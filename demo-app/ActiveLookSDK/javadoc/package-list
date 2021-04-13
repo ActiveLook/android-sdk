@@ -1,0 +1,6 @@
+com.activelook.activelooksdk
+com.activelook.activelooksdk.core
+com.activelook.activelooksdk.core.ble
+com.activelook.activelooksdk.core.debug
+com.activelook.activelooksdk.exceptions
+com.activelook.activelooksdk.types
