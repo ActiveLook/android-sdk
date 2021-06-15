@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"com.activelook.activelooksdk"},{"l":"com.activelook.activelooksdk.core"},{"l":"com.activelook.activelooksdk.core.ble"},{"l":"com.activelook.activelooksdk.core.debug"},{"l":"com.activelook.activelooksdk.exceptions"},{"l":"com.activelook.activelooksdk.types"}]

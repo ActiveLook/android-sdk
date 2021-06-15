@@ -19,13 +19,88 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-## Example
+## Quick start
+
+You can start displaying custom data in your glasses in less than 10 minutes. Ready?
+
+### Requirements
+
+You will need the following:
+- A pair of glasses
+- Android Studio up
+- An android device with BLE
+- a terminal with git
+
+### Step 1: Get the sources
+
+Open a terminal and run:
+
+```
+git clone https://github.com/ActiveLook/android-sdk.git
+cd android-sdk
+git checkout dev
+```
+
+### Step 2: Set up Android Studio
+
+Launch Android Studio and select 'Open an Existing Project' on the Welcome screen.
+Select the directory of the repository you just cloned and click 'Open'.
+
+### Step 3: Set up your android device
+
+On your android device, enable the [developer mode](https://developer.android.com/studio/debug/dev-options) and connect it to your computer via USB.
+Your device will prompt you to accept debugging from Android Studio.
+Accept it if you trust your computer and your device should appear in Android Studio menu bar, next to
+the 'Play' button.
+
+### Step 4: Test the demo application
+
+Simply click the 'Play' button or the 'Bug' button and the application will be installed on your device
+and started.
+
+Click 'SCAN' in the application and start the glasses (long press in the middle).
+Your glasses will pop in the application on your device and you can connect to it by clicking its name.
+Navigate in the different menu and see what you can do.
+
+### Step 5: Start your customization
+It is time to have a look at the code and try to display some text.
+
+Open the file: `app/src/main/java/com/activelook/demo/GraphicsCommands.java`
+
+In this file, you can see a method `getCommands()` which is populated with a list of items.
+This items are all automatically mapped to a button in the demo application.
+
+```java
+@Override
+protected Map.Entry<String, Consumer<Glasses>>[] getCommands() {
+...
+item("color(5)", glasses ->
+  glasses.color((byte) 0x05)
+),
+...
+item("txt(30, 30, 0, 1, 10, Bonjour)", glasses ->
+  glasses.txt(new Point(30, 30), Rotation.TOP_LR, (byte) 1, (byte) 0x0A, "Bonjour")
+),
+...
+```
+
+Add a new item in this list and you will create a new button accessible in the 'GRAPHICS' submenu.
+For example, let's add a command `MyText` that will display `MyText` at the coordinate (0, 0) in the glasses. Simply append a new item:
+```java
+item("MyText", glasses -> glasses.txt(new Point(0, 0), Rotation.TOP_LR, (byte) 1, (byte) 0x0F, "MyText")),
+```
+
+You will find all the information about the commands and their parameters in the javadoc and in the ActiveLook API.
+
+---
+
+## More in depth example
 
 To run the example project, clone the repo, and import the project in Android Studio.
 
 Note: BlueTooth will not work on the android simulator. A physical device should be used instead.
 
-## Initialization
+### Initialization
 
 To start using the SDK, first import and initialize the sdk, for example, in a main application class:
 
@@ -62,7 +137,7 @@ import com.activelook.activelooksdk.Sdk;
 Sdk alsdk = ((DemoApp) this.getApplication()).getActiveLookSdk();
 ```
 
-## Scanning
+### Scanning
 
 To scan for available ActiveLook glasses, simply use the
 `startScan(Consumer<DiscoveredGlasses> onDiscoverGlasses)` and
@@ -80,7 +155,7 @@ this.alsdk.startScan(discoveredGlasses -> runOnUiThread(() -> {
 }));
 ```
 
-## Connect to ActiveLook glasses
+### Connect to ActiveLook glasses
 
 To connect to a pair of discovered glasses, use the `connect(Consumer<Glasses> onConnected, Consumer<DiscoveredGlasses> onConnectionFail, Consumer<Glasses> onDisconnected)` method on the `DiscoveredGlasses` object.
 
@@ -113,7 +188,7 @@ glasses.setOnDisconnected(
 );
 ```
 
-## Device information
+### Device information
 
 To get information relative to discovered glasses as published over Bluetooth, you can access the following public properties:
 
@@ -137,7 +212,7 @@ Log.d("Glasses", "FirmwareVersion: " + di.getFirmwareVersion());
 Log.d("Glasses", "SoftwareVersion: " + di.getSoftwareVersion());
 ```
 
-## Commands
+### Commands
 
 All available commands are exposed as methods in the `Glasses` class.
 Examples are available in the Example application.
@@ -176,7 +251,7 @@ The callback will be called asynchronously.
 glasses.battery(r -> { Log.d("Battery", String.format("Battery level: %d", r)); });
 ```
 
-## Notifications
+### Notifications
 
 It is possible to subscribe to three types of notifications that the glasses will send over Bluetooth:
 
@@ -196,7 +271,7 @@ glasses.subscribeToSensorInterfaceNotifications( //Runnable onEvent
 );
 ```
 
-## Disconnect
+### Disconnect
 
 When done interacting with ActiveLook glasses, simply call the `disconnect()` method:
 
@@ -204,7 +279,7 @@ When done interacting with ActiveLook glasses, simply call the `disconnect()` me
 glasses.disconnect()
 ```
 
-## Sharing glasses across multiple activities
+### Sharing glasses across multiple activities
 
 In order to use a `DiscoveredGlasses` or a `Glasses` created in one activty and consumed in another one, `Intent` must be use.
 These classes implements the `Parcelable` interface to make it possible.
@@ -250,8 +325,30 @@ public class ScanningActivity extends AppCompatActivity {
 }
 ```
 
-## About Android Wear
+### About Android Wear
 
 For now, it is unclear if Android Wear can be supported.
 A study on the compatibility and limits needs to be done and
 this sample code will be updated accordingly.
+
+
+# About the project
+
+Compiled and validated with Android studio 3.1.3 for Windows 64-bit
+Using (automatically installed):
+- Gradle 4.4
+- Android SDK Platform 21
+- Build Tools revision 27.0.3
+
+
+This code is licensed under the MIT Licence. You may obtain a copy of the License at
+
+https://opensource.org/licenses/MIT
+
+MDMBLE application embeds a SQLite database to store internal settings
+The unique MessageBLE(int id, String message, String alias) table stores the commands:
+- id: incremental number
+- message: command to be sent
+- alias: text displayed on the interface
+
+Caution: the database is cleared only when uninstalling the application.
