@@ -20,9 +20,6 @@ public class DisplayLuminanceCommands extends MainActivity2 {
                 item("luma(7)", glasses -> glasses.luma((byte) 7)),
                 item("luma(11)", glasses -> glasses.luma((byte) 11)),
                 item("luma(15)", glasses -> glasses.luma((byte) 15)),
-                item("dim(25)", glasses -> glasses.dim((byte) 25)),
-                item("dim(50)", glasses -> glasses.dim((byte) 50)),
-                item("dim(100)", glasses -> glasses.dim((byte) 100)),
         };
     }
 

@@ -100,13 +100,6 @@ public interface GlassesCommands {
      */
     void vers(Consumer<GlassesVersion> onResult);
     /**
-     * Turn glasses debug mode on of off.
-     * When activated return BLE data received to USB.
-     *
-     * @param on Turn on or off
-     */
-    void debug(boolean on);
-    /**
      * Set glasses led mode
      *
      * @param state The mode to set
@@ -142,14 +135,6 @@ public interface GlassesCommands {
      */
     void luma(byte value);
     /**
-     * Set luminance to a given percentage.
-     * It's not recommended to use this command when ALS is enabled since ALS will
-     * automatically overwrite dimming
-     *
-     * @param value The luminance percentage (OxOO to 0x64)
-     */
-    void dim(byte value);
-    /**
      * Turn on/off the auto-brightness adjustment and gesture detection.
      *
      * @param enable Set on or off.
@@ -167,22 +152,6 @@ public interface GlassesCommands {
      * @param enable Set on or off.
      */
     void als(boolean enable);
-    /**
-     * Set sensor parameters. Reboot of the device is necessary.
-     *
-     * @param mode       ALS_ARRAY: it changes the ALS array to compare when luma is changed. Reboot the device is
-     *                   necessary.
-     *                   ALS_PERIOD: it changes ALS period. Reboot of the device is necessary.
-     *                   GESTURE_PERIOD: it changes gesture period. Reboot of the device is necessary.
-     * @param parameters The sensor parameters to set.
-     */
-    void setSensorParameters(SensorMode mode, SensorParameters parameters);
-    /**
-     * Get sensor parameters (ALS Array, ALS Period and ranging Period).
-     *
-     * @param onResult Callback on to call on returned value.
-     */
-    void getSensorParameters(Consumer<SensorParameters> onResult);
     /**
      * Sets the grey level (0 to 15) used to draw the next graphical element.
      *
@@ -445,12 +414,6 @@ public interface GlassesCommands {
      */
     void pixelCount(Consumer<Integer> onResult);
     /**
-     * Set Max Pixel Value.
-     *
-     * @param maxValue the pixel maximal value.
-     */
-    void setPixelValue(int maxValue);
-    /**
      * Get total number of charging cycle.
      *
      * @param onResult Callback on to call on returned integer value.
@@ -462,12 +425,6 @@ public interface GlassesCommands {
      * @param onResult Callback on to call on returned integer value.
      */
     void getChargingTime(Consumer<Integer> onResult);
-    /**
-     * Get the maximum number of pixel activated.
-     *
-     * @param onResult Callback on to call on returned integer value.
-     */
-    void getMaxPixelValue(Consumer<Integer> onResult);
     /**
      * Reset charging counter and charging time value in Param.
      */

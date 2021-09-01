@@ -19,6 +19,7 @@ import android.util.Log;
 
 import androidx.core.util.Consumer;
 
+import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
 import com.activelook.activelooksdk.core.GlassesCommandsAdapter;
 import com.activelook.activelooksdk.core.Payload;
@@ -42,12 +43,16 @@ class GlassesImpl extends GlassesCommandsAdapter implements Glasses {
     private DiscoveredGlassesImpl connectedFrom;
 
     GlassesImpl(DiscoveredGlassesImpl discoveredGlasses, Consumer<Glasses> onConnected,
+                Consumer<DiscoveredGlasses> onConnectionFail,
                 Consumer<Glasses> onDisconnected) {
         super();
         this.connectedFrom = discoveredGlasses;
-        this.gattCallbacks = new GlassesGattCallbackImpl(this.connectedFrom.scanResult.getDevice(), this);
-        this.gattCallbacks.setOnConnect(onConnected);
-        this.gattCallbacks.setOnDisconnected(onDisconnected);
+        this.gattCallbacks = new GlassesGattCallbackImpl(
+                this.connectedFrom.scanResult.getDevice(),
+                this,
+                onConnected,
+                () -> onConnectionFail.accept(discoveredGlasses),
+                onDisconnected);
     }
 
     protected GlassesImpl(Parcel in) {

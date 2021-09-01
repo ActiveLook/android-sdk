@@ -40,42 +40,53 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
     private final BluetoothDevice device;
     private final DeviceInformation deviceInfo;
     private final ConcurrentLinkedQueue<byte []> pendingWriteCommand;
+    private boolean isWritingCommand;
     private final BluetoothGatt gatt;
     private int mtu;
     private GlassesImpl glasses;
     private Consumer<Glasses> onConnected;
     private Consumer<Glasses> onDisconnected;
+    private Runnable onConnectionFail;
     private byte[] pendingBuffer;
     private Consumer<Integer> onBatteryLevelEvent;
     private Consumer<FlowControlStatus> onFlowControlEvent;
     private Runnable onSensorInterfaceEvent;
 
-    GlassesGattCallbackImpl(BluetoothDevice device, GlassesImpl bleGlasses) {
+    GlassesGattCallbackImpl(BluetoothDevice device, GlassesImpl bleGlasses,
+                            Consumer<Glasses> onConnected,
+                            Runnable onConnectionFail,
+                            Consumer<Glasses> onDisconnected) {
         super();
         this.device = device;
         this.deviceInfo = new DeviceInformation();
         this.pendingWriteCommand = new ConcurrentLinkedQueue<>();
+        this.isWritingCommand = false;
         this.mtu = 20;
         this.glasses = bleGlasses;
         this.onBatteryLevelEvent = null;
         this.onFlowControlEvent = null;
         this.onSensorInterfaceEvent = null;
         final SdkImpl sdk = BleSdkSingleton.getInstance();
-        this.gatt = this.device.connectGatt(sdk.getContext(), true, this);
+        this.setOnConnect(onConnected);
+        this.setOnConnectionFail(onConnectionFail);
+        this.setOnDisconnected(onDisconnected);
+        this.gatt = this.device.connectGatt(sdk.getContext(), false, this);
         sdk.registerConnectedGlasses(this.glasses);
     }
 
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         super.onConnectionStateChange(gatt, status, newState);
-        if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
+        if (newState == BluetoothProfile.STATE_CONNECTED) {
             int rmtu = 512;
             while (!this.gatt.requestMtu(rmtu)) rmtu --;
-        } else {
-            BleSdkSingleton.getInstance().unregisterConnectedGlasses(this.glasses);
-            if (this.onDisconnected != null) {
+        } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            if (this.onConnectionFail != null) {
+                this.onConnectionFail.run();
+            } else if (this.onDisconnected != null) {
                 this.onDisconnected.accept(this.glasses);
             }
+            this.disconnect();
         }
     }
 
@@ -119,6 +130,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         } else if (characteristic.getUuid().equals(BleUUID.SoftwareVersionCharacteristic)) {
             this.deviceInfo.setSoftwareVersion(
                     new String(characteristic.getValue(), StandardCharsets.UTF_8));
+            this.setOnConnectionFail(null);
             if (this.onConnected != null) {
                 this.onConnected.accept(this.glasses);
                 Log.e("onDescriptorWrite", "DONE");
@@ -130,6 +142,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
         if (characteristic.equals(this.getRxCharacteristic())) {
+            this.isWritingCommand = false;
             this.unstackWriteCommand();
         }
     }
@@ -227,6 +240,10 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         this.onDisconnected = onDisconnected;
     }
 
+    void setOnConnectionFail(Runnable onConnectionFail) {
+        this.onConnectionFail = onConnectionFail;
+    }
+
     void setOnConnect(Consumer<Glasses> onConnected) {
         this.onConnected = onConnected;
     }
@@ -238,7 +255,8 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
     }
 
     synchronized void unstackWriteCommand() {
-        if (this.pendingWriteCommand.size()>0) {
+        if (this.pendingWriteCommand.size()>0 && !this.isWritingCommand) {
+            this.isWritingCommand = true;
             final byte [] buffer = this.pendingWriteCommand.poll();
             Log.d("unstackWriteCommand", String.format("write rx: %s", Utils.bytesToHexString(buffer)));
             this.getRxCharacteristic().setValue(buffer);
@@ -248,6 +266,8 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
 
     void disconnect() {
         this.gatt.disconnect();
+        this.gatt.close();
+        BleSdkSingleton.getInstance().unregisterConnectedGlasses(this.glasses);
     }
 
     /*
