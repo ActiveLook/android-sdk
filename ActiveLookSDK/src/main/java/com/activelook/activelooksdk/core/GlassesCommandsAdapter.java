@@ -61,7 +61,6 @@ public class GlassesCommandsAdapter implements GlassesCommands {
     static final byte ID_test = (byte) 0x04;
     static final byte ID_battery = (byte) 0x05;
     static final byte ID_vers = (byte) 0x06;
-    static final byte ID_debug = (byte) 0x07;
     static final byte ID_led = (byte) 0x08;
     static final byte ID_shift = (byte) 0x09;
     static final byte ID_settings = (byte) 0x0A;
@@ -70,15 +69,12 @@ public class GlassesCommandsAdapter implements GlassesCommands {
      * Display luminance commands ids
      */
     static final byte ID_luma = (byte) 0x10;
-    static final byte ID_dim = (byte) 0x11;
     /*
      * Optical sensor commands ids
      */
     static final byte ID_sensor = (byte) 0x20;
     static final byte ID_gesture = (byte) 0x21;
     static final byte ID_als = (byte) 0x22;
-    static final byte ID_setSensorParameters = (byte) 0x23;
-    static final byte ID_getSensorParameters = (byte) 0x24;
     /*
      * Graphics commands ids
      */
@@ -146,10 +142,8 @@ public class GlassesCommandsAdapter implements GlassesCommands {
      * Statistics commands ids
      */
     static final byte ID_pixelCount = (byte) 0xA5;
-    static final byte ID_setPixelValue = (byte) 0xA6;
     static final byte ID_getChargingCounter = (byte) 0xA7;
     static final byte ID_getChargingTime = (byte) 0xA8;
-    static final byte ID_getMaxPixelValue = (byte) 0xA9;
     static final byte ID_resetChargingParam = (byte) 0xAA;
     /*
      * Configuration commands ids
@@ -265,11 +259,6 @@ public class GlassesCommandsAdapter implements GlassesCommands {
     }
 
     @Override
-    public void debug(boolean on) {
-        this.write(new Payload(ID_debug).addData(on));
-    }
-
-    @Override
     public void led(LedState state) {
         this.write(new Payload(ID_led).addData(state.toBytes()));
     }
@@ -295,11 +284,6 @@ public class GlassesCommandsAdapter implements GlassesCommands {
     }
 
     @Override
-    public void dim(byte value) {
-        this.write(new Payload(ID_dim).addData(value));
-    }
-
-    @Override
     public void sensor(boolean on) {
         this.write(new Payload(ID_sensor).addData(on));
     }
@@ -312,26 +296,6 @@ public class GlassesCommandsAdapter implements GlassesCommands {
     @Override
     public void als(boolean on) {
         this.write(new Payload(ID_als).addData(on));
-    }
-
-    @Override
-    public void setSensorParameters(SensorMode mode, SensorParameters parameters) {
-        Payload payload = new Payload(ID_setSensorParameters).addData(mode.toBytes());
-        if (mode.equals(SensorMode.ALS_ARRAY)) {
-            this.write(payload.addData(parameters.getAlsLuma()));
-        } else if (mode.equals(SensorMode.ALS_PERIOD)) {
-            this.write(payload.addData(parameters.getAlsPeriod()));
-        } else if (mode.equals(SensorMode.GESTURE_PERIOD)) {
-            this.write(payload.addData(parameters.getGesturePeriod()));
-        }
-    }
-
-    @Override
-    public void getSensorParameters(Consumer<SensorParameters> onResult) {
-        this.write(
-                new Payload(ID_getSensorParameters),
-                bytes -> onResult.accept(new SensorParameters(bytes))
-        );
     }
 
     @Override
@@ -646,11 +610,6 @@ public class GlassesCommandsAdapter implements GlassesCommands {
     }
 
     @Override
-    public void setPixelValue(int maxValue) {
-        this.write(new Payload(ID_setPixelValue));
-    }
-
-    @Override
     public void getChargingCounter(Consumer<Integer> onResult) {
         this.write(new Payload(ID_getChargingCounter), bytes -> onResult.accept((int) bytes[0]));
     }
@@ -658,11 +617,6 @@ public class GlassesCommandsAdapter implements GlassesCommands {
     @Override
     public void getChargingTime(Consumer<Integer> onResult) {
         this.write(new Payload(ID_getChargingTime), bytes -> onResult.accept((int) bytes[0]));
-    }
-
-    @Override
-    public void getMaxPixelValue(Consumer<Integer> onResult) {
-        this.write(new Payload(ID_getMaxPixelValue), bytes -> onResult.accept((int) bytes[0]));
     }
 
     @Override

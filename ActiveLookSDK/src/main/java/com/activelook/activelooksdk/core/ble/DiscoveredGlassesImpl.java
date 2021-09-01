@@ -108,7 +108,7 @@ class DiscoveredGlassesImpl implements DiscoveredGlasses {
             Consumer<Glasses> onDisconnected
     ) {
         final SdkImpl sdk = BleSdkSingleton.getInstance();
-        sdk.registerConnectedGlasses(new GlassesImpl(this, onConnected, onDisconnected));
+        sdk.registerConnectedGlasses(new GlassesImpl(this, onConnected, onConnectionFail, onDisconnected));
     }
 
     @Override

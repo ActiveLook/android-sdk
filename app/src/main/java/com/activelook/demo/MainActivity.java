@@ -31,10 +31,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null && ((DemoApp) this.getApplication()).isConnected()) {
             this.connectedGlasses = savedInstanceState.getParcelable("connectedGlasses");
-            this.connectedGlasses.setOnDisconnected(glasses -> {
-                glasses.disconnect();
-                MainActivity.this.disconnect();
-            });
+            this.connectedGlasses.setOnDisconnected(glasses -> MainActivity.this.disconnect());
         }
         setContentView(R.layout.activity_scrolling);
         Toolbar toolbar = this.findViewById(R.id.toolbar);
@@ -112,12 +109,7 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("connectedGlasses", this.connectedGlasses);
             MainActivity.this.startActivity(intent);
         });
-        this.findViewById(R.id.button_disconnect).setOnClickListener(view -> {
-            MainActivity.this.connectedGlasses.disconnect();
-            MainActivity.this.connectedGlasses = null;
-            MainActivity.this.updateVisibility();
-            this.snack("Disconnected");
-        });
+        this.findViewById(R.id.button_disconnect).setOnClickListener(view -> MainActivity.this.disconnect());
         this.findViewById(R.id.debug).setOnClickListener(view -> {
             MainActivity.this.debugButton();
         });
@@ -257,6 +249,7 @@ public class MainActivity extends AppCompatActivity {
     private void disconnect() {
         runOnUiThread(() -> {
             ((DemoApp) this.getApplication()).onDisconnected();
+            MainActivity.this.connectedGlasses.disconnect();
             MainActivity.this.connectedGlasses = null;
             MainActivity.this.updateVisibility();
             MainActivity.this.snack("Disconnected");
