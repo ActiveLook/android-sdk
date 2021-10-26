@@ -277,7 +277,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
                 offset += buffer.length;
             }
             final byte[] buffer = stack.poll();
-            final int sizeOutOfPayload = stackSize - this.mtu;
+            final int sizeOutOfPayload = Math.max(0, stackSize - this.mtu);
             final int sizeInPayload = buffer.length - sizeOutOfPayload;
             System.arraycopy(buffer, 0, payload, offset, sizeInPayload);
             if (sizeOutOfPayload > 0) {
