@@ -51,7 +51,7 @@ allprojects {
   }
 }
 ```
-2. Fof the `settings.gradle` file, you should add:
+2. For the `settings.gradle` file, you should add:
 ```
 dependencyResolutionManagement {
   repositories {
