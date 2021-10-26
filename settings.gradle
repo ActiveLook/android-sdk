@@ -1,0 +1,3 @@
+include ':ActiveLookSDK'
+include ':app'
+rootProject.name = "My Active Look Application"
