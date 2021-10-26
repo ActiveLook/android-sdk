@@ -208,7 +208,12 @@ Note: BlueTooth will not work on the android simulator. A physical device should
 
 ### Initialization
 
-To start using the SDK, first import and initialize the sdk, for example, in a main application class:
+To start using the SDK, first import and initialize the sdk.
+You will need a token provided by Microoled to authenticate with the update server.
+Four callbacks `onUpdateStart`, `onUpdateProgress`, `onUpdateSuccess`, `onUpdateError`
+must be provided to handle glasses update events.
+Read the javadoc for more inforamtions.
+For example, in a main application class, you can initialize the SDK like this:
 
 ```java
 package com.activelook.demo;
@@ -223,7 +228,14 @@ public class DemoApp extends Application {
   @Override
   public void onCreate() {
     super.onCreate();
-    this.alsdk = Sdk.init(this.getApplicationContext());
+    this.alsdk = Sdk.init(
+      this.getApplicationContext(),
+      "MyPrivateToken",
+      (update) -> Log.i("GLASSES_UPDATE", "Starting glasses update."),
+      (update) -> Log.i("GLASSES_UPDATE", "Progressing glasses update."),
+      (update) -> Log.i("GLASSES_UPDATE", "Success glasses update."),
+      (update) -> Log.i("GLASSES_UPDATE", "Error glasses update.")
+    );
   }
 
   public Sdk getActiveLookSdk() {
@@ -264,6 +276,11 @@ this.alsdk.startScan(discoveredGlasses -> runOnUiThread(() -> {
 ### Connect to ActiveLook glasses
 
 To connect to a pair of discovered glasses, use the `connect(Consumer<Glasses> onConnected, Consumer<DiscoveredGlasses> onConnectionFail, Consumer<Glasses> onDisconnected)` method on the `DiscoveredGlasses` object.
+
+The connection process handle the glasses update.
+The registered callbacks on the SDK initialization will be triggered if a compatible
+update is available.
+Once the update process has terminated, you connection process will continue.
 
 If the connection is successful, the `onConnected.accept` method will be called and will return a `Glasses` object,
 which can then be used to get information about the connected ActiveLook glasses or send commands.

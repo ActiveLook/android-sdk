@@ -26,6 +26,7 @@ import androidx.core.util.Consumer;
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Sdk;
 import com.activelook.activelooksdk.exceptions.UnsupportedBleException;
+import com.activelook.activelooksdk.types.GlassesUpdate;
 
 import java.util.HashMap;
 
@@ -38,7 +39,12 @@ class SdkImpl implements Sdk {
     private final HashMap<String, GlassesImpl> connectedGlasses = new HashMap<>();
     private ScanCallback scanCallback;
 
-    SdkImpl(Context context) throws UnsupportedBleException {
+    SdkImpl(Context context,
+            String token,
+            Consumer<GlassesUpdate> onUpdateStart,
+            Consumer<GlassesUpdate> onUpdateProgress,
+            Consumer<GlassesUpdate> onUpdateSuccess,
+            Consumer<GlassesUpdate> onUpdateError) throws UnsupportedBleException {
         this.context = context;
         this.manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         this.adapter = this.manager.getAdapter();

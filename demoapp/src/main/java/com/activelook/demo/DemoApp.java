@@ -1,6 +1,7 @@
 package com.activelook.demo;
 
 import android.app.Application;
+import android.util.Log;
 
 import com.activelook.activelooksdk.Sdk;
 
@@ -13,7 +14,14 @@ public class DemoApp extends Application {
     public void onCreate() {
         super.onCreate();
         this.connected = false;
-        this.alsdk = Sdk.init(this.getApplicationContext());
+        this.alsdk = Sdk.init(
+                this.getApplicationContext(),
+                "MyPrivateToken",
+                (update) -> Log.i("GLASSES_UPDATE", "Starting glasses update."),
+                (update) -> Log.i("GLASSES_UPDATE", "Progressing glasses update."),
+                (update) -> Log.i("GLASSES_UPDATE", "Success glasses update."),
+                (update) -> Log.i("GLASSES_UPDATE", "Error glasses update.")
+        );
     }
 
     public Sdk getActiveLookSdk() {
