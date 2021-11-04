@@ -16,7 +16,7 @@ package com.activelook.activelooksdk.core;
 
 import androidx.core.util.Consumer;
 
-import com.activelook.activelooksdk.GlassesCommands;
+import com.activelook.activelooksdk.Glasses;
 import com.activelook.activelooksdk.types.Configuration;
 import com.activelook.activelooksdk.types.ConfigurationDescription;
 import com.activelook.activelooksdk.types.ConfigurationElementsInfo;
@@ -34,22 +34,16 @@ import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
 import com.activelook.activelooksdk.types.Rotation;
-import com.activelook.activelooksdk.types.SensorMode;
-import com.activelook.activelooksdk.types.SensorParameters;
 import com.activelook.activelooksdk.types.Utils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
 @SuppressWarnings("SpellCheckingInspection")
-public class GlassesCommandsAdapter implements GlassesCommands {
+public abstract class GlassesCommandsAdapter implements Glasses {
 
     /*
      * General commands ids
