@@ -43,7 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @SuppressWarnings("SpellCheckingInspection")
-public abstract class GlassesCommandsAdapter implements Glasses {
+public abstract class AbstractGlasses implements Glasses {
 
     /*
      * General commands ids
@@ -157,7 +157,7 @@ public abstract class GlassesCommandsAdapter implements Glasses {
     /*
     Methods for children implementation
      */
-    protected GlassesCommandsAdapter() {
+    protected AbstractGlasses() {
         this.currentQID = new QueryId();
         this.callbacks = new HashMap<>();
     }

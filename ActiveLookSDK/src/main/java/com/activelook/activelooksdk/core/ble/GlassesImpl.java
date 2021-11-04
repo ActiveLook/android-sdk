@@ -21,12 +21,12 @@ import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
-import com.activelook.activelooksdk.core.GlassesCommandsAdapter;
+import com.activelook.activelooksdk.core.AbstractGlasses;
 import com.activelook.activelooksdk.core.Payload;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
 
-class GlassesImpl extends GlassesCommandsAdapter implements Glasses {
+class GlassesImpl extends AbstractGlasses implements Glasses {
 
     public static final Creator<GlassesImpl> CREATOR = new Creator<GlassesImpl>() {
         @Override
