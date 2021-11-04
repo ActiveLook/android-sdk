@@ -18,29 +18,29 @@ import android.util.Log;
 
 import java.nio.charset.StandardCharsets;
 
-public class Payload {
+public class Command {
 
     private final byte commandId;
     private byte[] queryId;
     private byte[] data;
 
-    public Payload() {
+    public Command() {
         super();
         this.commandId = (byte) 0x00;
     }
 
-    Payload(byte commandId) {
+    Command(byte commandId) {
         super();
         this.commandId = commandId;
     }
 
-    Payload(byte commandId, byte[] queryId) {
+    Command(byte commandId, byte[] queryId) {
         super();
         this.commandId = commandId;
         this.queryId = queryId;
     }
 
-    public Payload(byte[] payload) {
+    public Command(byte[] payload) {
         super();
         int fullLength = 5;
         assert payload[0] == (byte) 0xFF;
@@ -68,7 +68,7 @@ public class Payload {
     }
 
     public static final boolean isValidBuffer(byte[] payload) {
-        Log.d("Validating", Payload.bytesToStr(payload));
+        Log.d("Validating", Command.bytesToStr(payload));
         int fullLength = 5;
         assert payload[0] == (byte) 0xFF;
         if ((payload[2] & 0x10) == 0x10) {
@@ -210,7 +210,7 @@ public class Payload {
 
     @Override
     public String toString() {
-        return "Payload{" +
+        return "Command{" +
                 "commandId=" + this.commandId +
                 ", queryId=" + bytesToStr(this.queryId) +
                 ", data=" + bytesToStr(this.data) +
@@ -261,51 +261,51 @@ public class Payload {
         }
     }
 
-    public Payload addData(byte[] bytes) {
+    public Command addData(byte[] bytes) {
         if (this.data == null) {
             this.data = bytes;
         } else {
-            this.data = Payload.combine(this.data, bytes);
+            this.data = Command.combine(this.data, bytes);
         }
         return this;
     }
 
-    public Payload addData(byte value) {
+    public Command addData(byte value) {
         return this.addData(new byte[]{value});
     }
 
-    public Payload addData(boolean on) {
+    public Command addData(boolean on) {
         this.addData(on ? (byte) 0x01 : (byte) 0x00);
         return this;
     }
 
-    public Payload addData(short[] values) {
+    public Command addData(short[] values) {
         for (short value : values) {
             this.addData(new byte[]{(byte) ((value & 0xFF00) >> 8), (byte) (value & 0x00FF)});
         }
         return this;
     }
 
-    public Payload addData(char[] values) {
+    public Command addData(char[] values) {
         for (char value : values) {
             this.addData(new byte[]{(byte) ((value & 0xFF00) >> 8), (byte) (value & 0x00FF)});
         }
         return this;
     }
 
-    public Payload addData(short value) {
+    public Command addData(short value) {
         return this.addData(new short[]{value});
     }
 
-    public Payload addData(char value) {
+    public Command addData(char value) {
         return this.addData(new char[]{value});
     }
 
-    public Payload addData(String value) {
+    public Command addData(String value) {
         return this.addData(value.getBytes(StandardCharsets.US_ASCII));
     }
 
-    public Payload addData(String value, boolean nulTerminated) {
+    public Command addData(String value, boolean nulTerminated) {
         if (nulTerminated == true) {
             return this.addData(value.getBytes(StandardCharsets.US_ASCII)).addData((byte) 0x00);
         }
@@ -322,7 +322,7 @@ public class Payload {
         this.addData(buffer);
     }
 
-    public Payload addData(int value) {
+    public Command addData(int value) {
         byte b0 = (byte) ((value & 0xFF000000) >> 24);
         byte b1 = (byte) ((value & 0x00FF0000) >> 16);
         byte b2 = (byte) ((value & 0x0000FF00) >> 8);

@@ -165,12 +165,12 @@ public abstract class AbstractGlasses implements Glasses {
     protected void writeCommand(byte[] payload) {
     }
 
-    protected final void delegateToCallback(final Payload payload) {
-        final QueryId qid = payload.getQueryId();
+    protected final void delegateToCallback(final Command command) {
+        final QueryId qid = command.getQueryId();
         if (qid != null) {
             final Consumer<byte[]> callback = this.callbacks.remove(qid);
             if (callback != null) {
-                callback.accept(payload.getData());
+                callback.accept(command.getData());
             }
         }
     }
@@ -188,17 +188,17 @@ public abstract class AbstractGlasses implements Glasses {
         return result;
     }
 
-    private void write(final Payload payload) {
+    private void write(final Command command) {
         final QueryId qid = this.nextQueryId();
-        payload.setQueryId(qid);
-        this.writeCommand(payload.toBytes());
+        command.setQueryId(qid);
+        this.writeCommand(command.toBytes());
     }
 
-    private void write(final Payload payload, final Consumer<byte[]> callback) {
+    private void write(final Command command, final Consumer<byte[]> callback) {
         QueryId qid = this.nextQueryId();
-        payload.setQueryId(qid);
+        command.setQueryId(qid);
         this.registerCallback(qid, callback);
-        this.writeCommand(payload.toBytes());
+        this.writeCommand(command.toBytes());
     }
 
     /*
@@ -214,153 +214,153 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void power(boolean on) {
-        this.write(new Payload(ID_power).addData(on));
+        this.write(new Command(ID_power).addData(on));
     }
 
     @Override
     public void clear() {
-        this.write(new Payload(ID_clear));
+        this.write(new Command(ID_clear));
     }
 
     @Override
     public void grey(byte level) {
-        this.write(new Payload(ID_grey).addData(level));
+        this.write(new Command(ID_grey).addData(level));
     }
 
     @Override
     public void demo() {
-        this.write(new Payload(ID_demo));
+        this.write(new Command(ID_demo));
     }
 
     @Override
     public void demo(DemoPattern pattern) {
-        this.write(new Payload(ID_demo).addData(pattern.toBytes()));
+        this.write(new Command(ID_demo).addData(pattern.toBytes()));
     }
 
     @Override
     public void test(DemoPattern pattern) {
-        this.write(new Payload(ID_test).addData(pattern.toBytes()));
+        this.write(new Command(ID_test).addData(pattern.toBytes()));
     }
 
     @Override
     public void battery(Consumer<Integer> onResult) {
-        this.write(new Payload(ID_battery), bytes -> onResult.accept((int) bytes[0]));
+        this.write(new Command(ID_battery), bytes -> onResult.accept((int) bytes[0]));
     }
 
     @Override
     public void vers(Consumer<GlassesVersion> onResult) {
-        this.write(new Payload(ID_vers), bytes -> onResult.accept(new GlassesVersion(bytes)));
+        this.write(new Command(ID_vers), bytes -> onResult.accept(new GlassesVersion(bytes)));
     }
 
     @Override
     public void led(LedState state) {
-        this.write(new Payload(ID_led).addData(state.toBytes()));
+        this.write(new Command(ID_led).addData(state.toBytes()));
     }
 
     @Override
     public void shift(short x, short y) {
-        this.write(new Payload(ID_shift).addData(x).addData(y));
+        this.write(new Command(ID_shift).addData(x).addData(y));
     }
 
     @Override
     public void settings(Consumer<GlassesSettings> onResult) {
-        this.write(new Payload(ID_settings), bytes -> onResult.accept(new GlassesSettings(bytes)));
+        this.write(new Command(ID_settings), bytes -> onResult.accept(new GlassesSettings(bytes)));
     }
 
     @Override
     public void luma(byte value) {
-        this.write(new Payload(ID_luma).addData(value));
+        this.write(new Command(ID_luma).addData(value));
     }
 
     @Override
     public void sensor(boolean on) {
-        this.write(new Payload(ID_sensor).addData(on));
+        this.write(new Command(ID_sensor).addData(on));
     }
 
     @Override
     public void gesture(boolean on) {
-        this.write(new Payload(ID_gesture).addData(on));
+        this.write(new Command(ID_gesture).addData(on));
     }
 
     @Override
     public void als(boolean on) {
-        this.write(new Payload(ID_als).addData(on));
+        this.write(new Command(ID_als).addData(on));
     }
 
     @Override
     public void color(byte value) {
-        this.write(new Payload(ID_color).addData(value));
+        this.write(new Command(ID_color).addData(value));
     }
 
     @Override
     public void point(short x, short y) {
-        this.write(new Payload(ID_point).addData(x).addData(y));
+        this.write(new Command(ID_point).addData(x).addData(y));
     }
 
     @Override
     public void line(short x1, short y1, short x2, short y2) {
-        this.write(new Payload(ID_line).addData(x1).addData(y1).addData(x2).addData(y2));
+        this.write(new Command(ID_line).addData(x1).addData(y1).addData(x2).addData(y2));
     }
 
     @Override
     public void rect(short x1, short y1, short x2, short y2) {
-        this.write(new Payload(ID_rect).addData(x1).addData(y1).addData(x2).addData(y2));
+        this.write(new Command(ID_rect).addData(x1).addData(y1).addData(x2).addData(y2));
     }
 
     @Override
     public void rectf(short x1, short y1, short x2, short y2) {
-        this.write(new Payload(ID_rectf).addData(x1).addData(y1).addData(x2).addData(y2));
+        this.write(new Command(ID_rectf).addData(x1).addData(y1).addData(x2).addData(y2));
     }
 
     @Override
     public void circ(short x, short y, byte r) {
-        this.write(new Payload(ID_circ).addData(x).addData(y).addData(r));
+        this.write(new Command(ID_circ).addData(x).addData(y).addData(r));
     }
 
     @Override
     public void circf(short x, short y, byte r) {
-        this.write(new Payload(ID_circf).addData(x).addData(y).addData(r));
+        this.write(new Command(ID_circf).addData(x).addData(y).addData(r));
     }
 
     @Override
     public void txt(short x, short y, Rotation r, byte f, byte c, String s) {
-        this.write(new Payload(ID_txt).addData(x).addData(y).addData(r.toBytes()).addData(f).addData(c).addData(s,
+        this.write(new Command(ID_txt).addData(x).addData(y).addData(r.toBytes()).addData(f).addData(c).addData(s,
                 true));
     }
 
     @Override
     public void polyline(short[] points) {
-        this.write(new Payload(ID_polyline).addData(points));
+        this.write(new Command(ID_polyline).addData(points));
     }
 
     @Override
     public void imgList(Consumer<List<ImageInfo>> onResult) {
         this.write(
-                new Payload(ID_imgList),
+                new Command(ID_imgList),
                 bytes -> onResult.accept(ImageInfo.toList(bytes))
         );
     }
 
     @Override
     public void imgSave(byte id, ImageData data) {
-        this.write(new Payload(ID_imgSave)
+        this.write(new Command(ID_imgSave)
                 .addData(id)
                 .addData(data.getSize())
                 .addData(data.getWidth())
         );
         for (byte[] chunk : data.getChunks(240)) {
-            this.write(new Payload(ID_imgSave).addData(chunk));
+            this.write(new Command(ID_imgSave).addData(chunk));
         }
     }
 
     @Override
     public void imgDisplay(byte id, short x, short y) {
-        this.write(new Payload(ID_imgDisplay).addData(id).addData(x).addData(y));
+        this.write(new Command(ID_imgDisplay).addData(id).addData(x).addData(y));
     }
 
     @Override
     public void imgDelete(byte id) {
-        this.write(new Payload(ID_imgDelete).addData(id));
+        this.write(new Command(ID_imgDelete).addData(id));
     }
 
     @Override
@@ -370,52 +370,52 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void imgStream(Image1bppData data, short x, short y) {
-        this.write(new Payload(ID_imgStream)
+        this.write(new Command(ID_imgStream)
                 .addData(data.getSize())
                 .addData(data.getWidth())
                 .addData(x)
                 .addData(y)
         );
         for (byte[] chunk : data.getChunks(240)) {
-            this.write(new Payload(ID_imgStream).addData(chunk));
+            this.write(new Command(ID_imgStream).addData(chunk));
         }
     }
 
     @Override
     public void imgSave1bpp(Image1bppData data) {
-        this.write(new Payload(ID_imgSave1bpp)
+        this.write(new Command(ID_imgSave1bpp)
                 .addData(data.getSize())
                 .addData(data.getWidth())
         );
         for (byte[] chunk : data.getChunks(240)) {
-            this.write(new Payload(ID_imgSave1bpp).addData(chunk));
+            this.write(new Command(ID_imgSave1bpp).addData(chunk));
         }
     }
 
     @Override
     public void fontList(Consumer<List<FontInfo>> onResult) {
-        this.write(new Payload(ID_fontList), bytes -> onResult.accept(FontInfo.toList(bytes)));
+        this.write(new Command(ID_fontList), bytes -> onResult.accept(FontInfo.toList(bytes)));
     }
 
     @Override
     public void fontSave(byte id, FontData data) {
-        this.write(new Payload(ID_fontSave)
+        this.write(new Command(ID_fontSave)
                 .addData(id)
                 .addData(data.getFontSize())
         );
         for (byte[] chunk : data.getChunks(240)) {
-            this.write(new Payload(ID_fontSave).addData(chunk));
+            this.write(new Command(ID_fontSave).addData(chunk));
         }
     }
 
     @Override
     public void fontSelect(byte id) {
-        this.write(new Payload(ID_fontSelect).addData(id));
+        this.write(new Command(ID_fontSelect).addData(id));
     }
 
     @Override
     public void fontDelete(byte id) {
-        this.write(new Payload(ID_fontDelete).addData(id));
+        this.write(new Command(ID_fontDelete).addData(id));
     }
 
     @Override
@@ -425,12 +425,12 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void layoutSave(LayoutParameters layout) {
-        this.write(new Payload(ID_layoutSave).addData(layout.toBytes()));
+        this.write(new Command(ID_layoutSave).addData(layout.toBytes()));
     }
 
     @Override
     public void layoutDelete(byte id) {
-        this.write(new Payload(ID_layoutDelete).addData(id));
+        this.write(new Command(ID_layoutDelete).addData(id));
     }
 
     @Override
@@ -440,18 +440,18 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void layoutDisplay(byte id, String text) {
-        this.write(new Payload(ID_layoutDisplay).addData(id).addData(text, true));
+        this.write(new Command(ID_layoutDisplay).addData(id).addData(text, true));
     }
 
     @Override
     public void layoutClear(byte id) {
-        this.write(new Payload(ID_layoutClear).addData(id));
+        this.write(new Command(ID_layoutClear).addData(id));
     }
 
     @Override
     public void layoutList(Consumer<List<Integer>> onResult) {
         this.write(
-            new Payload(ID_layoutList),
+            new Command(ID_layoutList),
             bytes -> {
                 final List<Integer> r = new ArrayList<>();
                 for (byte b: bytes) {
@@ -464,30 +464,30 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void layoutPosition(byte id, short x, byte y) {
-        this.write(new Payload(ID_layoutPosition).addData(id).addData(x).addData(y));
+        this.write(new Command(ID_layoutPosition).addData(id).addData(x).addData(y));
     }
 
     @Override
     public void layoutDisplayExtended(byte id, short x, byte y, String text) {
-        this.write(new Payload(ID_layoutDisplayExtended).addData(id).addData(x).addData(y).addData(text, true));
+        this.write(new Command(ID_layoutDisplayExtended).addData(id).addData(x).addData(y).addData(text, true));
     }
 
     @Override
     public void layoutGet(byte id, Consumer<LayoutParameters> onResult) {
         this.write(
-                new Payload(ID_layoutList).addData(id),
+                new Command(ID_layoutList).addData(id),
                 bytes -> onResult.accept(new LayoutParameters(bytes))
         );
     }
 
     @Override
     public void gaugeDisplay(byte id, byte value) {
-        this.write(new Payload(ID_gaugeDisplay).addData(id).addData(value));
+        this.write(new Command(ID_gaugeDisplay).addData(id).addData(value));
     }
 
     @Override
     public void gaugeSave(byte id, short x, short y, char r, char rin, byte start, byte end, boolean clockwise) {
-        this.write(new Payload(ID_gaugeSave)
+        this.write(new Command(ID_gaugeSave)
                 .addData(id)
                 .addData(x).addData(y)
                 .addData(r).addData(rin)
@@ -511,7 +511,7 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void gaugeDelete(byte id) {
-        this.write(new Payload(ID_gaugeDelete).addData(id));
+        this.write(new Command(ID_gaugeDelete).addData(id));
     }
 
     @Override
@@ -522,7 +522,7 @@ public abstract class AbstractGlasses implements Glasses {
     @Override
     public void gaugeList(Consumer<List<Integer>> onResult) {
         this.write(
-                new Payload(ID_gaugeList),
+                new Command(ID_gaugeList),
                 bytes -> {
                     final List<Integer> r = new ArrayList<>();
                     for (byte b: bytes) {
@@ -536,7 +536,7 @@ public abstract class AbstractGlasses implements Glasses {
     @Override
     public void gaugeGet(byte id, Consumer<GaugeInfo> onResult) {
         this.write(
-                new Payload(ID_gaugeGet).addData(id),
+                new Command(ID_gaugeGet).addData(id),
                 bytes -> onResult.accept(new GaugeInfo(bytes))
         );
     }
@@ -548,17 +548,17 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void pageSave(PageInfo page) {
-        this.write(new Payload(ID_pageSave).addData(page.getPayload()));
+        this.write(new Command(ID_pageSave).addData(page.getPayload()));
     }
 
     @Override
     public void pageGet(byte id, Consumer<PageInfo> onResult) {
-        this.write(new Payload(ID_pageList), bytes -> onResult.accept(new PageInfo(bytes)));
+        this.write(new Command(ID_pageList), bytes -> onResult.accept(new PageInfo(bytes)));
     }
 
     @Override
     public void pageDelete(byte id) {
-        this.write(new Payload(ID_pageDelete).addData(id));
+        this.write(new Command(ID_pageDelete).addData(id));
     }
 
     @Override
@@ -568,21 +568,21 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void pageDisplay(byte id, String [] texts) {
-        final Payload payload = new Payload(ID_pageDisplay).addData(id);
+        final Command command = new Command(ID_pageDisplay).addData(id);
         for(String text: texts) {
-            payload.addData(text, true);
+            command.addData(text, true);
         }
-        this.write(payload);
+        this.write(command);
     }
 
     @Override
     public void pageClear(byte id) {
-        this.write(new Payload(ID_pageClear).addData(id));
+        this.write(new Command(ID_pageClear).addData(id));
     }
     @Override
     public void pageList(Consumer<List<Integer>> onResult) {
         this.write(
-                new Payload(ID_pageList),
+                new Command(ID_pageList),
                 bytes -> {
                     final List<Integer> r = new ArrayList<>();
                     for (byte b: bytes) {
@@ -595,27 +595,27 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void pixelCount(Consumer<Integer> onResult) {
-        this.write(new Payload(ID_pixelCount), bytes -> onResult.accept((int) bytes[0]));
+        this.write(new Command(ID_pixelCount), bytes -> onResult.accept((int) bytes[0]));
     }
 
     @Override
     public void getChargingCounter(Consumer<Integer> onResult) {
-        this.write(new Payload(ID_getChargingCounter), bytes -> onResult.accept((int) bytes[0]));
+        this.write(new Command(ID_getChargingCounter), bytes -> onResult.accept((int) bytes[0]));
     }
 
     @Override
     public void getChargingTime(Consumer<Integer> onResult) {
-        this.write(new Payload(ID_getChargingTime), bytes -> onResult.accept((int) bytes[0]));
+        this.write(new Command(ID_getChargingTime), bytes -> onResult.accept((int) bytes[0]));
     }
 
     @Override
     public void resetChargingParam() {
-        this.write(new Payload(ID_resetChargingParam));
+        this.write(new Command(ID_resetChargingParam));
     }
 
     @Override
     public void cfgWrite(String name, int version, int password) {
-        this.write(new Payload(ID_cfgWrite)
+        this.write(new Command(ID_cfgWrite)
                 .addData(name, true)
                 .addData(version)
                 .addData(password)
@@ -624,24 +624,24 @@ public abstract class AbstractGlasses implements Glasses {
     @Override
     public void cfgRead(String name, Consumer<ConfigurationElementsInfo> onResult) {
         this.write(
-                new Payload(ID_cfgRead).addData(name, true),
+                new Command(ID_cfgRead).addData(name, true),
                 bytes -> onResult.accept(new ConfigurationElementsInfo(bytes))
         );
     }
     @Override
     public void cfgSet(String name) {
-        this.write(new Payload(ID_cfgSet).addData(name, true));
+        this.write(new Command(ID_cfgSet).addData(name, true));
     }
     @Override
     public void cfgList(Consumer<List<ConfigurationDescription>> onResult) {
         this.write(
-                new Payload(ID_cfgList),
+                new Command(ID_cfgList),
                 bytes -> onResult.accept(ConfigurationDescription.toList(bytes))
         );
     }
     @Override
     public void cfgRename(String oldName, String newName, int password) {
-        this.write(new Payload(ID_cfgRename)
+        this.write(new Command(ID_cfgRename)
                 .addData(oldName, true)
                 .addData(newName, true)
                 .addData(password)
@@ -649,30 +649,30 @@ public abstract class AbstractGlasses implements Glasses {
     }
     @Override
     public void cfgDelete(String name) {
-        this.write(new Payload(ID_cfgDelete).addData(name, true));
+        this.write(new Command(ID_cfgDelete).addData(name, true));
     }
     @Override
     public void cfgDeleteLessUsed() {
-        this.write(new Payload(ID_cfgDeleteLessUsed));
+        this.write(new Command(ID_cfgDeleteLessUsed));
     }
     @Override
     public void cfgFreeSpace(Consumer<FreeSpace> onResult) {
         this.write(
-                new Payload(ID_cfgFreeSpace),
+                new Command(ID_cfgFreeSpace),
                 bytes -> onResult.accept(new FreeSpace(bytes))
         );
     }
     @Override
     public void cfgGetNb(Consumer<Integer> onResult) {
         this.write(
-                new Payload(ID_cfgGetNb),
+                new Command(ID_cfgGetNb),
                 bytes -> onResult.accept((int) bytes[0])
         );
     }
 
     @Override
     public void shutdown() {
-        this.write(new Payload(ID_shutdown).addData(new byte [] { (byte) 0x6F, (byte) 0x7F, (byte) 0xC4, (byte) 0xEE}));
+        this.write(new Command(ID_shutdown).addData(new byte [] { (byte) 0x6F, (byte) 0x7F, (byte) 0xC4, (byte) 0xEE}));
     }
 
     ///////////////////////
@@ -680,22 +680,22 @@ public abstract class AbstractGlasses implements Glasses {
     ///////////////////////
     @Override
     public void tdbg() {
-        this.write(new Payload(ID_tdbg));
+        this.write(new Command(ID_tdbg));
     }
 
     @Override
     public void WConfigID(Configuration config) {
-        this.write(new Payload(ID_WConfigID).addData(config.toBytes()));
+        this.write(new Command(ID_WConfigID).addData(config.toBytes()));
     }
 
     @Override
     public void RConfigID(byte number, Consumer<Configuration> onResult) {
-        this.write(new Payload(ID_RConfigID).addData(number), bytes -> onResult.accept(new Configuration(bytes)));
+        this.write(new Command(ID_RConfigID).addData(number), bytes -> onResult.accept(new Configuration(bytes)));
     }
 
     @Override
     public void SetConfigID(byte id) {
-        this.write(new Payload(ID_SetConfigID).addData(id));
+        this.write(new Command(ID_SetConfigID).addData(id));
     }
 
 }

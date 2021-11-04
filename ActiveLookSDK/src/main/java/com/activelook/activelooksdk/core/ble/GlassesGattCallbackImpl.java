@@ -26,7 +26,7 @@ import android.util.Log;
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.Glasses;
-import com.activelook.activelooksdk.core.Payload;
+import com.activelook.activelooksdk.core.Command;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
 import com.activelook.activelooksdk.types.Utils;
@@ -160,16 +160,16 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
             if (this.pendingBuffer != null) {
                 this.addPendingBuffer(buffer);
                 buffer = this.pendingBuffer;
-                if (Payload.isValidBuffer(buffer)) {
+                if (Command.isValidBuffer(buffer)) {
                     this.pendingBuffer = null;
-                    final Payload payload = new Payload(buffer);
-                    Log.w("onTXChanged Buffered", payload.toString());
-                    this.glasses.callCallback(payload);
+                    final Command command = new Command(buffer);
+                    Log.w("onTXChanged Buffered", command.toString());
+                    this.glasses.callCallback(command);
                 }
-            } else if (Payload.isValidBuffer(buffer)) {
-                final Payload payload = new Payload(buffer);
-                Log.w("onTXChanged", payload.toString());
-                this.glasses.callCallback(payload);
+            } else if (Command.isValidBuffer(buffer)) {
+                final Command command = new Command(buffer);
+                Log.w("onTXChanged", command.toString());
+                this.glasses.callCallback(command);
             } else {
                 this.addPendingBuffer(buffer);
             }
@@ -201,7 +201,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
                 }
             }
         } else {
-            Log.e("onCharacteristicChanged", Payload.bytesToStr(characteristic.getValue()));
+            Log.e("onCharacteristicChanged", Command.bytesToStr(characteristic.getValue()));
         }
     }
 

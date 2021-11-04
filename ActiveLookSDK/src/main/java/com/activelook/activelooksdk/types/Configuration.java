@@ -14,7 +14,7 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-import com.activelook.activelooksdk.core.Payload;
+import com.activelook.activelooksdk.core.Command;
 
 public class Configuration {
 
@@ -40,7 +40,7 @@ public class Configuration {
     }
 
     public byte[] toBytes() {
-        return new Payload().addData(this.number).addData(this.id).addData(new byte[]{0x00, 0x00, 0x00}).getData();
+        return new Command().addData(this.number).addData(this.id).addData(new byte[]{0x00, 0x00, 0x00}).getData();
     }
 
 }
