@@ -41,7 +41,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
 
     private final BluetoothDevice device;
     private final DeviceInformation deviceInfo;
-    private final ConcurrentLinkedDeque<byte []> pendingWriteCommand;
+    private final ConcurrentLinkedDeque<byte []> pendingWriteRxCharacteristic;
     private final AtomicBoolean flowControlCanSend;
     private final AtomicBoolean isWritingCommand;
     private final BluetoothGatt gatt;
@@ -62,7 +62,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         super();
         this.device = device;
         this.deviceInfo = new DeviceInformation();
-        this.pendingWriteCommand = new ConcurrentLinkedDeque<>();
+        this.pendingWriteRxCharacteristic = new ConcurrentLinkedDeque<>();
         this.flowControlCanSend = new AtomicBoolean(true);
         this.isWritingCommand = new AtomicBoolean(false);
         this.mtu = 20;
@@ -147,7 +147,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         super.onCharacteristicWrite(gatt, characteristic, status);
         if (characteristic.equals(this.getRxCharacteristic())) {
             this.isWritingCommand.set(false);
-            this.unstackWriteCommand();
+            this.unstackWriteRxCharacteristic();
         }
     }
 
@@ -185,7 +185,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
             final byte state = characteristic.getValue()[0];
             if (state == (byte) 0x01) {
                 if (this.flowControlCanSend.compareAndSet(false, true)) {
-                    this.unstackWriteCommand();
+                    this.unstackWriteRxCharacteristic();
                 }
             } else if (state == (byte) 0x02) {
                 this.flowControlCanSend.set(false);
@@ -254,18 +254,18 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         this.onConnected = onConnected;
     }
 
-    void writeCommand(byte[] payload) {
-        final byte [][] chunks = Utils.split(payload, this.mtu);
-        this.pendingWriteCommand.addAll(Arrays.asList(chunks));
-        this.unstackWriteCommand();
+    void writeRxCharacteristic(byte[] bytes) {
+        final byte [][] chunks = Utils.split(bytes, this.mtu);
+        this.pendingWriteRxCharacteristic.addAll(Arrays.asList(chunks));
+        this.unstackWriteRxCharacteristic();
     }
 
-    synchronized void unstackWriteCommand() {
-        if (this.flowControlCanSend.get() && this.pendingWriteCommand.size()>0 && this.isWritingCommand.compareAndSet(false, true)) {
+    synchronized void unstackWriteRxCharacteristic() {
+        if (this.flowControlCanSend.get() && this.pendingWriteRxCharacteristic.size()>0 && this.isWritingCommand.compareAndSet(false, true)) {
             final ConcurrentLinkedQueue<byte []> stack = new ConcurrentLinkedQueue<>();
             int stackSize = 0;
-            while (stackSize < this.mtu && this.pendingWriteCommand.size()>0) {
-                final byte [] buffer = this.pendingWriteCommand.poll();
+            while (stackSize < this.mtu && this.pendingWriteRxCharacteristic.size()>0) {
+                final byte [] buffer = this.pendingWriteRxCharacteristic.poll();
                 stack.add(buffer);
                 stackSize += buffer.length;
             }
@@ -283,7 +283,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
             if (sizeOutOfPayload > 0) {
                 final byte[] remaining = new byte[sizeOutOfPayload];
                 System.arraycopy(buffer, sizeInPayload, remaining, 0, sizeOutOfPayload);
-                this.pendingWriteCommand.addFirst(remaining);
+                this.pendingWriteRxCharacteristic.addFirst(remaining);
             }
             Log.d("unstackWriteCommand", String.format("write rx: %s", Utils.bytesToHexString(buffer)));
             this.getRxCharacteristic().setValue(payload);

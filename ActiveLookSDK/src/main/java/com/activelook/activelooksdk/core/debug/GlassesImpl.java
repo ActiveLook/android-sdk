@@ -100,10 +100,10 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void writeCommand(byte[] payload) {
+    public void writeBytes(byte[] bytes) {
         StringBuilder result = new StringBuilder();
         String prefix = "[ ";
-        for (byte aByte : payload) {
+        for (byte aByte : bytes) {
             result.append(String.format("%s0x%02X", prefix, aByte));
             prefix = ", ";
         }

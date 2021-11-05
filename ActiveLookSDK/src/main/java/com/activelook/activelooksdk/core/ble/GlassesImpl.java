@@ -64,10 +64,10 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void writeCommand(byte[] payload) {
-        Log.w("writeCommand", Command.bytesToStr(payload));
-        Log.w("writeCommand", String.format("payload length: %d", payload.length));
-        this.gattCallbacks.writeCommand(payload);
+    public void writeBytes(byte[] bytes) {
+        Log.w("writeCommand", Command.bytesToStr(bytes));
+        Log.w("writeCommand", String.format("payload length: %d", bytes.length));
+        this.gattCallbacks.writeRxCharacteristic(bytes);
     }
 
     @Override
