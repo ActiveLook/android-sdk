@@ -14,17 +14,20 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-import com.activelook.activelooksdk.core.Command;
+import com.activelook.activelooksdk.core.Payload;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class PageInfo {
 
     private final byte id;
-    private final Command command;
+    private final Payload payload;
 
     public PageInfo(byte id, byte[] layoutIds, short[] xs, byte [] ys) {
         this.id = id;
-        this.command = new Command();
-        this.command.addData(this.id);
+        this.payload = new Payload();
+        this.payload.addData(this.id);
         for(int i = 0; i<layoutIds.length; i++) {
             this.addLayout(layoutIds[i], xs[i], ys[i]);
         }
@@ -36,26 +39,26 @@ public class PageInfo {
 
     public PageInfo(byte [] bytes) {
         this.id = bytes[0];
-        this.command = new Command();
-        this.command.addData(bytes);
+        this.payload = new Payload();
+        this.payload.addData(bytes);
     }
 
     public PageInfo addLayout(byte id, short x, byte y) {
-        this.command.addData(id);
-        this.command.addData(x);
-        this.command.addData(y);
+        this.payload.addData(id);
+        this.payload.addData(x);
+        this.payload.addData(y);
         return this;
     }
 
     public byte [] getPayload() {
-        return this.command.getData();
+        return this.payload.getData();
     }
 
     @Override
     public String toString() {
         return "PageInfo{" +
                 "id=" + id +
-                ", command=" + Command.bytesToStr(this.command.getData()) +
+                ", payload=" + Payload.bytesToStr(this.payload.getData()) +
                 '}';
     }
 

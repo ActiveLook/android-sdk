@@ -14,7 +14,10 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-import com.activelook.activelooksdk.core.Command;
+import com.activelook.activelooksdk.core.Payload;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class LayoutParameters {
 
@@ -31,7 +34,7 @@ public class LayoutParameters {
     private final byte textY;
     private final Rotation rotation;
     private final boolean textOpacity;
-    private Command subCommands;
+    private Payload subCommands;
 
     public LayoutParameters(byte id,
                             short x, byte y, short width, byte height,
@@ -50,7 +53,7 @@ public class LayoutParameters {
         this.textY = textY;
         this.rotation = rotation;
         this.textOpacity = textOpacity;
-        this.subCommands = new Command();
+        this.subCommands = new Payload();
     }
 
     public LayoutParameters(byte[] bytes) {
@@ -132,7 +135,7 @@ public class LayoutParameters {
 
     public byte[] toBytes() {
         final byte[] subBytes = this.subCommands.getData();
-        return new Command()
+        return new Payload()
                 .addData(this.id)
                 .addData((byte) subBytes.length)
                 .addData(this.x)
@@ -142,11 +145,11 @@ public class LayoutParameters {
                 .addData(this.fg)
                 .addData(this.bg)
                 .addData(this.font)
-                .addData(this.textValid)
+                //.addData(this.textValid)
                 .addData(this.textX)
                 .addData(this.textY)
                 .addData(this.rotation.toBytes())
-                .addData(this.textOpacity)
+                //.addData(this.textOpacity)
                 .addData(subBytes).getData();
     }
 

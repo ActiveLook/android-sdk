@@ -28,6 +28,10 @@ public class Image1bppData {
         return this.width;
     }
 
+    public byte[] getBytes() {
+        return this.bytes;
+    }
+
     public int getSize() {
         return this.bytes.length;
     }

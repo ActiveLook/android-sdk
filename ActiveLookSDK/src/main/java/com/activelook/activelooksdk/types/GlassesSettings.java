@@ -16,29 +16,30 @@ package com.activelook.activelooksdk.types;
 
 public class GlassesSettings {
 
-    private int globalXShift;
-    private int globalYShift;
-    private int luma;
+    private short globalXShift;
+    private short globalYShift;
+    private short luma;
     private boolean alsEnable;
     private boolean gestureEnable;
 
-    public GlassesSettings(byte[] payload) {
-        this.globalXShift = payload[0];
-        this.globalYShift = payload[1];
-        this.luma = payload[2];
-        this.alsEnable = payload[3] == 0x01;
-        this.gestureEnable = payload[4] == 0x01;
+    public GlassesSettings(final byte globalXShift, final byte globalYShift, final short luma, final boolean alsEnable,
+                           final boolean gestureEnable) {
+        this.globalXShift = globalXShift;
+        this.globalYShift = globalYShift;
+        this.luma = luma;
+        this.alsEnable = alsEnable;
+        this.gestureEnable = gestureEnable;
     }
 
-    public int getGlobalXShift() {
+    public short getGlobalXShift() {
         return this.globalXShift;
     }
 
-    public int getGlobalYShift() {
+    public short getGlobalYShift() {
         return this.globalYShift;
     }
 
-    public int getLuma() {
+    public short getLuma() {
         return this.luma;
     }
 
@@ -52,13 +53,13 @@ public class GlassesSettings {
 
     @Override
     public String toString() {
-        return "Settings{" +
-                "globalXShift=" + globalXShift +
-                ", globalYShift=" + globalYShift +
-                ", luma=" + luma +
-                ", alsEnable=" + alsEnable +
-                ", gestureEnable=" + gestureEnable +
-                '}';
+        return "GlassesSettings " +
+                "{ globalXShift=" + this.globalXShift +
+                ", globalYShift=" + this.globalYShift +
+                ", luma=" + this.luma +
+                ", alsEnable=" + this.alsEnable +
+                ", gestureEnable=" + this.gestureEnable +
+                " }";
     }
 
 }

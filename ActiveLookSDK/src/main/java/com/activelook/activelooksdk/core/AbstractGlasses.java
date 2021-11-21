@@ -212,8 +212,9 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void power(boolean on) {
-        this.writeCommand(new Command(ID_power).addData(on));
+    public void power(final boolean on) {
+        final CommandData data = CommandData.fromBoolean(on);
+        this.writeCommand(new Command(ID_power, data));
     }
 
     @Override
@@ -222,8 +223,9 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void grey(byte level) {
-        this.writeCommand(new Command(ID_grey).addData(level));
+    public void grey(final byte level) {
+        final CommandData data = CommandData.fromGreyLevel(level);
+        this.writeCommand(new Command(ID_grey, data));
     }
 
     @Override
@@ -232,137 +234,170 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void demo(DemoPattern pattern) {
-        this.writeCommand(new Command(ID_demo).addData(pattern.toBytes()));
+    public void demo(final DemoPattern pattern) {
+        final CommandData data = CommandData.fromDemoPattern(pattern);
+        this.writeCommand(new Command(ID_demo, data));
     }
 
     @Override
-    public void test(DemoPattern pattern) {
-        this.writeCommand(new Command(ID_test).addData(pattern.toBytes()));
+    public void test(final DemoPattern pattern) {
+        final CommandData data = CommandData.fromDemoPattern(pattern);
+        this.writeCommand(new Command(ID_test, data));
     }
 
     @Override
-    public void battery(Consumer<Integer> onResult) {
-        this.writeCommand(new Command(ID_battery), bytes -> onResult.accept((int) bytes[0]));
+    public void battery(final Consumer<Integer> onResult) {
+        this.writeCommand(
+                new Command(ID_battery),
+                bytes -> onResult.accept(CommandData.toBatteryLevel(bytes))
+        );
     }
 
     @Override
-    public void vers(Consumer<GlassesVersion> onResult) {
+    public void vers(final Consumer<GlassesVersion> onResult) {
         this.writeCommand(
                 new Command(ID_vers),
-                bytes -> onResult.accept(new GlassesVersion(bytes))
+                bytes -> onResult.accept(CommandData.toGlassesVersion(bytes))
         );
     }
 
     @Override
-    public void led(LedState state) {
-        this.writeCommand(new Command(ID_led).addData(state.toBytes()));
+    public void led(final LedState state) {
+        final CommandData data = CommandData.fromLedState(state);
+        this.writeCommand(new Command(ID_led, data));
     }
 
     @Override
-    public void shift(short x, short y) {
-        this.writeCommand(new Command(ID_shift).addData(x).addData(y));
+    public void shift(final short x, final short y) {
+        final CommandData data = new CommandData().addInt16(x, y);
+        this.writeCommand(new Command(ID_shift, data));
     }
 
     @Override
-    public void settings(Consumer<GlassesSettings> onResult) {
-        this.writeCommand(new Command(ID_settings), bytes -> onResult.accept(new GlassesSettings(bytes)));
+    public void settings(final Consumer<GlassesSettings> onResult) {
+        this.writeCommand(
+                new Command(ID_settings),
+                bytes -> onResult.accept(CommandData.toGlassesSettings(bytes))
+        );
     }
 
     @Override
-    public void luma(byte value) {
-        this.writeCommand(new Command(ID_luma).addData(value));
+    public void luma(final byte value) {
+        final CommandData data = CommandData.fromLuma(value);
+        this.writeCommand(new Command(ID_luma, data));
     }
 
     @Override
-    public void sensor(boolean on) {
-        this.writeCommand(new Command(ID_sensor).addData(on));
+    public void sensor(final boolean on) {
+        final CommandData data = CommandData.fromBoolean(on);
+        this.writeCommand(new Command(ID_sensor, data));
     }
 
     @Override
-    public void gesture(boolean on) {
-        this.writeCommand(new Command(ID_gesture).addData(on));
+    public void gesture(final boolean on) {
+        final CommandData data = CommandData.fromBoolean(on);
+        this.writeCommand(new Command(ID_gesture, data));
     }
 
     @Override
-    public void als(boolean on) {
-        this.writeCommand(new Command(ID_als).addData(on));
+    public void als(final boolean on) {
+        final CommandData data = CommandData.fromBoolean(on);
+        this.writeCommand(new Command(ID_als, data));
     }
 
     @Override
-    public void color(byte value) {
-        this.writeCommand(new Command(ID_color).addData(value));
+    public void color(final byte value) {
+        final CommandData data = CommandData.fromGreyLevel(value);
+        this.writeCommand(new Command(ID_color, data));
     }
 
     @Override
-    public void point(short x, short y) {
-        this.writeCommand(new Command(ID_point).addData(x).addData(y));
+    public void point(final short x, final short y) {
+        final CommandData data = new CommandData().addInt16(x, y);
+        this.writeCommand(new Command(ID_point, data));
     }
 
     @Override
-    public void line(short x1, short y1, short x2, short y2) {
-        this.writeCommand(new Command(ID_line).addData(x1).addData(y1).addData(x2).addData(y2));
+    public void line(final short x1, final short y1, final short x2, final short y2) {
+        final CommandData data = new CommandData().addInt16(x1, y1, x2, y2);
+        this.writeCommand(new Command(ID_line, data));
     }
 
     @Override
-    public void rect(short x1, short y1, short x2, short y2) {
-        this.writeCommand(new Command(ID_rect).addData(x1).addData(y1).addData(x2).addData(y2));
+    public void rect(final short x1, final short y1, final short x2, final short y2) {
+        final CommandData data = new CommandData().addInt16(x1, y1, x2, y2);
+        this.writeCommand(new Command(ID_rect, data));
     }
 
     @Override
-    public void rectf(short x1, short y1, short x2, short y2) {
-        this.writeCommand(new Command(ID_rectf).addData(x1).addData(y1).addData(x2).addData(y2));
+    public void rectf(final short x1, final short y1, final short x2, final short y2) {
+        final CommandData data = new CommandData().addInt16(x1, y1, x2, y2);
+        this.writeCommand(new Command(ID_rectf, data));
     }
 
     @Override
-    public void circ(short x, short y, byte r) {
-        this.writeCommand(new Command(ID_circ).addData(x).addData(y).addData(r));
+    public void circ(final short x, final short y, final byte r) {
+        final CommandData data = new CommandData().addInt16(x, y).addUInt8(r);
+        this.writeCommand(new Command(ID_circ, data));
     }
 
     @Override
-    public void circf(short x, short y, byte r) {
-        this.writeCommand(new Command(ID_circf).addData(x).addData(y).addData(r));
+    public void circf(final short x, final short y, final byte r) {
+        final CommandData data = new CommandData().addInt16(x, y).addUInt8(r);
+        this.writeCommand(new Command(ID_circf, data));
     }
 
     @Override
-    public void txt(short x, short y, Rotation r, byte f, byte c, String s) {
-        this.writeCommand(new Command(ID_txt).addData(x).addData(y).addData(r.toBytes()).addData(f).addData(c).addData(s,
-                true));
+    public void txt(final short x, final short y, final Rotation r, final byte f, final byte c, final String s) {
+        final CommandData data = new CommandData()
+                .addInt16(x, y)
+                .add(CommandData.fromRotation(r))
+                .addUInt8(f, c)
+                .addNulTerminatedStrings(s);
+        this.writeCommand(new Command(ID_txt, data));
     }
 
     @Override
-    public void polyline(short[] points) {
-        this.writeCommand(new Command(ID_polyline).addData(points));
+    public void polyline(final short[] points) {
+        final CommandData data = new CommandData().addInt16(points);
+        this.writeCommand(new Command(ID_polyline, data));
     }
 
     @Override
-    public void imgList(Consumer<List<ImageInfo>> onResult) {
+    public void imgList(final Consumer<List<ImageInfo>> onResult) {
         this.writeCommand(
                 new Command(ID_imgList),
-                bytes -> onResult.accept(ImageInfo.toList(bytes))
+                bytes -> onResult.accept(CommandData.toImageInfoList(bytes))
         );
     }
 
-    @Override
-    public void imgSave(byte id, ImageData data) {
-        this.writeCommand(new Command(ID_imgSave)
-                .addData(id)
-                .addData(data.getSize())
-                .addData(data.getWidth())
-        );
-        for (byte[] chunk : data.getChunks(240)) {
-            this.writeCommand(new Command(ID_imgSave).addData(chunk));
+    // TODO @Override
+    public void imgSave(final byte id, final int width, final byte[] bytes) {
+        final CommandData data = new CommandData()
+                .addUInt8(id)
+                .addUInt32(bytes.length)
+                .addUInt16(width);
+        this.writeCommand(new Command(ID_imgSave, data));
+        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
+            this.writeCommand(new Command(ID_imgSave, chunkData));
         }
     }
 
     @Override
-    public void imgDisplay(byte id, short x, short y) {
-        this.writeCommand(new Command(ID_imgDisplay).addData(id).addData(x).addData(y));
+    public void imgSave(final byte id, final ImageData imgData) {
+        this.imgSave(id, imgData.getWidth(), imgData.getBytes());
     }
 
     @Override
-    public void imgDelete(byte id) {
-        this.writeCommand(new Command(ID_imgDelete).addData(id));
+    public void imgDisplay(final byte id, final short x, final short y) {
+        final CommandData data = new CommandData().addUInt8(id).addInt16(x, y);
+        this.writeCommand(new Command(ID_imgDisplay, data));
+    }
+
+    @Override
+    public void imgDelete(final byte id) {
+        final CommandData data = new CommandData().addUInt8(id);
+        this.writeCommand(new Command(ID_imgDelete, data));
     }
 
     @Override
@@ -370,60 +405,81 @@ public abstract class AbstractGlasses implements Glasses {
         this.imgDelete((byte) 0xFF);
     }
 
-    @Override
-    public void imgStream(Image1bppData data, short x, short y) {
-        this.writeCommand(new Command(ID_imgStream)
-                .addData(data.getSize())
-                .addData(data.getWidth())
-                .addData(x)
-                .addData(y)
-        );
-        for (byte[] chunk : data.getChunks(240)) {
-            this.writeCommand(new Command(ID_imgStream).addData(chunk));
+    // TODO @Override
+    public void imgStream(final short x, final short y, final int width, final byte[] bytes) {
+        final CommandData data = new CommandData()
+                .addUInt32(bytes.length)
+                .addUInt16(width)
+                .addInt16(x, y);
+        this.writeCommand(new Command(ID_imgStream, data));
+        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
+            this.writeCommand(new Command(ID_imgStream, chunkData));
         }
     }
 
     @Override
-    public void imgSave1bpp(Image1bppData data) {
-        this.writeCommand(new Command(ID_imgSave1bpp)
-                .addData(data.getSize())
-                .addData(data.getWidth())
-        );
-        for (byte[] chunk : data.getChunks(240)) {
-            this.writeCommand(new Command(ID_imgSave1bpp).addData(chunk));
+    public void imgStream(final Image1bppData imgData, final short x, final short y) {
+        this.imgStream(x, y, imgData.getWidth(), imgData.getBytes());
+    }
+
+    // TODO @Override
+    public void imgSave1bpp(final int width, final byte[] bytes) {
+        final CommandData data = new CommandData()
+                .addUInt32(bytes.length)
+                .addUInt16(width);
+        this.writeCommand(new Command(ID_imgSave1bpp, data));
+        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
+            this.writeCommand(new Command(ID_imgSave1bpp, chunkData));
         }
     }
 
     @Override
-    public void fontList(Consumer<List<FontInfo>> onResult) {
-        this.writeCommand(new Command(ID_fontList), bytes -> onResult.accept(FontInfo.toList(bytes)));
+    public void imgSave1bpp(final Image1bppData imgData) {
+        this.imgSave1bpp(imgData.getWidth(), imgData.getBytes());
     }
 
     @Override
-    public void fontSave(byte id, FontData data) {
-        this.writeCommand(new Command(ID_fontSave)
-                .addData(id)
-                .addData(data.getFontSize())
+    public void fontList(final Consumer<List<FontInfo>> onResult) {
+        this.writeCommand(
+                new Command(ID_fontList),
+                bytes -> onResult.accept(CommandData.toFontInfoList(bytes))
         );
-        for (byte[] chunk : data.getChunks(240)) {
-            this.writeCommand(new Command(ID_fontSave).addData(chunk));
+    }
+
+    // TODO @Override
+    public void fontSave(final byte id, final byte[] bytes) {
+        final CommandData data = new CommandData()
+                .addUInt8(id)
+                .addUInt16(bytes.length);
+        this.writeCommand(new Command(ID_fontSave, data));
+        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
+            this.writeCommand(new Command(ID_fontSave, chunkData));
         }
     }
 
     @Override
-    public void fontSelect(byte id) {
-        this.writeCommand(new Command(ID_fontSelect).addData(id));
+    public void fontSave(final byte id, final FontData fntData) {
+        this.fontSave(id, fntData.getBytes());
     }
 
     @Override
-    public void fontDelete(byte id) {
-        this.writeCommand(new Command(ID_fontDelete).addData(id));
+    public void fontSelect(final byte id) {
+        final CommandData data = new CommandData().addUInt8(id);
+        this.writeCommand(new Command(ID_fontSelect, data));
+    }
+
+    @Override
+    public void fontDelete(final byte id) {
+        final CommandData data = new CommandData().addUInt8(id);
+        this.writeCommand(new Command(ID_fontDelete, data));
     }
 
     @Override
     public void fontDeleteAll() {
         this.fontDelete((byte) 0xFF);
     }
+
+    // TODO !!!! HERE
 
     @Override
     public void layoutSave(LayoutParameters layout) {
@@ -489,26 +545,28 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void gaugeSave(byte id, short x, short y, char r, char rin, byte start, byte end, boolean clockwise) {
-        this.writeCommand(new Command(ID_gaugeSave)
-                .addData(id)
-                .addData(x).addData(y)
-                .addData(r).addData(rin)
-                .addData(start).addData(end)
-                .addData(clockwise));
+        // TODO
+        // this.writeCommand(new Command(ID_gaugeSave)
+        //         .addData(id)
+        //         .addData(x).addData(y)
+        //         .addData(r).addData(rin)
+        //         .addData(start).addData(end)
+        //         .addData(clockwise));
     }
 
     @Override
     public void gaugeSave(byte id, GaugeInfo gaugeInfo) {
-        this.gaugeSave(
-            id,
-            gaugeInfo.getX(),
-            gaugeInfo.getY(),
-            gaugeInfo.getR(),
-            gaugeInfo.getRin(),
-            gaugeInfo.getStart(),
-            gaugeInfo.getEnd(),
-            gaugeInfo.isClockwise()
-        );
+        // TODO
+        // this.gaugeSave(
+        //     id,
+        //     gaugeInfo.getX(),
+        //     gaugeInfo.getY(),
+        //     gaugeInfo.getR(),
+        //     gaugeInfo.getRin(),
+        //     gaugeInfo.getStart(),
+        //     gaugeInfo.getEnd(),
+        //     gaugeInfo.isClockwise()
+        // );
     }
 
     @Override

@@ -17,22 +17,29 @@ package com.activelook.activelooksdk.types;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FontInfo {
+public final class FontInfo {
 
-    private final byte id;
-    private final byte height;
+    private final int id;
+    private final int height;
 
-    public FontInfo(byte id, byte height) {
+    public FontInfo(int id, int height) {
         this.id = id;
         this.height = height;
     }
 
+    public int getId() {
+        return this.id;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
     public static final List<FontInfo> toList(byte[] bytes) {
         final ArrayList<FontInfo> result = new ArrayList<>();
-        int offset = 0;
-        while (offset < bytes.length) {
-            result.add(new FontInfo(bytes[offset], bytes[offset + 1]));
-            offset += 2;
+        final PayloadDecoder rp = new PayloadDecoder(bytes);
+        while (rp.hasNext()) {
+            result.add(new FontInfo(rp.readUInt(1), rp.readUInt(1)));
         }
         return result;
     }
