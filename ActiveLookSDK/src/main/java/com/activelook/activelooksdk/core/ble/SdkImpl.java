@@ -27,17 +27,15 @@ import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Sdk;
 import com.activelook.activelooksdk.exceptions.UnsupportedBleException;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.HashMap;
 
 class SdkImpl implements Sdk {
 
-    private final @NotNull Context context;
-    private final @NotNull BluetoothManager manager;
-    private final @NotNull BluetoothAdapter adapter;
-    private final @NotNull BluetoothLeScanner scanner;
-    private final @NotNull HashMap<String, GlassesImpl> connectedGlasses = new HashMap<>();
+    private final Context context;
+    private final BluetoothManager manager;
+    private final BluetoothAdapter adapter;
+    private final BluetoothLeScanner scanner;
+    private final HashMap<String, GlassesImpl> connectedGlasses = new HashMap<>();
     private ScanCallback scanCallback;
 
     SdkImpl(Context context) throws UnsupportedBleException {
@@ -50,7 +48,7 @@ class SdkImpl implements Sdk {
         this.scanner = this.adapter.getBluetoothLeScanner();
     }
 
-    @NotNull Context getContext() {
+    Context getContext() {
         return this.context;
     }
 
