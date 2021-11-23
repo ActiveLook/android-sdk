@@ -12,7 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyActiveLookApplication">
-        <activity android:name=".MainActivity2"></activity>
+        <activity android:name=".MainActivity2" />
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -35,16 +35,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".GeneralCommands"></activity>
-        <activity android:name=".DisplayLuminanceCommands"></activity>
-        <activity android:name=".OpticalSensorCommands"></activity>
-        <activity android:name=".GraphicsCommands"></activity>
-        <activity android:name=".BitmapsCommands"></activity>
-        <activity android:name=".FontCommands"></activity>
-        <activity android:name=".LayoutsCommands"></activity>
-        <activity android:name=".GaugeCommands"></activity>
-        <activity android:name=".PageCommands"></activity>
-        <activity android:name=".ConfigurationCommands"></activity>
+        <activity android:name=".GeneralCommands" />
+        <activity android:name=".DisplayLuminanceCommands" />
+        <activity android:name=".OpticalSensorCommands" />
+        <activity android:name=".GraphicsCommands" />
+        <activity android:name=".BitmapsCommands" />
+        <activity android:name=".FontCommands" />
+        <activity android:name=".LayoutsCommands" />
+        <activity android:name=".GaugeCommands" />
+        <activity android:name=".PageCommands" />
+        <activity android:name=".ConfigurationCommands" />
     </application>
     <uses-feature
         android:name="android.hardware.bluetooth_le"
