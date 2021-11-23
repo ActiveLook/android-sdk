@@ -16,13 +16,13 @@ package com.activelook.activelooksdk.types;
 
 public final class GlassesVersion {
 
-    private short major;
-    private short minor;
-    private short patch;
-    private char extra;
-    private short year;
-    private short week;
-    private int serial;
+    private final short major;
+    private final short minor;
+    private final short patch;
+    private final char extra;
+    private final short year;
+    private final short week;
+    private final int serial;
 
     public GlassesVersion(final short major, final short minor, final short patch, final char extra, final short year,
                           final short week, final int serial) {

@@ -16,7 +16,7 @@ package com.activelook.activelooksdk.core;
 
 public class QueryId {
 
-    private byte value;
+    private final byte value;
 
     public QueryId(byte value) {
         this.value = value;

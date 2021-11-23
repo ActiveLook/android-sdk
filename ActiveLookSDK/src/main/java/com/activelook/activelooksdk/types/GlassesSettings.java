@@ -16,11 +16,11 @@ package com.activelook.activelooksdk.types;
 
 public class GlassesSettings {
 
-    private short globalXShift;
-    private short globalYShift;
-    private short luma;
-    private boolean alsEnable;
-    private boolean gestureEnable;
+    private final short globalXShift;
+    private final short globalYShift;
+    private final short luma;
+    private final boolean alsEnable;
+    private final boolean gestureEnable;
 
     public GlassesSettings(final byte globalXShift, final byte globalYShift, final short luma, final boolean alsEnable,
                            final boolean gestureEnable) {
