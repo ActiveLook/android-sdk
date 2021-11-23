@@ -44,4 +44,11 @@ public final class FontInfo {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "FontInfo{" +
+                "id=" + id +
+                ", height=" + height +
+                '}';
+    }
 }

@@ -26,6 +26,22 @@ public class ConverterUnitTest {
     }
 
     @Test
+    public void automaticCast() {
+        assertEquals((byte) 0x80, CommandData.UInt8.asByte((byte) 0x80));
+        assertEquals((byte) 0x80, CommandData.UInt8.asByte((short) 0x0080));
+        assertEquals((byte) 0x80, CommandData.UInt8.asByte((int) 0x00000080));
+        assertEquals((byte) 0x80, CommandData.UInt8.asByte((long) 0x0000000000000080l));
+        assertEquals((byte) 0x80, CommandData.UInt8.asByte((byte) 0x80));
+        assertEquals((byte) 0x80, CommandData.UInt8.asByte((short) 0xFF80));
+        assertEquals((byte) 0x80, CommandData.UInt8.asByte((int) 0xFFFFFF80));
+        assertEquals((byte) 0x80, CommandData.UInt8.asByte((long) 0xFFFFFFFFFFFFFF80l));
+        assertArrayEquals(
+                new byte [] { (byte) 0xFF, (byte) 0xFF },
+                CommandData.UInt16.asBytes((short) 0xFFFF)
+        );
+    }
+
+    @Test
     public void byteCast() {
         for (short v = Short.MIN_VALUE; v < Short.MAX_VALUE; v++) {
             assertTrue((byte) v == (byte) (v & 0xFF));

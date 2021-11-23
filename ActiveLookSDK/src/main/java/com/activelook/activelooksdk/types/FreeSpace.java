@@ -19,6 +19,11 @@ public final class FreeSpace {
     private final long totalSize;
     private final long freeSpace;
 
+    public FreeSpace(final long totalSize, final long freeSpace) {
+        this.totalSize = totalSize;
+        this.freeSpace = freeSpace;
+    }
+
     public FreeSpace(byte[] bytes) {
         final PayloadDecoder rp = new PayloadDecoder(bytes);
         this.totalSize = rp.readLong(4);

@@ -489,19 +489,19 @@ public interface Glasses extends Parcelable {
      *
      * @param onResult Callback on to call on returned integer value.
      */
-    void pixelCount(Consumer<Integer> onResult);
+    void pixelCount(Consumer<Long> onResult);
     /**
      * Get total number of charging cycle.
      *
      * @param onResult Callback on to call on returned integer value.
      */
-    void getChargingCounter(Consumer<Integer> onResult);
+    void getChargingCounter(Consumer<Long> onResult);
     /**
      * Get total number of charging minute.
      *
      * @param onResult Callback on to call on returned integer value.
      */
-    void getChargingTime(Consumer<Integer> onResult);
+    void getChargingTime(Consumer<Long> onResult);
     /**
      * Reset charging counter and charging time value in Param.
      */

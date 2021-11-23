@@ -82,7 +82,7 @@ public abstract class AbstractGlasses implements Glasses {
     /*
      * Images commands ids
      */
-    static final byte ID_imgList = (byte) 0x40;
+    static final byte ID_imgList = (byte) 0x47;
     static final byte ID_imgSave = (byte) 0x41;
     static final byte ID_imgDisplay = (byte) 0x42;
     static final byte ID_imgDelete = (byte) 0x43;
@@ -479,16 +479,16 @@ public abstract class AbstractGlasses implements Glasses {
         this.fontDelete((byte) 0xFF);
     }
 
-    // TODO !!!! HERE
-
     @Override
-    public void layoutSave(LayoutParameters layout) {
-        this.writeCommand(new Command(ID_layoutSave).addData(layout.toBytes()));
+    public void layoutSave(final LayoutParameters layout) {
+        final CommandData data = CommandData.fromLayoutParameters(layout);
+        this.writeCommand(new Command(ID_layoutSave, data));
     }
 
     @Override
-    public void layoutDelete(byte id) {
-        this.writeCommand(new Command(ID_layoutDelete).addData(id));
+    public void layoutDelete(final byte id) {
+        final CommandData data = new CommandData().addUInt8(id);
+        this.writeCommand(new Command(ID_layoutDelete, data));
     }
 
     @Override
@@ -497,23 +497,25 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void layoutDisplay(byte id, String text) {
-        this.writeCommand(new Command(ID_layoutDisplay).addData(id).addData(text, true));
+    public void layoutDisplay(final byte id, final String text) {
+        final CommandData data = new CommandData().addUInt8(id).addNulTerminatedStrings(text);
+        this.writeCommand(new Command(ID_layoutDisplay, data));
     }
 
     @Override
-    public void layoutClear(byte id) {
-        this.writeCommand(new Command(ID_layoutClear).addData(id));
+    public void layoutClear(final byte id) {
+        final CommandData data = new CommandData().addUInt8(id);
+        this.writeCommand(new Command(ID_layoutClear, data));
     }
 
     @Override
-    public void layoutList(Consumer<List<Integer>> onResult) {
+    public void layoutList(final Consumer<List<Integer>> onResult) {
         this.writeCommand(
             new Command(ID_layoutList),
             bytes -> {
                 final List<Integer> r = new ArrayList<>();
                 for (byte b: bytes) {
-                    r.add(b & 0x00FF);
+                    r.add((int) CommandData.UInt8.asShort(b));
                 }
                 onResult.accept(r);
             }
@@ -521,57 +523,56 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void layoutPosition(byte id, short x, byte y) {
-        this.writeCommand(new Command(ID_layoutPosition).addData(id).addData(x).addData(y));
+    public void layoutPosition(final byte id, final short x, final byte y) {
+        final CommandData data = new CommandData().addUInt8(id).addUInt16(x).addUInt8(y);
+        this.writeCommand(new Command(ID_layoutPosition, data));
     }
 
     @Override
-    public void layoutDisplayExtended(byte id, short x, byte y, String text) {
-        this.writeCommand(new Command(ID_layoutDisplayExtended).addData(id).addData(x).addData(y).addData(text, true));
+    public void layoutDisplayExtended(final byte id, final short x, final byte y, final String text) {
+        final CommandData data = new CommandData().addUInt8(id).addUInt16(x).addUInt8(y).addNulTerminatedStrings(text);
+        this.writeCommand(new Command(ID_layoutDisplayExtended, data));
     }
 
     @Override
-    public void layoutGet(byte id, Consumer<LayoutParameters> onResult) {
+    public void layoutGet(final byte id, final Consumer<LayoutParameters> onResult) {
+        final CommandData data = new CommandData().addUInt8(id);
         this.writeCommand(
-                new Command(ID_layoutList).addData(id),
-                bytes -> onResult.accept(new LayoutParameters(bytes))
+                new Command(ID_layoutGet, data),
+                bytes -> onResult.accept(CommandData.toLayoutParameters(id, bytes))
         );
     }
 
     @Override
-    public void gaugeDisplay(byte id, byte value) {
-        this.writeCommand(new Command(ID_gaugeDisplay).addData(id).addData(value));
+    public void gaugeDisplay(final byte id, final byte value) {
+        final CommandData data = new CommandData().addUInt8(id).addUInt8(value);
+        this.writeCommand(new Command(ID_gaugeDisplay, data));
     }
 
     @Override
-    public void gaugeSave(byte id, short x, short y, char r, char rin, byte start, byte end, boolean clockwise) {
-        // TODO
-        // this.writeCommand(new Command(ID_gaugeSave)
-        //         .addData(id)
-        //         .addData(x).addData(y)
-        //         .addData(r).addData(rin)
-        //         .addData(start).addData(end)
-        //         .addData(clockwise));
+    public void gaugeSave(final byte id,
+                          final short x, final short y, final char r, final char rin,
+                          final byte start, final byte end, final boolean clockwise) {
+        final CommandData data = new CommandData().addUInt8(id)
+                .addInt16(x, y).addUInt16(r, rin).addUInt8(start, end)
+                .add(CommandData.fromBoolean(clockwise));
+        this.writeCommand(new Command(ID_gaugeSave, data));
     }
 
     @Override
-    public void gaugeSave(byte id, GaugeInfo gaugeInfo) {
-        // TODO
-        // this.gaugeSave(
-        //     id,
-        //     gaugeInfo.getX(),
-        //     gaugeInfo.getY(),
-        //     gaugeInfo.getR(),
-        //     gaugeInfo.getRin(),
-        //     gaugeInfo.getStart(),
-        //     gaugeInfo.getEnd(),
-        //     gaugeInfo.isClockwise()
-        // );
+    public void gaugeSave(final byte id, final GaugeInfo gaugeInfo) {
+        final CommandData data = new CommandData().addUInt8(id)
+                .addInt16(gaugeInfo.getX(), gaugeInfo.getY())
+                .addUInt16(gaugeInfo.getR(), gaugeInfo.getRin())
+                .addUInt8(gaugeInfo.getStart(), gaugeInfo.getEnd())
+                .add(CommandData.fromBoolean(gaugeInfo.isClockwise()));
+        this.writeCommand(new Command(ID_gaugeSave, data));
     }
 
     @Override
-    public void gaugeDelete(byte id) {
-        this.writeCommand(new Command(ID_gaugeDelete).addData(id));
+    public void gaugeDelete(final byte id) {
+        final CommandData data = new CommandData().addUInt8(id);
+        this.writeCommand(new Command(ID_gaugeDelete, data));
     }
 
     @Override
@@ -580,13 +581,13 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void gaugeList(Consumer<List<Integer>> onResult) {
+    public void gaugeList(final Consumer<List<Integer>> onResult) {
         this.writeCommand(
                 new Command(ID_gaugeList),
                 bytes -> {
                     final List<Integer> r = new ArrayList<>();
                     for (byte b: bytes) {
-                        r.add(b & 0x00FF);
+                        r.add((int) CommandData.UInt8.asShort(b));
                     }
                     onResult.accept(r);
                 }
@@ -594,13 +595,15 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void gaugeGet(byte id, Consumer<GaugeInfo> onResult) {
+    public void gaugeGet(final byte id, final Consumer<GaugeInfo> onResult) {
+        final CommandData data = new CommandData().addUInt8(id);
         this.writeCommand(
-                new Command(ID_gaugeGet).addData(id),
-                bytes -> onResult.accept(new GaugeInfo(bytes))
+                new Command(ID_gaugeGet, data),
+                bytes -> onResult.accept(CommandData.toGaugeInfo(bytes))
         );
     }
 
+    // TODO !!!! HERE
     @Override
     public void pageSave(byte id, byte[] layoutIds, short[] xs, byte [] ys) {
         this.pageSave(new PageInfo(id, layoutIds, xs, ys));
@@ -654,18 +657,27 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void pixelCount(Consumer<Integer> onResult) {
-        this.writeCommand(new Command(ID_pixelCount), bytes -> onResult.accept((int) bytes[0]));
+    public void pixelCount(final Consumer<Long> onResult) {
+        this.writeCommand(
+                new Command(ID_pixelCount),
+                bytes -> onResult.accept(CommandData.UInt32.asLong(bytes))
+        );
     }
 
     @Override
-    public void getChargingCounter(Consumer<Integer> onResult) {
-        this.writeCommand(new Command(ID_getChargingCounter), bytes -> onResult.accept((int) bytes[0]));
+    public void getChargingCounter(final Consumer<Long> onResult) {
+        this.writeCommand(
+                new Command(ID_getChargingCounter),
+                bytes -> onResult.accept(CommandData.UInt32.asLong(bytes))
+        );
     }
 
     @Override
-    public void getChargingTime(Consumer<Integer> onResult) {
-        this.writeCommand(new Command(ID_getChargingTime), bytes -> onResult.accept((int) bytes[0]));
+    public void getChargingTime(final Consumer<Long> onResult) {
+        this.writeCommand(
+                new Command(ID_getChargingTime),
+                bytes -> onResult.accept(CommandData.UInt32.asLong(bytes))
+        );
     }
 
     @Override
@@ -674,59 +686,63 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void cfgWrite(String name, int version, int password) {
-        this.writeCommand(new Command(ID_cfgWrite)
-                .addData(name, true)
-                .addData(version)
-                .addData(password)
-        );
+    public void cfgWrite(final String name, final int version, final int password) {
+        final CommandData data = new CommandData().addNulTerminatedStrings(name).addUInt32(version, password);
+        this.writeCommand(new Command(ID_cfgWrite, data));
     }
+
     @Override
-    public void cfgRead(String name, Consumer<ConfigurationElementsInfo> onResult) {
+    public void cfgRead(final String name, final Consumer<ConfigurationElementsInfo> onResult) {
+        final CommandData data = new CommandData().addNulTerminatedStrings(name);
         this.writeCommand(
-                new Command(ID_cfgRead).addData(name, true),
-                bytes -> onResult.accept(new ConfigurationElementsInfo(bytes))
+                new Command(ID_cfgRead, data),
+                bytes -> onResult.accept(CommandData.toConfigurationElementsInfo(bytes))
         );
     }
+
     @Override
-    public void cfgSet(String name) {
-        this.writeCommand(new Command(ID_cfgSet).addData(name, true));
+    public void cfgSet(final String name) {
+        final CommandData data = new CommandData().addNulTerminatedStrings(name);
+        this.writeCommand(new Command(ID_cfgSet, data));
     }
+
     @Override
-    public void cfgList(Consumer<List<ConfigurationDescription>> onResult) {
+    public void cfgList(final Consumer<List<ConfigurationDescription>> onResult) {
         this.writeCommand(
                 new Command(ID_cfgList),
-                bytes -> onResult.accept(ConfigurationDescription.toList(bytes))
+                bytes -> onResult.accept(CommandData.toConfigurationDescriptionList(bytes))
         );
     }
+
     @Override
-    public void cfgRename(String oldName, String newName, int password) {
-        this.writeCommand(new Command(ID_cfgRename)
-                .addData(oldName, true)
-                .addData(newName, true)
-                .addData(password)
-        );
+    public void cfgRename(final String oldName, final String newName, final int password) {
+        final CommandData data = new CommandData().addNulTerminatedStrings(oldName, newName).addUInt32(password);
+        this.writeCommand(new Command(ID_cfgRename, data));
     }
+
     @Override
-    public void cfgDelete(String name) {
-        this.writeCommand(new Command(ID_cfgDelete).addData(name, true));
+    public void cfgDelete(final String name) {
+        final CommandData data = new CommandData().addNulTerminatedStrings(name);
+        this.writeCommand(new Command(ID_cfgDelete, data));
     }
+
     @Override
     public void cfgDeleteLessUsed() {
         this.writeCommand(new Command(ID_cfgDeleteLessUsed));
     }
+
     @Override
-    public void cfgFreeSpace(Consumer<FreeSpace> onResult) {
+    public void cfgFreeSpace(final Consumer<FreeSpace> onResult) {
         this.writeCommand(
                 new Command(ID_cfgFreeSpace),
-                bytes -> onResult.accept(new FreeSpace(bytes))
+                bytes -> onResult.accept(CommandData.toFreeSpace(bytes))
         );
     }
     @Override
-    public void cfgGetNb(Consumer<Integer> onResult) {
+    public void cfgGetNb(final Consumer<Integer> onResult) {
         this.writeCommand(
-                new Command(ID_cfgGetNb),
-                bytes -> onResult.accept((int) bytes[0])
+                new Command(ID_getChargingTime),
+                bytes -> onResult.accept((int) CommandData.UInt8.asShort(bytes[0]))
         );
     }
 

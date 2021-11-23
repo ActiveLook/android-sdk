@@ -14,11 +14,16 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.core;
 
+import com.activelook.activelooksdk.types.ConfigurationDescription;
+import com.activelook.activelooksdk.types.ConfigurationElementsInfo;
 import com.activelook.activelooksdk.types.DemoPattern;
 import com.activelook.activelooksdk.types.FontInfo;
+import com.activelook.activelooksdk.types.FreeSpace;
+import com.activelook.activelooksdk.types.GaugeInfo;
 import com.activelook.activelooksdk.types.GlassesSettings;
 import com.activelook.activelooksdk.types.GlassesVersion;
 import com.activelook.activelooksdk.types.ImageInfo;
+import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
 
@@ -144,6 +149,14 @@ public final class CommandData {
             offset += currentSize;
         }
         return chunks;
+    }
+
+    public String toHexString() {
+        StringBuilder result = new StringBuilder();
+        for (byte b : this.bytes) {
+            result.append(String.format("%02X", b));
+        }
+        return result.toString();
     }
 
     public CommandData add(final byte ...bs) {
@@ -282,6 +295,10 @@ public final class CommandData {
         }
     }
 
+    public static CommandData fromLayoutParameters(final LayoutParameters layoutParameters) {
+        return new CommandData(layoutParameters.toBytes());
+    }
+
     // To
     public static int toBatteryLevel(final byte [] bytes) {
         return UInt8.asShort(bytes[0]);
@@ -334,6 +351,67 @@ public final class CommandData {
             ));
         }
         return result;
+    }
+
+    public static LayoutParameters toLayoutParameters(final byte id, final byte [] bytes) {
+        return new LayoutParameters(id, bytes);
+    }
+
+    public static GaugeInfo toGaugeInfo(final byte [] bytes) {
+        int i = 0;
+        return new GaugeInfo(
+                CommandData.Int16.asShort(bytes[i++], bytes[i++]),
+                CommandData.Int16.asShort(bytes[i++], bytes[i++]),
+                CommandData.UInt16.asInt(bytes[i++], bytes[i++]),
+                CommandData.UInt16.asInt(bytes[i++], bytes[i++]),
+                CommandData.UInt8.asShort(bytes[i++]),
+                CommandData.UInt8.asShort(bytes[i++]),
+                bytes[i++] != 0
+        );
+    }
+
+    public static ConfigurationElementsInfo toConfigurationElementsInfo(final byte[] bytes) {
+        int i = 0;
+        return new ConfigurationElementsInfo(
+                CommandData.UInt32.asLong(bytes[i++], bytes[i++], bytes[i++], bytes[i++]),
+                CommandData.UInt8.asShort(bytes[i++]),
+                CommandData.UInt8.asShort(bytes[i++]),
+                CommandData.UInt8.asShort(bytes[i++]),
+                CommandData.UInt8.asShort(bytes[i++]),
+                CommandData.UInt8.asShort(bytes[i++])
+        );
+    }
+
+    public static List<ConfigurationDescription> toConfigurationDescriptionList(final byte [] bytes) {
+        final ArrayList<ConfigurationDescription> result = new ArrayList<>();
+        int i = 0;
+        while (i < bytes.length) {
+            int nameLength = 0;
+            while (bytes[i + nameLength] != 0) {
+                nameLength ++;
+            }
+            final byte [] nameBuffer = new byte [nameLength];
+            System.arraycopy(bytes, i, nameBuffer, 0, nameLength);
+            final String name = new String(nameBuffer, StandardCharsets.US_ASCII);
+            i += nameLength + 1;
+            result.add(new ConfigurationDescription(
+                    name,
+                    CommandData.UInt32.asLong(bytes[i++], bytes[i++], bytes[i++], bytes[i++]),
+                    CommandData.UInt32.asLong(bytes[i++], bytes[i++], bytes[i++], bytes[i++]),
+                    CommandData.UInt8.asShort(bytes[i++]),
+                    CommandData.UInt8.asShort(bytes[i++]),
+                    bytes[i++] != 0
+            ));
+        }
+        return result;
+    }
+
+    public static FreeSpace toFreeSpace(final byte[] bytes) {
+        int i = 0;
+        return new FreeSpace(
+                CommandData.UInt32.asLong(bytes[i++], bytes[i++], bytes[i++], bytes[i++]),
+                CommandData.UInt32.asLong(bytes[i++], bytes[i++], bytes[i++], bytes[i++])
+        );
     }
 
     /////////////

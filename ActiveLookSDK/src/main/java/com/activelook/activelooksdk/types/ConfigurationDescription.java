@@ -27,6 +27,17 @@ public class ConfigurationDescription {
     private final int installCnt;
     private final boolean isSystem;
 
+    public ConfigurationDescription(final String name,
+                                    final long size, final long version,
+                                    final int usageCnt, final int installCnt, final boolean isSystem) {
+        this.name = name;
+        this.size = size;
+        this.version = version;
+        this.usageCnt = usageCnt;
+        this.installCnt = installCnt;
+        this.isSystem = isSystem;
+    }
+
     public ConfigurationDescription(String name, byte[] bytes) {
         this.name = name;
         final PayloadDecoder rp = new PayloadDecoder(bytes);

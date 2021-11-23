@@ -23,6 +23,17 @@ public class ConfigurationElementsInfo {
     private final int nbPage;
     private final int nbGauge;
 
+    public ConfigurationElementsInfo(final long version, final int nbImg,
+                                     final int nbLayout, final int nbFont,
+                                     final int nbPage, final int nbGauge) {
+        this.version = version;
+        this.nbImg = nbImg;
+        this.nbLayout = nbLayout;
+        this.nbFont = nbFont;
+        this.nbPage = nbPage;
+        this.nbGauge = nbGauge;
+    }
+
     public ConfigurationElementsInfo(byte[] bytes) {
         final PayloadDecoder rp = new PayloadDecoder(bytes);
         this.version = rp.readLong(4);

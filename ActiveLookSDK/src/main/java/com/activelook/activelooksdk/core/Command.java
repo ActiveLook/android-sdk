@@ -54,12 +54,12 @@ public class Command {
         int n = payload[2] & (byte) 0x0F;
         int offset = 4;
         if ((payload[2] & 0x10) == 0x10) {
-            fullLength = (payload[3] << 8) | payload[4];
+            fullLength = CommandData.UInt16.asInt(payload[3], payload[4]);
             offset++;
         } else {
-            fullLength = payload[3];
+            fullLength = CommandData.UInt8.asShort(payload[3]);
         }
-        int m = fullLength - (5 + n);
+        int m = fullLength - (1 + n + offset);
         if (n > 0) {
             this.queryId = new byte[n];
             System.arraycopy(payload, offset, this.queryId, 0, n);
@@ -78,10 +78,11 @@ public class Command {
         int fullLength = 5;
         assert payload[0] == (byte) 0xFF;
         if ((payload[2] & 0x10) == 0x10) {
-            fullLength = (payload[3] << 8) | payload[4];
+            fullLength = CommandData.UInt16.asInt(payload[3], payload[4]);
         } else {
-            fullLength = payload[3];
+            fullLength = CommandData.UInt8.asShort(payload[3]);
         }
+        Log.d("Validating", String.format("payload.length %d == fullLength %d", payload.length, fullLength));
         if (payload.length == fullLength) {
             assert payload[fullLength - 1] == (byte) 0xAA;
             return true;
