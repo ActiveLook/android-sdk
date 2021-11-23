@@ -14,7 +14,6 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,38 +21,50 @@ import java.util.List;
 public class ConfigurationDescription {
 
     private final String name;
-    private final int size;
-    private final int version;
-    private final byte usageCnt;
-    private final byte installCnt;
+    private final long size;
+    private final long version;
+    private final int usageCnt;
+    private final int installCnt;
     private final boolean isSystem;
 
-    public ConfigurationDescription(String name, byte[] payload) {
+    public ConfigurationDescription(final String name,
+                                    final long size, final long version,
+                                    final int usageCnt, final int installCnt, final boolean isSystem) {
         this.name = name;
-        this.size = ((payload[0] << 24) |(payload[1] << 16) |(payload[2] << 8) | payload[3]);
-        this.version = ((payload[4] << 24) |(payload[5] << 16) |(payload[6] << 8) | payload[7]);
-        this.usageCnt = payload[8];
-        this.installCnt = payload[9];
-        this.isSystem = payload[10] != (byte) 0x00;
+        this.size = size;
+        this.version = version;
+        this.usageCnt = usageCnt;
+        this.installCnt = installCnt;
+        this.isSystem = isSystem;
+    }
+
+    public ConfigurationDescription(String name, byte[] bytes) {
+        this.name = name;
+        final PayloadDecoder rp = new PayloadDecoder(bytes);
+        this.size = rp.readLong(4);
+        this.version = rp.readLong(4);
+        this.usageCnt = rp.readUInt(1);
+        this.installCnt = rp.readUInt(1);
+        this.isSystem = rp.readBoolean();
     }
 
     public String getName() {
         return this.name;
     }
 
-    public int getSize() {
+    public long getSize() {
         return this.size;
     }
 
-    public int getVersion() {
+    public long getVersion() {
         return this.version;
     }
 
-    public byte getUsageCount() {
+    public int getUsageCount() {
         return this.usageCnt;
     }
 
-    public byte getInstallCount() {
+    public int getInstallCount() {
         return this.installCnt;
     }
 

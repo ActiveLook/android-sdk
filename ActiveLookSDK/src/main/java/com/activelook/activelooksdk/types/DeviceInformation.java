@@ -71,4 +71,15 @@ public class DeviceInformation {
         this.softwareVersion = softwareVersion;
     }
 
+    @Override
+    public String toString() {
+        return "DeviceInformation{" +
+                "manufacturerName='" + manufacturerName + '\'' +
+                ", modelNumber='" + modelNumber + '\'' +
+                ", serialNumber='" + serialNumber + '\'' +
+                ", hardwareVersion='" + hardwareVersion + '\'' +
+                ", firmwareVersion='" + firmwareVersion + '\'' +
+                ", softwareVersion='" + softwareVersion + '\'' +
+                '}';
+    }
 }

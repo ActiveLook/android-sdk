@@ -14,10 +14,8 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
+import com.activelook.activelooksdk.core.CommandData;
 import com.activelook.activelooksdk.core.Payload;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class LayoutParameters {
 
@@ -34,7 +32,7 @@ public class LayoutParameters {
     private final byte textY;
     private final Rotation rotation;
     private final boolean textOpacity;
-    private Payload subCommands;
+    private CommandData subCommands;
 
     public LayoutParameters(byte id,
                             short x, byte y, short width, byte height,
@@ -53,12 +51,17 @@ public class LayoutParameters {
         this.textY = textY;
         this.rotation = rotation;
         this.textOpacity = textOpacity;
-        this.subCommands = new Payload();
+        this.subCommands = new CommandData();
     }
 
-    public LayoutParameters(byte[] bytes) {
+    @Deprecated
+    public LayoutParameters(final byte[] bytes) {
+        this((byte) 0, bytes);
+    }
+
+    public LayoutParameters(byte id, byte[] bytes) {
         this(
-            (byte) 0,
+            id,
             (short) ((bytes[1] << 8) | bytes[2]),
             bytes[3],
             (short) ((bytes[4] << 8) | bytes[5]),
@@ -75,82 +78,101 @@ public class LayoutParameters {
         final int subSize = bytes[0];
         final byte [] subPayload = new byte [subSize];
         System.arraycopy(bytes, 15, subPayload, 0, subSize);
-        this.subCommands.addData(subPayload);
+        this.subCommands.add(subPayload);
     }
 
     public LayoutParameters addSubCommandBitmap(byte id, short x, short y) {
-        this.subCommands.addData((byte) 0x00).addData(id).addData(x).addData(y);
+        this.subCommands.add((byte) 0x00).addUInt8(id).addInt16(x).addInt16(y);
         return this;
     }
 
     public LayoutParameters addSubCommandCirc(short x, short y, short r) {
-        this.subCommands.addData((byte) 0x01).addData(x).addData(y).addData(r);
+        this.subCommands.add((byte) 0x01).addInt16(x).addInt16(y).addUInt16(r);
         return this;
     }
 
     public LayoutParameters addSubCommandCircf(short x, short y, short r) {
-        this.subCommands.addData((byte) 0x02).addData(x).addData(y).addData(r);
+        this.subCommands.add((byte) 0x02).addInt16(x).addInt16(y).addUInt16(r);
         return this;
     }
 
     public LayoutParameters addSubCommandColor(byte c) {
-        this.subCommands.addData((byte) 0x03).addData(c);
+        this.subCommands.add((byte) 0x03).addUInt8(c);
         return this;
     }
 
     public LayoutParameters addSubCommandFont(byte f) {
-        this.subCommands.addData((byte) 0x04).addData(f);
+        this.subCommands.add((byte) 0x04).addUInt8(f);
         return this;
     }
 
     public LayoutParameters addSubCommandLine(short x1, short y1, short x2, short y2) {
-        this.subCommands.addData((byte) 0x05).addData(x1).addData(y1).addData(x2).addData(y2);
+        this.subCommands.add((byte) 0x05).addInt16(x1).addInt16(y1).addInt16(x2).addInt16(y2);
         return this;
     }
 
     public LayoutParameters addSubCommandPoint(byte x, short y) {
-        this.subCommands.addData((byte) 0x06).addData(x).addData(y);
+        this.subCommands.add((byte) 0x06).addInt16(x).addInt16(y);
         return this;
     }
 
     public LayoutParameters addSubCommandRect(short x1, short y1, short x2, short y2) {
-        this.subCommands.addData((byte) 0x07).addData(x1).addData(y1).addData(x2).addData(y2);
+        this.subCommands.add((byte) 0x07).addInt16(x1).addInt16(y1).addInt16(x2).addInt16(y2);
         return this;
     }
 
     public LayoutParameters addSubCommandRectf(short x1, short y1, short x2, short y2) {
-        this.subCommands.addData((byte) 0x08).addData(x1).addData(y1).addData(x2).addData(y2);
+        this.subCommands.add((byte) 0x08).addInt16(x1).addInt16(y1).addInt16(x2).addInt16(y2);
         return this;
     }
 
     public LayoutParameters addSubCommandText(short x, short y, String txt) {
-        this.subCommands.addData((byte) 0x09).addData(x).addData(y).addData((byte) txt.length()).addData(txt);
+        this.subCommands.add((byte) 0x09).addInt16(x).addInt16(y).addUInt8((short) txt.length()).addNulTerminatedStrings(txt);
         return this;
     }
 
     public LayoutParameters addSubCommandGauge(byte gaugeId) {
-        this.subCommands.addData((byte) 0x0A).addData(gaugeId);
+        this.subCommands.add((byte) 0x0A).addUInt8(gaugeId);
         return this;
     }
 
     public byte[] toBytes() {
-        final byte[] subBytes = this.subCommands.getData();
-        return new Payload()
-                .addData(this.id)
-                .addData((byte) subBytes.length)
-                .addData(this.x)
-                .addData(this.y)
-                .addData(this.width)
-                .addData(this.height)
-                .addData(this.fg)
-                .addData(this.bg)
-                .addData(this.font)
-                .addData(this.textValid)
-                .addData(this.textX)
-                .addData(this.textY)
-                .addData(this.rotation.toBytes())
-                .addData(this.textOpacity)
-                .addData(subBytes).getData();
+        final byte[] subBytes = this.subCommands.getBytes();
+        return new CommandData()
+                .addUInt8(this.id)
+                .addUInt8((byte) subBytes.length)
+                .addUInt16(this.x)
+                .addUInt8(this.y)
+                .addUInt16(this.width)
+                .addUInt8(this.height)
+                .addUInt8(this.fg)
+                .addUInt8(this.bg)
+                .addUInt8(this.font)
+                .add(CommandData.fromBoolean(this.textValid))
+                .addUInt16(this.textX)
+                .addUInt8(this.textY)
+                .add(CommandData.fromRotation(this.rotation))
+                .add(CommandData.fromBoolean(this.textOpacity))
+                .add(subBytes).getBytes();
     }
 
+    @Override
+    public String toString() {
+        return "LayoutParameters{" +
+                "id=" + id +
+                ", x=" + x +
+                ", y=" + y +
+                ", width=" + width +
+                ", height=" + height +
+                ", fg=" + fg +
+                ", bg=" + bg +
+                ", font=" + font +
+                ", textValid=" + textValid +
+                ", textX=" + textX +
+                ", textY=" + textY +
+                ", rotation=" + rotation +
+                ", textOpacity=" + textOpacity +
+                ", subCommands=" + subCommands.toHexString() +
+                '}';
+    }
 }

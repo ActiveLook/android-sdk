@@ -1,3 +1,11 @@
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
 include ':ActiveLookSDK'
-include ':app'
-rootProject.name = "My Active Look Application"
+include ':debugapp'
+include ':demoapp'
+rootProject.name = "Active Look SDK"

@@ -14,26 +14,28 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class FreeSpace {
+public final class FreeSpace {
 
     private final long totalSize;
     private final long freeSpace;
 
-    public FreeSpace(byte[] payload) {
-        long size;
-        size = 0l;  size |= (payload[0] & 0xFF);
-        size <<= 8; size |= (payload[1] & 0xFF);
-        size <<= 8; size |= (payload[2] & 0xFF);
-        size <<= 8; size |= (payload[3] & 0xFF);
-        this.totalSize = size;
-        size = 0l;  size |= (payload[4] & 0xFF);
-        size <<= 8; size |= (payload[5] & 0xFF);
-        size <<= 8; size |= (payload[6] & 0xFF);
-        size <<= 8; size |= (payload[7] & 0xFF);
-        this.freeSpace = size;
+    public FreeSpace(final long totalSize, final long freeSpace) {
+        this.totalSize = totalSize;
+        this.freeSpace = freeSpace;
+    }
+
+    public FreeSpace(byte[] bytes) {
+        final PayloadDecoder rp = new PayloadDecoder(bytes);
+        this.totalSize = rp.readLong(4);
+        this.freeSpace = rp.readLong(4);
+    }
+
+    public long getTotalSize() {
+        return this.totalSize;
+    }
+
+    public long getFreeSpace() {
+        return this.freeSpace;
     }
 
     @Override

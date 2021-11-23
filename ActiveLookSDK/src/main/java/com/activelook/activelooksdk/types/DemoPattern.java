@@ -14,7 +14,7 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-public enum DemoPattern implements Utils.PayloadElement {
+public enum DemoPattern implements Utils.FieldWithValue {
     FILL {
         @Override
         public byte[] toBytes() {

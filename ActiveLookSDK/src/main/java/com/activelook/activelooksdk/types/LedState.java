@@ -14,7 +14,7 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-public enum LedState implements Utils.PayloadElement {
+public enum LedState implements Utils.FieldWithValue {
     OFF {
         @Override
         public byte[] toBytes() {

@@ -20,11 +20,11 @@ import android.util.Log;
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.Glasses;
-import com.activelook.activelooksdk.core.GlassesCommandsAdapter;
+import com.activelook.activelooksdk.core.AbstractGlasses;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
 
-class GlassesImpl extends GlassesCommandsAdapter implements Glasses {
+class GlassesImpl extends AbstractGlasses implements Glasses {
 
     public static final Creator<GlassesImpl> CREATOR = new Creator<GlassesImpl>() {
         @Override
@@ -100,10 +100,10 @@ class GlassesImpl extends GlassesCommandsAdapter implements Glasses {
     }
 
     @Override
-    public void writeCommand(byte[] payload) {
+    public void writeBytes(byte[] bytes) {
         StringBuilder result = new StringBuilder();
         String prefix = "[ ";
-        for (byte aByte : payload) {
+        for (byte aByte : bytes) {
             result.append(String.format("%s0x%02X", prefix, aByte));
             prefix = ", ";
         }

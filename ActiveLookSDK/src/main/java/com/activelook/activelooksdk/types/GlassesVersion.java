@@ -14,26 +14,25 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-import java.util.Arrays;
+public final class GlassesVersion {
 
-public class GlassesVersion {
-
-    private int major;
-    private int minor;
-    private int patch;
+    private short major;
+    private short minor;
+    private short patch;
     private char extra;
-    private int year;
-    private int week;
+    private short year;
+    private short week;
     private int serial;
 
-    public GlassesVersion(byte[] payload) {
-        this.major = payload[0];
-        this.minor = payload[1];
-        this.patch = payload[2];
-        this.extra = (char) payload[3];
-        this.year = payload[4];
-        this.week = payload[5];
-        this.serial = (payload[6] << 16) | (payload[7] << 8) | (payload[8] & 0xFF);
+    public GlassesVersion(final short major, final short minor, final short patch, final char extra, final short year,
+                          final short week, final int serial) {
+        this.major = major;
+        this.minor = minor;
+        this.patch = patch;
+        this.extra = extra;
+        this.year = year;
+        this.week = week;
+        this.serial = serial;
     }
 
     public String getVersion() {
@@ -70,15 +69,16 @@ public class GlassesVersion {
 
     @Override
     public String toString() {
-        return "Version{" +
-                "major=" + major +
-                ", minor=" + minor +
-                ", patch=" + patch +
-                ", extra=" + extra +
-                ", year=" + year +
-                ", week=" + week +
-                ", serial=" + serial +
-                '}';
+        return "GlassesVersion " +
+                "{ major=" + this.major +
+                ", minor=" + this.minor +
+                ", patch=" + this.patch +
+                ", extra=" + this.extra +
+                ", year=" + this.year +
+                ", week=" + this.week +
+                ", serial=" + this.serial +
+                ", version=" + this.getVersion() +
+                " }";
     }
 
 }

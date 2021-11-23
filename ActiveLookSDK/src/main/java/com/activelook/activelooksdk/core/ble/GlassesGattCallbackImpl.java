@@ -26,7 +26,7 @@ import android.util.Log;
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.Glasses;
-import com.activelook.activelooksdk.core.Payload;
+import com.activelook.activelooksdk.core.Command;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
 import com.activelook.activelooksdk.types.Utils;
@@ -35,13 +35,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 class GlassesGattCallbackImpl extends BluetoothGattCallback {
 
     private final BluetoothDevice device;
     private final DeviceInformation deviceInfo;
-    private final ConcurrentLinkedDeque<byte []> pendingWriteCommand;
+    private final ConcurrentLinkedDeque<byte []> pendingWriteRxCharacteristic;
     private final AtomicBoolean flowControlCanSend;
     private final AtomicBoolean isWritingCommand;
     private final BluetoothGatt gatt;
@@ -54,6 +58,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
     private Consumer<Integer> onBatteryLevelEvent;
     private Consumer<FlowControlStatus> onFlowControlEvent;
     private Runnable onSensorInterfaceEvent;
+    private ScheduledFuture<?> repairFlowControl;
 
     GlassesGattCallbackImpl(BluetoothDevice device, GlassesImpl bleGlasses,
                             Consumer<Glasses> onConnected,
@@ -62,7 +67,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         super();
         this.device = device;
         this.deviceInfo = new DeviceInformation();
-        this.pendingWriteCommand = new ConcurrentLinkedDeque<>();
+        this.pendingWriteRxCharacteristic = new ConcurrentLinkedDeque<>();
         this.flowControlCanSend = new AtomicBoolean(true);
         this.isWritingCommand = new AtomicBoolean(false);
         this.mtu = 20;
@@ -70,11 +75,12 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         this.onBatteryLevelEvent = null;
         this.onFlowControlEvent = null;
         this.onSensorInterfaceEvent = null;
+        this.repairFlowControl = null;
         final SdkImpl sdk = BleSdkSingleton.getInstance();
         this.setOnConnect(onConnected);
         this.setOnConnectionFail(onConnectionFail);
         this.setOnDisconnected(onDisconnected);
-        this.gatt = this.device.connectGatt(sdk.getContext(), false, this);
+        this.gatt = this.device.connectGatt(sdk.getContext(), true, this);
         sdk.registerConnectedGlasses(this.glasses);
     }
 
@@ -146,8 +152,13 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
         if (characteristic.equals(this.getRxCharacteristic())) {
-            this.isWritingCommand.set(false);
-            this.unstackWriteCommand();
+            // this.isWritingCommand.set(false);
+            // this.unstackWriteRxCharacteristic();
+            final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+            executorService.schedule(() -> {
+                this.isWritingCommand.set(false);
+                this.unstackWriteRxCharacteristic();
+            }, 25, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -160,16 +171,16 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
             if (this.pendingBuffer != null) {
                 this.addPendingBuffer(buffer);
                 buffer = this.pendingBuffer;
-                if (Payload.isValidBuffer(buffer)) {
+                if (Command.isValidBuffer(buffer)) {
                     this.pendingBuffer = null;
-                    final Payload payload = new Payload(buffer);
-                    Log.w("onTXChanged Buffered", payload.toString());
-                    this.glasses.callCallback(payload);
+                    final Command command = new Command(buffer);
+                    Log.w("onTXChanged Buffered", command.toString());
+                    this.glasses.callCallback(command);
                 }
-            } else if (Payload.isValidBuffer(buffer)) {
-                final Payload payload = new Payload(buffer);
-                Log.w("onTXChanged", payload.toString());
-                this.glasses.callCallback(payload);
+            } else if (Command.isValidBuffer(buffer)) {
+                final Command command = new Command(buffer);
+                Log.w("onTXChanged", command.toString());
+                this.glasses.callCallback(command);
             } else {
                 this.addPendingBuffer(buffer);
             }
@@ -184,11 +195,28 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         } else if (characteristic.getUuid().equals(BleUUID.ActiveLookFlowControlCharacteristic)) {
             final byte state = characteristic.getValue()[0];
             if (state == (byte) 0x01) {
+                if (this.repairFlowControl != null) {
+                    this.repairFlowControl.cancel(false);
+                    this.repairFlowControl = null;
+                }
+                Log.e("FLOW CONTROL", String.format("Glasses flow control CAN SEND"));
                 if (this.flowControlCanSend.compareAndSet(false, true)) {
-                    this.unstackWriteCommand();
+                    this.unstackWriteRxCharacteristic();
                 }
             } else if (state == (byte) 0x02) {
+                Log.e("FLOW CONTROL", String.format("Glasses flow control STOP SEND"));
                 this.flowControlCanSend.set(false);
+                if (this.repairFlowControl != null) {
+                    this.repairFlowControl.cancel(true);
+                }
+                final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+                this.repairFlowControl = executorService.schedule(() -> {
+                    GlassesGattCallbackImpl.this.repairFlowControl = null;
+                    Log.e("FLOW CONTROL", String.format("Glasses flow control FORCED CAN SEND"));
+                    if (GlassesGattCallbackImpl.this.flowControlCanSend.compareAndSet(false, true)) {
+                        GlassesGattCallbackImpl.this.unstackWriteRxCharacteristic();
+                    }
+                }, 750, TimeUnit.MILLISECONDS);
             } else if (this.onFlowControlEvent != null) {
                 if (state == (byte) 0x03) {
                     this.onFlowControlEvent.accept(FlowControlStatus.CMD_ERROR);
@@ -201,7 +229,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
                 }
             }
         } else {
-            Log.e("onCharacteristicChanged", Payload.bytesToStr(characteristic.getValue()));
+            Log.e("onCharacteristicChanged", Command.bytesToStr(characteristic.getValue()));
         }
     }
 
@@ -219,6 +247,8 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         } else if (descriptor.getCharacteristic().getUuid().equals(BleUUID.ActiveLookTxCharacteristic)) {
             this.activateNotification(this.getUiCharacteristic());
         } else if (descriptor.getCharacteristic().getUuid().equals(BleUUID.ActiveLookUICharacteristic)) {
+            this.activateNotification(this.getBatteryCharacteristic());
+        } else if (descriptor.getCharacteristic().getUuid().equals(BleUUID.BatteryLevelCharacteristic)) {
             this.activateNotification(this.getSensorCharacteristic());
         } else if (descriptor.getCharacteristic().getUuid().equals(BleUUID.ActiveLookSensorInterfaceCharacteristic)) {
             final BluetoothGattService diService = this.gatt.getService(BleUUID.DeviceInformationService);
@@ -254,18 +284,18 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         this.onConnected = onConnected;
     }
 
-    void writeCommand(byte[] payload) {
-        final byte [][] chunks = Utils.split(payload, this.mtu);
-        this.pendingWriteCommand.addAll(Arrays.asList(chunks));
-        this.unstackWriteCommand();
+    void writeRxCharacteristic(byte[] bytes) {
+        final byte [][] chunks = Utils.split(bytes, this.mtu);
+        this.pendingWriteRxCharacteristic.addAll(Arrays.asList(chunks));
+        this.unstackWriteRxCharacteristic();
     }
 
-    synchronized void unstackWriteCommand() {
-        if (this.flowControlCanSend.get() && this.pendingWriteCommand.size()>0 && this.isWritingCommand.compareAndSet(false, true)) {
+    synchronized void unstackWriteRxCharacteristic() {
+        if (this.flowControlCanSend.get() && this.pendingWriteRxCharacteristic.size()>0 && this.isWritingCommand.compareAndSet(false, true)) {
             final ConcurrentLinkedQueue<byte []> stack = new ConcurrentLinkedQueue<>();
             int stackSize = 0;
-            while (stackSize < this.mtu && this.pendingWriteCommand.size()>0) {
-                final byte [] buffer = this.pendingWriteCommand.poll();
+            while (stackSize < this.mtu && this.pendingWriteRxCharacteristic.size()>0 && stack.size() < 4) {
+                final byte [] buffer = this.pendingWriteRxCharacteristic.poll();
                 stack.add(buffer);
                 stackSize += buffer.length;
             }
@@ -277,17 +307,40 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
                 offset += buffer.length;
             }
             final byte[] buffer = stack.poll();
-            final int sizeOutOfPayload = stackSize - this.mtu;
-            final int sizeInPayload = buffer.length - sizeOutOfPayload;
-            System.arraycopy(buffer, 0, payload, offset, sizeInPayload);
-            if (sizeOutOfPayload > 0) {
-                final byte[] remaining = new byte[sizeOutOfPayload];
-                System.arraycopy(buffer, sizeInPayload, remaining, 0, sizeOutOfPayload);
-                this.pendingWriteCommand.addFirst(remaining);
+            final int sizeOutOfPayload = Math.max(0, stackSize - this.mtu);
+            if (sizeOutOfPayload <= 0) {
+                System.arraycopy(buffer, 0, payload, offset, buffer.length);
+            } else {
+                this.pendingWriteRxCharacteristic.addFirst(buffer);
             }
-            Log.d("unstackWriteCommand", String.format("write rx: %s", Utils.bytesToHexString(buffer)));
-            this.getRxCharacteristic().setValue(payload);
-            this.gatt.writeCharacteristic(this.getRxCharacteristic());
+            Log.d("unstackWriteCommand", String.format("write rx: %s", Utils.bytesToHexString(payload)));
+            while(!this.getRxCharacteristic().setValue(payload)) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                Log.e("unstackWriteCommand", String.format("Could not update rx: %s", Utils.bytesToHexString(buffer)));
+            }
+            while(!this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                Log.e("unstackWriteCommand", String.format("Could not write rx: %s", Utils.bytesToHexString(buffer)));
+            }
+        } else {
+            Log.d("unstackWriteCommand", String.format("Stacking %d", this.pendingWriteRxCharacteristic.size()));
+            if (!this.flowControlCanSend.get()) {
+                Log.d("unstackWriteCommand", String.format("flow control busy"));
+            }
+            if (this.isWritingCommand.get()) {
+                Log.d("unstackWriteCommand", String.format("already writing"));
+            }
+            if (this.pendingWriteRxCharacteristic.size()==0) {
+                Log.d("unstackWriteCommand", String.format("nothing to send"));
+            }
         }
     }
 
@@ -315,7 +368,6 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         this.gatt.setCharacteristicNotification(characteristic, true);
         final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(BleUUID.BleNotificationDescriptor);
         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        this.gatt.writeCharacteristic(characteristic);
         this.gatt.writeDescriptor(descriptor);
     }
 
@@ -343,16 +395,15 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         return this.getCommandInterfaceService().getCharacteristic(BleUUID.ActiveLookRxCharacteristic);
     }
 
+    private BluetoothGattCharacteristic getBatteryCharacteristic() {
+        return this.gatt.getService(BleUUID.BatteryService).getCharacteristic(BleUUID.BatteryLevelCharacteristic);
+    }
+
     public DeviceInformation getDeviceInformation() {
         return this.deviceInfo;
     }
 
     public void subscribeToBatteryLevelNotifications(Consumer<Integer> onEvent) {
-        if (this.onBatteryLevelEvent == null && onEvent != null) {
-            this.activateNotification(
-                    this.gatt.getService(BleUUID.BatteryService)
-                            .getCharacteristic(BleUUID.BatteryLevelCharacteristic));
-        }
         this.onBatteryLevelEvent = onEvent;
     }
 
@@ -361,11 +412,6 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
     }
 
     public void subscribeToSensorInterfaceNotifications(Runnable onEvent) {
-        if (this.onSensorInterfaceEvent == null && onEvent != null) {
-            this.activateNotification(
-                    this.gatt.getService(BleUUID.ActiveLookCommandsInterfaceService)
-                            .getCharacteristic(BleUUID.ActiveLookSensorInterfaceCharacteristic));
-        }
         this.onSensorInterfaceEvent = onEvent;
     }
 

@@ -16,7 +16,8 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:theme="@style/Theme.MyActiveLookApplication.NoActionBar">
+            android:theme="@style/Theme.MyActiveLookApplication.NoActionBar"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -26,7 +27,8 @@
         <activity
             android:name=".ScanningActivity"
             android:label="@string/app_name"
-            android:theme="@style/Theme.MyActiveLookApplication">
+            android:theme="@style/Theme.MyActiveLookApplication"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

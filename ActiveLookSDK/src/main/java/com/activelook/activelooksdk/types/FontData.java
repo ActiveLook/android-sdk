@@ -31,6 +31,10 @@ public class FontData {
         System.arraycopy(bytes, 0, this.bytes, 2, bytes.length);
     }
 
+    public byte[] getBytes() {
+        return this.bytes;
+    }
+
     public char getFontSize() {
         return (char) (this.bytes.length);
     }

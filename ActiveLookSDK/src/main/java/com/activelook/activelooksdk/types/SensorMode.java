@@ -14,7 +14,7 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-public enum SensorMode implements Utils.PayloadElement {
+public enum SensorMode implements Utils.FieldWithValue {
     ALS_ARRAY {
         @Override
         public byte[] toBytes() {

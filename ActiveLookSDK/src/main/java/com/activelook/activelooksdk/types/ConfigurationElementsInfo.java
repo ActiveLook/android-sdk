@@ -14,26 +14,58 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-
 public class ConfigurationElementsInfo {
 
-    private final int version;
-    private final byte nbImg;
-    private final byte nbLayout;
-    private final byte nbFont;
-    private final byte nbPage;
-    private final byte nbGauge;
+    private final long version;
+    private final int nbImg;
+    private final int nbLayout;
+    private final int nbFont;
+    private final int nbPage;
+    private final int nbGauge;
 
-    public ConfigurationElementsInfo(byte[] payload) {
-        this.version = ((payload[0] << 24) |(payload[1] << 16) |(payload[2] << 8) | payload[3]);
-        this.nbImg = payload[4];
-        this.nbLayout = payload[5];
-        this.nbFont = payload[6];
-        this.nbPage = payload[7];
-        this.nbGauge = payload[8];
+    public ConfigurationElementsInfo(final long version, final int nbImg,
+                                     final int nbLayout, final int nbFont,
+                                     final int nbPage, final int nbGauge) {
+        this.version = version;
+        this.nbImg = nbImg;
+        this.nbLayout = nbLayout;
+        this.nbFont = nbFont;
+        this.nbPage = nbPage;
+        this.nbGauge = nbGauge;
+    }
+
+    public ConfigurationElementsInfo(byte[] bytes) {
+        final PayloadDecoder rp = new PayloadDecoder(bytes);
+        this.version = rp.readLong(4);
+        this.nbImg = rp.readUInt(1);
+        this.nbLayout = rp.readUInt(1);
+        this.nbFont = rp.readUInt(1);
+        this.nbPage = rp.readUInt(1);
+        this.nbGauge = rp.readUInt(1);
+    }
+
+    public long getVersion() {
+        return this.version;
+    }
+
+    public int getNbImg() {
+        return this.nbImg;
+    }
+
+    public int getNbLayout() {
+        return this.nbLayout;
+    }
+
+    public int getNbFont() {
+        return this.nbFont;
+    }
+
+    public int getNbPage() {
+        return this.nbPage;
+    }
+
+    public int getNbGauge() {
+        return this.nbGauge;
     }
 
     @Override

@@ -21,12 +21,12 @@ import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
-import com.activelook.activelooksdk.core.GlassesCommandsAdapter;
-import com.activelook.activelooksdk.core.Payload;
+import com.activelook.activelooksdk.core.AbstractGlasses;
+import com.activelook.activelooksdk.core.Command;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
 
-class GlassesImpl extends GlassesCommandsAdapter implements Glasses {
+class GlassesImpl extends AbstractGlasses implements Glasses {
 
     public static final Creator<GlassesImpl> CREATOR = new Creator<GlassesImpl>() {
         @Override
@@ -64,10 +64,10 @@ class GlassesImpl extends GlassesCommandsAdapter implements Glasses {
     }
 
     @Override
-    public void writeCommand(byte[] payload) {
-        Log.w("writeCommand", Payload.bytesToStr(payload));
-        Log.w("writeCommand", String.format("payload length: %d", payload.length));
-        this.gattCallbacks.writeCommand(payload);
+    public void writeBytes(byte[] bytes) {
+        Log.w("writeCommand", Command.bytesToStr(bytes));
+        Log.w("writeCommand", String.format("payload length: %d", bytes.length));
+        this.gattCallbacks.writeRxCharacteristic(bytes);
     }
 
     @Override
@@ -132,8 +132,8 @@ class GlassesImpl extends GlassesCommandsAdapter implements Glasses {
         this.gattCallbacks.subscribeToSensorInterfaceNotifications(onEvent);
     }
 
-    void callCallback(Payload payload) {
-        this.delegateToCallback(payload);
+    void callCallback(Command command) {
+        this.delegateToCallback(command);
     }
 
     @Override
