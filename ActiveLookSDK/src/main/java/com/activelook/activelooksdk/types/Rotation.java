@@ -14,7 +14,7 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-public enum Rotation implements Utils.PayloadElement {
+public enum Rotation implements Utils.FieldWithValue {
     BOTTOM_RL {
         @Override
         public byte[] toBytes() {

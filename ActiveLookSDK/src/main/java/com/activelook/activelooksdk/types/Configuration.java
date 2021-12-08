@@ -16,31 +16,49 @@ package com.activelook.activelooksdk.types;
 
 import com.activelook.activelooksdk.core.Payload;
 
-public class Configuration {
+public final class Configuration {
 
-    private final byte number;
     private final int id;
-
-    public Configuration(byte number, int id) {
-        this.number = number;
-        this.id = id;
-    }
+    private final long version;
+    private final int nbImg;
+    private final int nbLayout;
+    private final int nbFont;
 
     public Configuration(byte[] bytes) {
-        this.number = bytes[0];
-        this.id = (bytes[1] << 24) | (bytes[2] << 16) | (bytes[3] << 8) | (bytes[4]);
-    }
-
-    public byte getNumber() {
-        return this.number;
+        final PayloadDecoder rp = new PayloadDecoder(bytes);
+        this.id = rp.readUInt(1);
+        this.version = rp.readLong(4);
+        this.nbImg = rp.readUInt(1);
+        this.nbLayout = rp.readUInt(1);
+        this.nbFont = rp.readUInt(1);
     }
 
     public int getId() {
         return this.id;
     }
 
+    public long getVersion() {
+        return this.version;
+    }
+
+    public int getNbImg() {
+        return this.nbImg;
+    }
+
+    public int getNbLayout() {
+        return this.nbLayout;
+    }
+
+    public int getNbFont() {
+        return this.nbFont;
+    }
+
     public byte[] toBytes() {
-        return new Payload().addData(this.number).addData(this.id).addData(new byte[]{0x00, 0x00, 0x00}).getData();
+        return new Payload()
+                .addData((byte) this.id)
+                .addData((int) this.version)
+                .addData(new byte[]{0x00, 0x00, 0x00})
+                .getData();
     }
 
 }

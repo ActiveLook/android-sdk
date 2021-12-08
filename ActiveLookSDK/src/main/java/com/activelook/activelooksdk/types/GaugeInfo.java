@@ -14,32 +14,28 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class GaugeInfo {
 
     private final short x;
     private final short y;
-    private final char r;
-    private final char rin;
-    private final byte start;
-    private final byte end;
+    private final int r;
+    private final int rin;
+    private final short start;
+    private final short end;
     private final boolean clockwise;
 
-    public GaugeInfo(byte [] payload) {
-        this(
-            (short) (((payload[0] & 0xFF) << 8) | (payload[1] & 0xFF)),
-            (short) (((payload[2] & 0xFF) << 8) | (payload[3] & 0xFF)),
-            (char) (((payload[4] & 0xFF) << 8) | (payload[5] & 0xFF)),
-            (char) (((payload[6] & 0xFF) << 8) | (payload[7] & 0xFF)),
-            payload[8],
-            payload[9],
-            payload[10] != 0x00
-        );
+    public GaugeInfo(byte [] bytes) {
+        final PayloadDecoder rp = new PayloadDecoder(bytes);
+        this.x = rp.readShort();
+        this.y = rp.readShort();
+        this.r = rp.readUInt(2);
+        this.rin = rp.readUInt(2);
+        this.start = rp.readShort(1);
+        this.end = rp.readShort(1);
+        this.clockwise = rp.readBoolean();
     }
 
-    public GaugeInfo(short x, short y, char r, char rin, byte start, byte end, boolean clockwise) {
+    public GaugeInfo(short x, short y, int r, int rin, short start, short end, boolean clockwise) {
         this.x = x;
         this.y = y;
         this.r = r;
@@ -57,19 +53,19 @@ public class GaugeInfo {
         return this.y;
     }
 
-    public char getR() {
+    public int getR() {
         return this.r;
     }
 
-    public char getRin() {
+    public int getRin() {
         return this.rin;
     }
 
-    public byte getStart() {
+    public short getStart() {
         return this.start;
     }
 
-    public byte getEnd() {
+    public short getEnd() {
         return this.end;
     }
 

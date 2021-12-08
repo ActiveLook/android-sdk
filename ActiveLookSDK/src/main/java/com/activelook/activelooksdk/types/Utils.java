@@ -22,7 +22,9 @@ public final class Utils {
      * Convert an int to a byte corresponding to a grey level.
      *
      * @param value The level.
+     *
      * @return The corresponding byte.
+     *
      * @throws InvalidParameterException If value if not between 0 and 15.
      */
     public static final byte greyLevel(int value) {
@@ -37,14 +39,22 @@ public final class Utils {
 
     public static final Rotation toRotation(byte value) {
         switch (value) {
-            case 0x00: return Rotation.BOTTOM_RL;
-            case 0x01: return Rotation.BOTTOM_LR;
-            case 0x02: return Rotation.LEFT_BT;
-            case 0x03: return Rotation.LEFT_TB;
-            case 0x04: return Rotation.TOP_LR;
-            case 0x05: return Rotation.TOP_RL;
-            case 0x06: return Rotation.RIGHT_TB;
-            case 0x07: return Rotation.RIGHT_BT;
+            case 0x00:
+                return Rotation.BOTTOM_RL;
+            case 0x01:
+                return Rotation.BOTTOM_LR;
+            case 0x02:
+                return Rotation.LEFT_BT;
+            case 0x03:
+                return Rotation.LEFT_TB;
+            case 0x04:
+                return Rotation.TOP_LR;
+            case 0x05:
+                return Rotation.TOP_RL;
+            case 0x06:
+                return Rotation.RIGHT_TB;
+            case 0x07:
+                return Rotation.RIGHT_BT;
         }
         return null;
     }
@@ -55,6 +65,7 @@ public final class Utils {
      *
      * @param source    The source buffer.
      * @param chunkSize the chunk size.
+     *
      * @return The array of chunk.
      */
     public static byte[][] split(byte[] source, int chunkSize) {
@@ -75,9 +86,9 @@ public final class Utils {
         return ret;
     }
 
-    public static final byte [] hexStringToBytes(String line) {
+    public static final byte[] hexStringToBytes(String line) {
         final byte[] result = new byte[line.length() / 2];
-        for (int i = 0; i < result.length; i ++){
+        for (int i = 0; i < result.length; i++) {
             final int hi = Character.digit(line.charAt(i * 2), 16) << 4;
             final int lo = Character.digit(line.charAt(i * 2 + 1), 16);
             result[i] = (byte) (hi | lo);
@@ -85,7 +96,7 @@ public final class Utils {
         return result;
     }
 
-    public static final String bytesToHexString(byte [] buffer) {
+    public static final String bytesToHexString(byte[] buffer) {
         if (buffer == null) {
             return "";
         }
@@ -124,9 +135,10 @@ public final class Utils {
         }
     }
 
-    interface PayloadElement {
+    public interface FieldWithValue {
 
         byte[] toBytes();
+
         default int length() {
             return this.toBytes().length;
         }

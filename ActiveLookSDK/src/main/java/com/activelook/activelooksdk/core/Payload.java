@@ -20,24 +20,28 @@ import java.nio.charset.StandardCharsets;
 
 public class Payload {
 
+    private final CommandData bytes;
     private final byte commandId;
     private byte[] queryId;
-    private byte[] data;
+    // private byte[] data;
 
     public Payload() {
         super();
         this.commandId = (byte) 0x00;
+        this.bytes = new CommandData();
     }
 
     Payload(byte commandId) {
         super();
         this.commandId = commandId;
+        this.bytes = new CommandData();
     }
 
     Payload(byte commandId, byte[] queryId) {
         super();
         this.commandId = commandId;
         this.queryId = queryId;
+        this.bytes = new CommandData();
     }
 
     public Payload(byte[] payload) {
@@ -58,11 +62,11 @@ public class Payload {
             this.queryId = new byte[n];
             System.arraycopy(payload, offset, this.queryId, 0, n);
         }
+        this.bytes = new CommandData();
         if (m > 0) {
-            this.data = new byte[m];
-            System.arraycopy(payload, offset + n, this.data, 0, m);
-        } else {
-            this.data = new byte[0];
+            final byte [] data = new byte[m];
+            System.arraycopy(payload, offset + n, data, 0, m);
+            this.bytes.add(data);
         }
         assert payload[fullLength - 1] == (byte) 0xAA;
     }
@@ -213,7 +217,7 @@ public class Payload {
         return "Payload{" +
                 "commandId=" + this.commandId +
                 ", queryId=" + bytesToStr(this.queryId) +
-                ", data=" + bytesToStr(this.data) +
+                ", data=" + bytesToStr(this.bytes.getBytes()) +
                 '}';
     }
 
@@ -238,35 +242,19 @@ public class Payload {
     }
 
     public byte[] getData() {
-        return this.data;
-    }
-
-    public void setData(byte[] data) {
-        this.data = data;
+        return this.bytes.getBytes();
     }
 
     public byte[] toBytes() {
-        if (this.data == null) {
-            if (this.queryId == null) {
-                return getBytes(this.commandId);
-            } else {
-                return getBytesWithQueryId(this.commandId, this.queryId);
-            }
+        if (this.queryId == null) {
+            return getBytesWithData(this.commandId, this.bytes.getBytes());
         } else {
-            if (this.queryId == null) {
-                return getBytesWithData(this.commandId, this.data);
-            } else {
-                return getBytes(this.commandId, this.queryId, this.data);
-            }
+            return getBytes(this.commandId, this.queryId, this.bytes.getBytes());
         }
     }
 
     public Payload addData(byte[] bytes) {
-        if (this.data == null) {
-            this.data = bytes;
-        } else {
-            this.data = Payload.combine(this.data, bytes);
-        }
+        this.bytes.add(bytes);
         return this;
     }
 
@@ -274,9 +262,17 @@ public class Payload {
         return this.addData(new byte[]{value});
     }
 
-    public Payload addData(boolean on) {
-        this.addData(on ? (byte) 0x01 : (byte) 0x00);
+    public Payload addBytes(byte ...bytes) {
+        this.bytes.add(bytes);
         return this;
+    }
+
+    public Payload addByte(byte value) {
+        return this.addBytes(value);
+    }
+
+    public Payload addByte(boolean value) {
+        return this.addBytes(value ? (byte) 0x01 : (byte) 0x00);
     }
 
     public Payload addData(short[] values) {
