@@ -43,7 +43,14 @@ public class DebugActivity extends AppCompatActivity {
                     Manifest.permission.BLUETOOTH_CONNECT,
             }, 0);
             Log.d("SDK", "Init");
-            Sdk.init(DebugActivity.this);
+            Sdk.init(
+                    DebugActivity.this,
+                    "unused",
+                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateStart   : %s", gu)),
+                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateProgress: %s", gu)),
+                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateSuccess : %s", gu)),
+                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateError   : %s", gu))
+           );
             this.connectOneGlasses();
         });
     }

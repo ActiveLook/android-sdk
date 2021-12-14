@@ -33,6 +33,7 @@ import java.util.HashMap;
 class SdkImpl implements Sdk {
 
     private final Context context;
+    private final GlassesUpdater updater;
     private final BluetoothManager manager;
     private final BluetoothAdapter adapter;
     private final BluetoothLeScanner scanner;
@@ -46,6 +47,13 @@ class SdkImpl implements Sdk {
             Consumer<GlassesUpdate> onUpdateSuccess,
             Consumer<GlassesUpdate> onUpdateError) throws UnsupportedBleException {
         this.context = context;
+        this.updater = new GlassesUpdater(
+                context,
+                token,
+                onUpdateStart,
+                onUpdateProgress,
+                onUpdateSuccess,
+                onUpdateError);
         this.manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         this.adapter = this.manager.getAdapter();
         if (this.adapter == null) {
