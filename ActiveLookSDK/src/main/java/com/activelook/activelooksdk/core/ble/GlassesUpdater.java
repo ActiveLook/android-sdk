@@ -29,4 +29,6 @@ class GlassesUpdater {
         this.onUpdateError = onUpdateError;
     }
 
+    public void update(final Glasses glasses, final Consumer<Glasses> onConnected) {
+    }
 }

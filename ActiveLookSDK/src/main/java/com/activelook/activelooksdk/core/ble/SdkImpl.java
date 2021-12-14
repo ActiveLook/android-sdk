@@ -24,6 +24,7 @@ import android.widget.Toast;
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
+import com.activelook.activelooksdk.Glasses;
 import com.activelook.activelooksdk.Sdk;
 import com.activelook.activelooksdk.exceptions.UnsupportedBleException;
 import com.activelook.activelooksdk.types.GlassesUpdate;
@@ -97,6 +98,10 @@ class SdkImpl implements Sdk {
 
     GlassesImpl getConnectedBleGlasses(final String address) {
         return this.connectedGlasses.get(address);
+    }
+
+    void update(final Glasses glasses, final Consumer<Glasses> onConnected) {
+        this.updater.update(glasses, onConnected);
     }
 
 }
