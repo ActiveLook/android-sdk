@@ -28,7 +28,7 @@ android {
     }
 }
 
-task javadoc(type: Javadoc) {
+task javadoc(type: Javadoc, dependsOn: clean) {
     failOnError  false
     source = android.sourceSets.main.java.sourceFiles
     configurations.implementation.setCanBeResolved(true)
@@ -47,6 +47,9 @@ task sourcesJar(type: Jar) {
 }
 
 afterEvaluate {
+    javadoc.classpath += files(android.libraryVariants.collect { variant ->
+        variant.javaCompileProvider.get().classpath.files
+    })
     publishing {
         publications {
             release(MavenPublication) {
