@@ -35,6 +35,21 @@ public final class GlassesVersion {
         this.serial = serial;
     }
 
+    public GlassesVersion(final String version) {
+        final String [] mmp = version
+                .replaceAll("[^.0-9]", "")
+                .split("\\.");
+        final String letters = version
+                .replaceAll("[.0-9]", "");
+        this.major = mmp.length > 0 ? Short.parseShort(mmp[0]) : 0;
+        this.minor = mmp.length > 1 ? Short.parseShort(mmp[1]) : 0;
+        this.patch = mmp.length > 2 ? Short.parseShort(mmp[2]) : 0;
+        this.extra = letters.length() > 0 ? letters.charAt(letters.length() - 1) : 0;
+        this.year = 0;
+        this.week = 0;
+        this.serial = 0;
+    }
+
     public String getVersion() {
         return String.format("%d.%d.%d.%c", this.major, this.minor, this.patch, this.extra);
     }
