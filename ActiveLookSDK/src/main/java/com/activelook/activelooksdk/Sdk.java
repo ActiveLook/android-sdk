@@ -68,6 +68,8 @@ public interface Sdk {
     void stopScan();
     /**
      * Is it scanning.
+     *
+     * @return Whether the SDK is scanning or not
      */
     boolean isScanning();
 
