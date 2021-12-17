@@ -89,7 +89,11 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         super.onConnectionStateChange(gatt, status, newState);
         if (newState == BluetoothProfile.STATE_CONNECTED) {
             int rmtu = 512;
-            while (!this.gatt.requestMtu(rmtu)) rmtu --;
+            Log.e("MTU", String.format("MTU=%d, status=%d", mtu, status));
+            while (!this.gatt.requestMtu(rmtu)) {
+                rmtu--;
+                Log.e("MTU", String.format("MTU=%d, status=%d", mtu, status));
+            }
         } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
             if (this.onConnectionFail != null) {
                 this.onConnectionFail.run();
