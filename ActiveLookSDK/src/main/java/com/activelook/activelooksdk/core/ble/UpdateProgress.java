@@ -29,6 +29,48 @@ final class UpdateProgress implements GlassesUpdate {
         this.targetConfigurationVersion = targetConfigurationVersion;
     }
 
+    UpdateProgress withStatus(final State state) {
+        return new UpdateProgress(
+                discoveredGlasses, state, progress,
+                sourceFirmwareVersion, targetFirmwareVersion,
+                sourceConfigurationVersion, targetConfigurationVersion);
+    }
+
+    UpdateProgress withProgress(final int progress) {
+        return new UpdateProgress(
+                discoveredGlasses, state, progress,
+                sourceFirmwareVersion, targetFirmwareVersion,
+                sourceConfigurationVersion, targetConfigurationVersion);
+    }
+
+    UpdateProgress withSourceFirmwareVersion(final String sourceFirmwareVersion) {
+        return new UpdateProgress(
+                discoveredGlasses, state, progress,
+                sourceFirmwareVersion, targetFirmwareVersion,
+                sourceConfigurationVersion, targetConfigurationVersion);
+    }
+
+    UpdateProgress withTargetFirmwareVersion(final String targetFirmwareVersion) {
+        return new UpdateProgress(
+                discoveredGlasses, state, progress,
+                sourceFirmwareVersion, targetFirmwareVersion,
+                sourceConfigurationVersion, targetConfigurationVersion);
+    }
+
+    UpdateProgress withSourceConfigurationVersion(final String sourceConfigurationVersion) {
+        return new UpdateProgress(
+                discoveredGlasses, state, progress,
+                sourceFirmwareVersion, targetFirmwareVersion,
+                sourceConfigurationVersion, targetConfigurationVersion);
+    }
+
+    UpdateProgress withTargetConfigurationVersion(final String targetConfigurationVersion) {
+        return new UpdateProgress(
+                discoveredGlasses, state, progress,
+                sourceFirmwareVersion, targetFirmwareVersion,
+                sourceConfigurationVersion, targetConfigurationVersion);
+    }
+
     @Override
     public final DiscoveredGlasses getDiscoveredGlasses() {
         return this.discoveredGlasses;
