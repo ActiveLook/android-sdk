@@ -1,6 +1,8 @@
 package com.activelook.activelooksdk.core.ble;
 
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
 import android.util.Log;
 
 import androidx.core.util.Consumer;
@@ -18,6 +20,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.List;
+
 class UpdateGlassesTask {
 
     static final String BASE_URL = "http://vps468290.ovh.net:8000";
@@ -34,6 +38,11 @@ class UpdateGlassesTask {
     private final Consumer<GlassesUpdate> onUpdateProgressCallback;
     private final Consumer<GlassesUpdate> onUpdateSuccessCallback;
     private final Consumer<GlassesUpdate> onUpdateErrorCallback;
+
+    private int suotaVersion;
+    private int suotaPatchDataSize;
+    private int suotaMtu;
+    private int suotaL2capPsm;
 
     private void onUpdateStart(final UpdateProgress progress) {
         this.progress = progress.withProgress(0);
@@ -99,6 +108,9 @@ class UpdateGlassesTask {
     private void onBluetoothError() {
     }
 
+    private void onCharacteristicError(final BluetoothGattCharacteristic characteristic) {
+    }
+
     void onFirmwareHistoryResponse(final JSONObject jsonObject) {
         try {
             final JSONObject latest = jsonObject.getJSONObject("latest");
@@ -130,17 +142,72 @@ class UpdateGlassesTask {
     private void onFirmwareDownloaded(final byte[] response) {
         this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
         Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
-        // TODO: start SPOTA or SUOTA
+        // TODO: start SUOTA
     }
 
-    // SPOTA
-    private void spotaUpdate(final GlassesGatt gatt) {
-        Log.d("SPOTA", String.format("Enabling notification"));
+    private void suotaUpdate(final GlassesGatt gatt) {
+        this.suotaRead_SUOTA_VERSION_UUID(gatt);
+    }
+
+    private void suotaRead_SUOTA_VERSION_UUID(final GlassesGatt gatt) {
+        final BluetoothGattService service = gatt.getService(GlassesGatt.SPOTA_SERVICE_UUID);
+        gatt.readCharacteristic(
+                service.getCharacteristic(GlassesGatt.SUOTA_VERSION_UUID),
+                c -> {
+                    this.suotaVersion = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                    this.suotaRead_SUOTA_PATCH_DATA_CHAR_SIZE_UUID(gatt, service);
+                },
+                this::onCharacteristicError);
+    }
+
+    private void suotaRead_SUOTA_PATCH_DATA_CHAR_SIZE_UUID(final GlassesGatt gatt, final BluetoothGattService service) {
+        gatt.readCharacteristic(
+                service.getCharacteristic(GlassesGatt.SUOTA_PATCH_DATA_CHAR_SIZE_UUID),
+                c -> {
+                    this.suotaPatchDataSize = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                    this.suotaRead_SUOTA_MTU_UUID(gatt, service);
+                },
+                this::onCharacteristicError);
+    }
+
+    private void suotaRead_SUOTA_MTU_UUID(final GlassesGatt gatt, final BluetoothGattService service) {
+        gatt.readCharacteristic(
+                service.getCharacteristic(GlassesGatt.SUOTA_MTU_UUID),
+                c -> {
+                    this.suotaMtu = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                    this.suotaRead_SUOTA_L2CAP_PSM_UUID(gatt, service);
+                },
+                this::onCharacteristicError);
+    }
+
+    private void suotaRead_SUOTA_L2CAP_PSM_UUID(final GlassesGatt gatt, final BluetoothGattService service) {
+        gatt.readCharacteristic(
+                service.getCharacteristic(GlassesGatt.SUOTA_L2CAP_PSM_UUID),
+                c -> {
+                    this.suotaL2capPsm = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                    this.enableNotifications(gatt, service);
+                },
+                this::onCharacteristicError);
+    }
+
+    private void enableNotifications(final GlassesGatt gatt, final BluetoothGattService service) {
+        Log.d("SUOTA", String.format("Enabling notification"));
         gatt.setCharacteristicNotification(
-                gatt.getService(GlassesGatt.SPOTA_SERVICE_UUID).getCharacteristic(GlassesGatt.SPOTA_SERV_STATUS_UUID),
+                service.getCharacteristic(GlassesGatt.SPOTA_SERV_STATUS_UUID),
                 true,
-                null,
+                () -> this.setSpotaMemDev(gatt),
                 this::onBluetoothError);
+    }
+
+
+    private void setSpotaMemDev(final GlassesGatt gatt) {
+        BluetoothGattCharacteristic characteristic = gatt
+                .getService(GlassesGatt.SPOTA_SERVICE_UUID)
+                .getCharacteristic(GlassesGatt.SPOTA_MEM_DEV_UUID);
+        final int memType = 0x13000000;
+        Log.d("SPOTA", "setSpotaMemDev: " + String.format("%#010x", memType));
+        characteristic.setValue(memType, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
+        gatt.writeCharacteristic(characteristic);
     }
 
 }
