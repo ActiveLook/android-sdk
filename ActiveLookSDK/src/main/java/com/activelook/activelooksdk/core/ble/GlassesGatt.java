@@ -8,12 +8,18 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
 final class GlassesGatt extends BluetoothGattCallback {
 
+    private static final UUID NOTIFICATION_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+
     private final BluetoothGatt gattDelegate;
+
+    private final HashMap<BluetoothGattDescriptor, Runnable> onDescriptorWritesSuccess;
+    private final HashMap<BluetoothGattDescriptor, Runnable> onDescriptorWritesError;
 
     GlassesGatt(
             final Context context,
@@ -21,6 +27,8 @@ final class GlassesGatt extends BluetoothGattCallback {
             final boolean autoConnect) {
         super();
         this.gattDelegate = device.connectGatt(context, autoConnect, this);
+        this.onDescriptorWritesSuccess = new HashMap<>();
+        this.onDescriptorWritesError = new HashMap<>();
     }
 
     void close() {
@@ -79,8 +87,29 @@ final class GlassesGatt extends BluetoothGattCallback {
         gattDelegate.abortReliableWrite();
     }
 
-    boolean setCharacteristicNotification(BluetoothGattCharacteristic characteristic, boolean enable) {
-        return gattDelegate.setCharacteristicNotification(characteristic, enable);
+    boolean setCharacteristicNotification(
+            final BluetoothGattCharacteristic characteristic,
+            final boolean enable,
+            final Runnable onSuccess,
+            final Runnable onError) {
+        final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(NOTIFICATION_DESCRIPTOR);
+        if (descriptor != null) {
+            if (onSuccess != null) this.onDescriptorWritesSuccess.put(descriptor, onSuccess);
+            if (onError != null) this.onDescriptorWritesError.put(descriptor, onError);
+            if (this.gattDelegate.setCharacteristicNotification(characteristic, enable)) {
+                descriptor.setValue(
+                        enable
+                        ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                        : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                if (this.gattDelegate.writeDescriptor(descriptor)) {
+                    return true;
+                }
+            }
+            if (onSuccess != null) this.onDescriptorWritesSuccess.remove(descriptor);
+            if (onError != null) this.onDescriptorWritesError.remove(descriptor);
+        }
+        if (onError != null) onError.run();
+        return false;
     }
 
     boolean readRemoteRssi() {
@@ -149,8 +178,17 @@ final class GlassesGatt extends BluetoothGattCallback {
     }
 
     @Override
-    public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+    public void onDescriptorWrite(
+            final BluetoothGatt gatt,
+            final BluetoothGattDescriptor descriptor,
+            final int status) {
+        assert this.gattDelegate == gatt;
         super.onDescriptorWrite(gatt, descriptor, status);
+        final Runnable onSuccess = this.onDescriptorWritesSuccess.remove(descriptor);
+        final Runnable onError = this.onDescriptorWritesError.remove(descriptor);
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            if (onSuccess != null) onSuccess.run();
+        } else if (onError != null) onError.run();
     }
 
     @Override
