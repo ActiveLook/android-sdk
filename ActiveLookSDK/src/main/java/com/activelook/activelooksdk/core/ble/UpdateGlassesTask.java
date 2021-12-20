@@ -96,6 +96,9 @@ class UpdateGlassesTask {
         error.printStackTrace();
     }
 
+    private void onBluetoothError() {
+    }
+
     void onFirmwareHistoryResponse(final JSONObject jsonObject) {
         try {
             final JSONObject latest = jsonObject.getJSONObject("latest");
@@ -128,6 +131,16 @@ class UpdateGlassesTask {
         this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
         Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
         // TODO: start SPOTA or SUOTA
+    }
+
+    // SPOTA
+    private void spotaUpdate(final GlassesGatt gatt) {
+        Log.d("SPOTA", String.format("Enabling notification"));
+        gatt.setCharacteristicNotification(
+                gatt.getService(GlassesGatt.SPOTA_SERVICE_UUID).getCharacteristic(GlassesGatt.SPOTA_SERV_STATUS_UUID),
+                true,
+                null,
+                this::onBluetoothError);
     }
 
 }

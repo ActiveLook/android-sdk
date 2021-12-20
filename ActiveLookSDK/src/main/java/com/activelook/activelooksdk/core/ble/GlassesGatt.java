@@ -16,6 +16,9 @@ final class GlassesGatt extends BluetoothGattCallback {
 
     private static final UUID NOTIFICATION_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
+    public static final UUID SPOTA_SERVICE_UUID = UUID.fromString("0000fef5-0000-1000-8000-00805f9b34fb");
+    public static final UUID SPOTA_SERV_STATUS_UUID = UUID.fromString("5f78df94-798c-46f5-990a-b3eb6a065c88");
+
     private final BluetoothGatt gattDelegate;
 
     private final HashMap<BluetoothGattDescriptor, Runnable> onDescriptorWritesSuccess;
