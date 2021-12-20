@@ -35,6 +35,9 @@ final class GlassesGatt extends BluetoothGattCallback {
     private final HashMap<BluetoothGattCharacteristic, Consumer<BluetoothGattCharacteristic>> onCharacteristicReadsSuccess;
     private final HashMap<BluetoothGattCharacteristic, Consumer<BluetoothGattCharacteristic>> onCharacteristicReadsError;
 
+    private final HashMap<BluetoothGattCharacteristic, Consumer<BluetoothGattCharacteristic>> onCharacteristicWritesSuccess;
+    private final HashMap<BluetoothGattCharacteristic, Consumer<BluetoothGattCharacteristic>> onCharacteristicWritesError;
+
     GlassesGatt(
             final Context context,
             final BluetoothDevice device,
@@ -45,6 +48,8 @@ final class GlassesGatt extends BluetoothGattCallback {
         this.onDescriptorWritesError = new HashMap<>();
         this.onCharacteristicReadsSuccess = new HashMap<>();
         this.onCharacteristicReadsError = new HashMap<>();
+        this.onCharacteristicWritesSuccess = new HashMap<>();
+        this.onCharacteristicWritesError = new HashMap<>();
     }
 
     void close() {
@@ -96,8 +101,25 @@ final class GlassesGatt extends BluetoothGattCallback {
         return false;
     }
 
-    boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) {
-        return gattDelegate.writeCharacteristic(characteristic);
+    boolean writeCharacteristic(
+            final BluetoothGattCharacteristic characteristic,
+            final Consumer<BluetoothGattCharacteristic> onSuccess,
+            final Consumer<BluetoothGattCharacteristic> onError) {
+        if (characteristic == null) {
+            if (onError != null) onError.accept(null);
+            return false;
+        }
+        if (onSuccess != null) this.onCharacteristicWritesSuccess.put(characteristic, onSuccess);
+        if (onError != null) this.onCharacteristicWritesError.put(characteristic, onError);
+        if (this.gattDelegate.writeCharacteristic(characteristic)) {
+            return true;
+        }
+        if (onSuccess != null) this.onCharacteristicWritesSuccess.remove(characteristic);
+        if (onError != null) {
+            this.onCharacteristicWritesError.remove(characteristic);
+            onError.accept(null);
+        }
+        return false;
     }
 
     boolean readDescriptor(BluetoothGattDescriptor descriptor) {
@@ -203,7 +225,13 @@ final class GlassesGatt extends BluetoothGattCallback {
 
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+        assert this.gattDelegate == gatt;
         super.onCharacteristicWrite(gatt, characteristic, status);
+        final Consumer<BluetoothGattCharacteristic> onSuccess = this.onCharacteristicWritesSuccess.remove(characteristic);
+        final Consumer<BluetoothGattCharacteristic> onError = this.onCharacteristicWritesError.remove(characteristic);
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            if (onSuccess != null) onSuccess.accept(characteristic);
+        } else if (onError != null) onError.accept(characteristic);
     }
 
     @Override
