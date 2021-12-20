@@ -26,7 +26,9 @@ public interface GlassesUpdate {
     String getSourceConfigurationVersion();
     String getTargetConfigurationVersion();
     enum State {
+        DOWNLOADING_FIRMWARE,
         UPDATING_FIRMWARE,
+        DOWNLOADING_CONFIGURATION,
         UPDATING_CONFIGURATION,
         ERROR_UPDATE_FAIL,
         ERROR_UPDATE_FORBIDDEN,
