@@ -195,19 +195,34 @@ class UpdateGlassesTask {
         gatt.setCharacteristicNotification(
                 service.getCharacteristic(GlassesGatt.SPOTA_SERV_STATUS_UUID),
                 true,
-                () -> this.setSpotaMemDev(gatt),
+                () -> this.setSpotaMemDev(gatt, service),
                 this::onBluetoothError);
     }
 
-
-    private void setSpotaMemDev(final GlassesGatt gatt) {
-        BluetoothGattCharacteristic characteristic = gatt
-                .getService(GlassesGatt.SPOTA_SERVICE_UUID)
-                .getCharacteristic(GlassesGatt.SPOTA_MEM_DEV_UUID);
+    private void setSpotaMemDev(final GlassesGatt gatt, final BluetoothGattService service) {
         final int memType = 0x13000000;
         Log.d("SPOTA", "setSpotaMemDev: " + String.format("%#010x", memType));
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(GlassesGatt.SPOTA_MEM_DEV_UUID);
         characteristic.setValue(memType, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
-        gatt.writeCharacteristic(characteristic);
+        gatt.writeCharacteristic(
+                characteristic,
+                c -> {
+                    this.setSpotaGpioMap(gatt, service);
+                },
+                this::onCharacteristicError);
+    }
+
+    private void setSpotaGpioMap(final GlassesGatt gatt, final BluetoothGattService service) {
+        final int memInfoData = 0x05060300;
+        Log.d("SPOTA", "setSpotaGpioMap: " + String.format("%#010x", memInfoData));
+        BluetoothGattCharacteristic characteristic = service.getCharacteristic(GlassesGatt.SPOTA_GPIO_MAP_UUID);
+        characteristic.setValue(memInfoData, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
+        gatt.writeCharacteristic(
+                characteristic,
+                c -> {
+                    // this.setPatchLength(gatt, service);
+                },
+                this::onCharacteristicError);
     }
 
 }

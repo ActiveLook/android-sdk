@@ -21,6 +21,7 @@ final class GlassesGatt extends BluetoothGattCallback {
     public static final UUID SPOTA_SERVICE_UUID = UUID.fromString("0000fef5-0000-1000-8000-00805f9b34fb");
     public static final UUID SPOTA_SERV_STATUS_UUID = UUID.fromString("5f78df94-798c-46f5-990a-b3eb6a065c88");
     public static final UUID SPOTA_MEM_DEV_UUID = UUID.fromString("8082caa8-41a6-4021-91c6-56f9b954cc34");
+    public static final UUID SPOTA_GPIO_MAP_UUID = UUID.fromString("724249f0-5eC3-4b5f-8804-42345af08651");
 
     public static final UUID SUOTA_VERSION_UUID = UUID.fromString("64B4E8B5-0DE5-401B-A21D-ACC8DB3B913A");
     public static final UUID SUOTA_PATCH_DATA_CHAR_SIZE_UUID = UUID.fromString("42C3DFDD-77BE-4D9C-8454-8F875267FB3B");
