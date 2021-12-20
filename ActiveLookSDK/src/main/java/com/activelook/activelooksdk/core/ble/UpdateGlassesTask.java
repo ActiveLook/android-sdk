@@ -127,6 +127,7 @@ class UpdateGlassesTask {
     private void onFirmwareDownloaded(final byte[] response) {
         this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
         Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
+        // TODO: start SPOTA or SUOTA
     }
 
 }
