@@ -14,6 +14,8 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 class UpdateGlassesTask {
@@ -95,7 +97,36 @@ class UpdateGlassesTask {
     }
 
     void onFirmwareHistoryResponse(final JSONObject jsonObject) {
-        Log.d("UPDATE", String.format("Received firmware history: %s", jsonObject));
+        try {
+            final JSONObject latest = jsonObject.getJSONObject("latest");
+            Log.d("FW_LATEST", String.format("%s", latest));
+            final JSONArray lVersion = latest.getJSONArray("version");
+            final int major = lVersion.getInt(0);
+            final int minor = lVersion.getInt(1);
+            final int patch = lVersion.getInt(2);
+            this.progress = this.progress.withTargetFirmwareVersion(String.format("%d.%d.%d", major, minor, patch));
+            if (
+                    major > this.gVersion.getMajor()
+                            || (major == this.gVersion.getMajor() && minor >  this.gVersion.getMinor())
+                            || (major == this.gVersion.getMajor() && minor == this.gVersion.getMinor() && patch > this.gVersion.getPatch())
+            ) {
+                this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_FIRMWARE));
+                this.requestQueue.add(new FileRequest(
+                        String.format("%s%s", BASE_URL, latest.getString("api_path")),
+                        this::onFirmwareDownloaded,
+                        this::onApiFail
+                ));
+            } else {
+                Log.d("FW_LATEST", String.format("No firmware update available"));
+            }
+        } catch (final JSONException e) {
+            this.onApiFail(e);
+        }
+    }
+
+    private void onFirmwareDownloaded(final byte[] response) {
+        this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
+        Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
     }
 
 }
