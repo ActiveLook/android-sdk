@@ -41,7 +41,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-class GlassesGattCallbackImpl extends BluetoothGattCallback {
+class GlassesGattCallbackImpl extends GlassesGatt {
 
     private final BluetoothDevice device;
     private final DeviceInformation deviceInfo;
@@ -51,7 +51,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
     private final BluetoothGatt gatt;
     private int mtu;
     private GlassesImpl glasses;
-    private Consumer<Glasses> onConnected;
+    private Consumer<GlassesImpl> onConnected;
     private Consumer<Glasses> onDisconnected;
     private Runnable onConnectionFail;
     private byte[] pendingBuffer;
@@ -61,10 +61,10 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
     private ScheduledFuture<?> repairFlowControl;
 
     GlassesGattCallbackImpl(BluetoothDevice device, GlassesImpl bleGlasses,
-                            Consumer<Glasses> onConnected,
+                            Consumer<GlassesImpl> onConnected,
                             Runnable onConnectionFail,
                             Consumer<Glasses> onDisconnected) {
-        super();
+        super(BleSdkSingleton.getInstance().getContext(), device, true);
         this.device = device;
         this.deviceInfo = new DeviceInformation();
         this.pendingWriteRxCharacteristic = new ConcurrentLinkedDeque<>();
@@ -80,7 +80,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         this.setOnConnect(onConnected);
         this.setOnConnectionFail(onConnectionFail);
         this.setOnDisconnected(onDisconnected);
-        this.gatt = this.device.connectGatt(sdk.getContext(), true, this);
+        this.gatt = this.gattDelegate;
         sdk.registerConnectedGlasses(this.glasses);
     }
 
@@ -284,7 +284,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         this.onConnectionFail = onConnectionFail;
     }
 
-    void setOnConnect(Consumer<Glasses> onConnected) {
+    void setOnConnect(Consumer<GlassesImpl> onConnected) {
         this.onConnected = onConnected;
     }
 
