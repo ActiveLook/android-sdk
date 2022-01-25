@@ -21,6 +21,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 
 class UpdateGlassesTask {
@@ -152,6 +156,17 @@ class UpdateGlassesTask {
             }
         } catch (final JSONException e) {
             this.onApiFail(e);
+        }
+    }
+
+    private void onConfigurationDownloaded(final byte[] response) {
+        this.onUpdateProgress(this.progress.withStatus(GlassesUpdate.State.UPDATING_CONFIGURATION).withProgress(0));
+        Log.d("CFG DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
+        try {
+            this.glasses.loadConfiguration(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response))));
+            this.onConnected.accept(this.glasses);
+        } catch (IOException e) {
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
         }
     }
 
