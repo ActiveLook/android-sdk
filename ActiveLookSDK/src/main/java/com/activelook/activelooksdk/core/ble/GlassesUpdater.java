@@ -38,6 +38,7 @@ class GlassesUpdater {
                 this.requestQueue,
                 discoveredGlasses,
                 glasses,
+                onConnected,
                 this.onUpdateStart,
                 this.onUpdateProgress,
                 this.onUpdateSuccess,

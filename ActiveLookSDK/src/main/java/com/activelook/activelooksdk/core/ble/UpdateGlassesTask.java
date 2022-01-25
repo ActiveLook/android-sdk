@@ -37,6 +37,8 @@ class UpdateGlassesTask {
     private final GlassesVersion gVersion;
     private UpdateProgress progress;
 
+    private final Consumer<Glasses> onConnected;
+
     private final Consumer<GlassesUpdate> onUpdateStartCallback;
     private final Consumer<GlassesUpdate> onUpdateProgressCallback;
     private final Consumer<GlassesUpdate> onUpdateSuccessCallback;
@@ -74,6 +76,7 @@ class UpdateGlassesTask {
             final RequestQueue requestQueue,
             final DiscoveredGlasses discoveredGlasses,
             final GlassesImpl glasses,
+            final Consumer<Glasses> onConnected,
             final Consumer<GlassesUpdate> onUpdateStart,
             final Consumer<GlassesUpdate> onUpdateProgress,
             final Consumer<GlassesUpdate> onUpdateSuccess,
@@ -81,6 +84,7 @@ class UpdateGlassesTask {
         this.requestQueue = requestQueue;
         this.discoveredGlasses = discoveredGlasses;
         this.glasses = glasses;
+        this.onConnected = onConnected;
         this.onUpdateStartCallback = onUpdateStart;
         this.onUpdateProgressCallback = onUpdateProgress;
         this.onUpdateSuccessCallback = onUpdateSuccess;
