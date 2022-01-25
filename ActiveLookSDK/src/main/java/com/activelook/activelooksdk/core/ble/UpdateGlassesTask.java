@@ -154,6 +154,22 @@ class UpdateGlassesTask {
                 ));
             } else {
                 Log.d("FW_LATEST", String.format("No firmware update available"));
+                this.glasses.cfgRead("ALooK", info -> {
+                    @SuppressLint("DefaultLocale")
+                    final String strVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
+
+                    @SuppressLint("DefaultLocale")
+                    final String cfgHistoryURL = String.format("%s/configurations/%s/%s?compatibility=%d&max-version=%s",
+                            BASE_URL, "ALK01A", FW_CHANNEL, FW_COMPAT, strVersion);
+
+                    this.requestQueue.add(new JsonObjectRequest(
+                            Request.Method.GET,
+                            cfgHistoryURL,
+                            null,
+                            r -> this.onConfigurationHistoryResponse(r, info),
+                            this::onApiFail
+                    ));
+                });
             }
         } catch (final JSONException e) {
             this.onApiFail(e);
