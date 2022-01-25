@@ -102,7 +102,7 @@ class GlassesGatt extends BluetoothGattCallback {
         if (onSuccess != null) this.onCharacteristicReadsSuccess.remove(characteristic);
         if (onError != null) {
             this.onCharacteristicReadsError.remove(characteristic);
-            onError.accept(null);
+            onError.accept(characteristic);
         }
         return false;
     }
@@ -123,7 +123,7 @@ class GlassesGatt extends BluetoothGattCallback {
         if (onSuccess != null) this.onCharacteristicWritesSuccess.remove(characteristic);
         if (onError != null) {
             this.onCharacteristicWritesError.remove(characteristic);
-            onError.accept(null);
+            onError.accept(characteristic);
         }
         return false;
     }
