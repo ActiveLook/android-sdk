@@ -28,12 +28,9 @@ import com.activelook.activelooksdk.Glasses;
 import com.activelook.activelooksdk.core.Command;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
-import com.activelook.activelooksdk.types.Utils;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -279,55 +276,54 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     }
 
     synchronized void unstackWriteRxCharacteristic() {
-        if (this.flowControlCanSend.get() && this.pendingWriteRxCharacteristic.size()>0 && this.isWritingCommand.compareAndSet(false, true)) {
-            final ConcurrentLinkedQueue<byte []> stack = new ConcurrentLinkedQueue<>();
+        if (this.flowControlCanSend.get() && this.pendingWriteRxCharacteristic.size() > 0 && this.isWritingCommand.compareAndSet(false, true)) {
+            final ConcurrentLinkedDeque<byte []> stack = new ConcurrentLinkedDeque<>();
+            final int writeMTU = this.mtu - 3;
             int stackSize = 0;
-            while (stackSize < this.mtu && this.pendingWriteRxCharacteristic.size()>0 && stack.size() < 4) {
+            while (stackSize < writeMTU && this.pendingWriteRxCharacteristic.size() > 0 && stack.size() < 1) {
                 final byte [] buffer = this.pendingWriteRxCharacteristic.poll();
-                stack.add(buffer);
-                stackSize += buffer.length;
+                if (buffer.length > 0) {
+                    stack.add(buffer);
+                    stackSize += buffer.length;
+                }
             }
-            final byte [] payload = new byte [Math.min(stackSize, this.mtu)];
+            final byte [] payload;
+            if (stackSize > writeMTU) {
+                payload = new byte [writeMTU];
+                final int sizeOutOfPayload = stackSize - writeMTU;
+                final byte[] remainingBuffer = new byte [sizeOutOfPayload];
+                final byte[] incompleteBuffer = stack.pollLast();
+                final int sizeInPayload = incompleteBuffer.length - sizeOutOfPayload;
+                final int incompleteBufferOffset = writeMTU - sizeInPayload;
+                System.arraycopy(incompleteBuffer, 0, payload, incompleteBufferOffset, sizeInPayload);
+                System.arraycopy(incompleteBuffer, sizeInPayload, remainingBuffer, 0, sizeOutOfPayload);
+                this.pendingWriteRxCharacteristic.addFirst(remainingBuffer);
+            } else {
+                payload = new byte [stackSize];
+            }
             int offset = 0;
-            while (stack.size() > 1) {
+            while (!stack.isEmpty()) {
                 final byte [] buffer = stack.poll();
                 System.arraycopy(buffer, 0, payload, offset, buffer.length);
                 offset += buffer.length;
             }
-            final byte[] buffer = stack.poll();
-            final int sizeOutOfPayload = Math.max(0, stackSize - this.mtu);
-            if (sizeOutOfPayload <= 0) {
-                System.arraycopy(buffer, 0, payload, offset, buffer.length);
+            if (this.flowControlCanSend.get()) {
+                if (!this.getRxCharacteristic().setValue(payload)) {
+                    this.pendingWriteRxCharacteristic.addFirst(payload);
+                    this.isWritingCommand.set(false);
+                    this.unstackWriteRxCharacteristic();
+                } else {
+                    this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+                    if (!this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
+                        this.pendingWriteRxCharacteristic.addFirst(payload);
+                        this.isWritingCommand.set(false);
+                        this.unstackWriteRxCharacteristic();
+                    }
+                }
             } else {
-                this.pendingWriteRxCharacteristic.addFirst(buffer);
-            }
-            Log.d("unstackWriteCommand", String.format("write rx: %s", Utils.bytesToHexString(payload)));
-            while(!this.getRxCharacteristic().setValue(payload)) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                Log.e("unstackWriteCommand", String.format("Could not update rx: %s", Utils.bytesToHexString(buffer)));
-            }
-            while(!this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                Log.e("unstackWriteCommand", String.format("Could not write rx: %s", Utils.bytesToHexString(buffer)));
-            }
-        } else {
-            Log.d("unstackWriteCommand", String.format("Stacking %d", this.pendingWriteRxCharacteristic.size()));
-            if (!this.flowControlCanSend.get()) {
-                Log.d("unstackWriteCommand", String.format("flow control busy"));
-            }
-            if (this.isWritingCommand.get()) {
-                Log.d("unstackWriteCommand", String.format("already writing"));
-            }
-            if (this.pendingWriteRxCharacteristic.size()==0) {
-                Log.d("unstackWriteCommand", String.format("nothing to send"));
+                this.pendingWriteRxCharacteristic.addFirst(payload);
+                this.isWritingCommand.set(false);
+                this.unstackWriteRxCharacteristic();
             }
         }
     }
