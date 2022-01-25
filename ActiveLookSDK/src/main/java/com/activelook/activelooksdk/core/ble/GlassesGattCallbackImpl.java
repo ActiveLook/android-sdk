@@ -213,7 +213,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                     if (GlassesGattCallbackImpl.this.flowControlCanSend.compareAndSet(false, true)) {
                         GlassesGattCallbackImpl.this.unstackWriteRxCharacteristic();
                     }
-                }, 750, TimeUnit.MILLISECONDS);
+                }, 1000, TimeUnit.MILLISECONDS);
             } else if (this.onFlowControlEvent != null) {
                 if (state == (byte) 0x03) {
                     this.onFlowControlEvent.accept(FlowControlStatus.CMD_ERROR);
