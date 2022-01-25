@@ -154,13 +154,8 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
         if (characteristic.equals(this.getRxCharacteristic())) {
-            // this.isWritingCommand.set(false);
-            // this.unstackWriteRxCharacteristic();
-            final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-            executorService.schedule(() -> {
-                this.isWritingCommand.set(false);
-                this.unstackWriteRxCharacteristic();
-            }, 25, TimeUnit.MILLISECONDS);
+            this.isWritingCommand.set(false);
+            this.unstackWriteRxCharacteristic();
         }
     }
 
