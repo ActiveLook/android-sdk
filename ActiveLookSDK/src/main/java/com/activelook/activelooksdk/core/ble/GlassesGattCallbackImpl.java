@@ -274,8 +274,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     }
 
     void writeRxCharacteristic(byte[] bytes) {
-        final byte [][] chunks = Utils.split(bytes, this.mtu);
-        this.pendingWriteRxCharacteristic.addAll(Arrays.asList(chunks));
+        this.pendingWriteRxCharacteristic.add(bytes);
         this.unstackWriteRxCharacteristic();
     }
 
