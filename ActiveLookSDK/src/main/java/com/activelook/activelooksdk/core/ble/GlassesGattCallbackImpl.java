@@ -16,7 +16,6 @@ package com.activelook.activelooksdk.core.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
@@ -43,7 +42,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 class GlassesGattCallbackImpl extends GlassesGatt {
 
-    private final BluetoothDevice device;
     private final DeviceInformation deviceInfo;
     private final ConcurrentLinkedDeque<byte []> pendingWriteRxCharacteristic;
     private final AtomicBoolean flowControlCanSend;
@@ -65,12 +63,11 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                             Runnable onConnectionFail,
                             Consumer<Glasses> onDisconnected) {
         super(BleSdkSingleton.getInstance().getContext(), device, true);
-        this.device = device;
         this.deviceInfo = new DeviceInformation();
         this.pendingWriteRxCharacteristic = new ConcurrentLinkedDeque<>();
         this.flowControlCanSend = new AtomicBoolean(true);
         this.isWritingCommand = new AtomicBoolean(false);
-        this.mtu = 20;
+        this.mtu = 23;
         this.glasses = bleGlasses;
         this.onBatteryLevelEvent = null;
         this.onFlowControlEvent = null;
@@ -84,16 +81,21 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         sdk.registerConnectedGlasses(this.glasses);
     }
 
+    private void optimizeMtu(final int optimalMtu) {
+        if (optimalMtu > this.mtu) {
+            if (!this.gatt.requestMtu(optimalMtu)) {
+                this.optimizeMtu(optimalMtu - 1);
+            }
+        } else if (!this.gatt.discoverServices()) {
+            this.optimizeMtu(optimalMtu);
+        }
+    }
+
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         super.onConnectionStateChange(gatt, status, newState);
         if (newState == BluetoothProfile.STATE_CONNECTED) {
-            int rmtu = 512;
-            Log.e("MTU", String.format("MTU=%d, status=%d", mtu, status));
-            while (!this.gatt.requestMtu(rmtu)) {
-                rmtu--;
-                Log.e("MTU", String.format("MTU=%d, status=%d", mtu, status));
-            }
+            this.optimizeMtu(512);
         } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
             if (this.onConnectionFail != null) {
                 this.onConnectionFail.run();
@@ -109,12 +111,8 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         super.onMtuChanged(gatt, mtu, status);
         if (status == BluetoothGatt.GATT_SUCCESS) {
             this.mtu = mtu;
-            Log.i("MTU", String.format("MTU=%d, status=%d", mtu, status));
-            this.gatt.discoverServices();
-        } else {
-            Log.e("MTU", String.format("MTU=%d, status=%d", mtu, status));
-            this.gatt.requestMtu(mtu);
         }
+        this.optimizeMtu(mtu);
     }
 
     @Override
