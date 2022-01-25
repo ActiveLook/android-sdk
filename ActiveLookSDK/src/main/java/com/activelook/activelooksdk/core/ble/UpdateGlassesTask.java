@@ -10,6 +10,7 @@ import androidx.core.util.Pair;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
+import com.activelook.activelooksdk.types.ConfigurationElementsInfo;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.GlassesUpdate;
 import com.activelook.activelooksdk.types.GlassesVersion;
@@ -153,6 +154,29 @@ class UpdateGlassesTask {
                 ));
             } else {
                 Log.d("FW_LATEST", String.format("No firmware update available"));
+            }
+        } catch (final JSONException e) {
+            this.onApiFail(e);
+        }
+    }
+
+    private void onConfigurationHistoryResponse(final JSONObject jsonObject, final ConfigurationElementsInfo info) {
+        try {
+            final JSONObject latest = jsonObject.getJSONObject("latest");
+            Log.d("CFG_LATEST", String.format("%s", latest));
+            final JSONArray lVersion = latest.getJSONArray("version");
+            final int version = lVersion.getInt(3);
+            this.progress = this.progress.withTargetConfigurationVersion(String.format("%d", version));
+            if (version > info.getVersion()) {
+                this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_CONFIGURATION));
+                this.requestQueue.add(new FileRequest(
+                        String.format("%s%s", BASE_URL, latest.getString("api_path")),
+                        this::onConfigurationDownloaded,
+                        this::onApiFail
+                ));
+            } else {
+                Log.d("CFG_LATEST", String.format("No configuration update available"));
+                this.onConnected.accept(this.glasses);
             }
         } catch (final JSONException e) {
             this.onApiFail(e);
