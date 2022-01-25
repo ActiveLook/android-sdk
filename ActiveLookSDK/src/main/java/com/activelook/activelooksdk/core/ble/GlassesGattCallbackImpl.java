@@ -145,7 +145,6 @@ class GlassesGattCallbackImpl extends GlassesGatt {
             this.setOnConnectionFail(null);
             if (this.onConnected != null) {
                 this.onConnected.accept(this.glasses);
-                Log.e("onDescriptorWrite", "DONE");
             }
         }
     }
@@ -162,7 +161,6 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
-        Log.e("onCharacteristicChanged", characteristic.getUuid().toString());
         if (characteristic.getUuid().equals(BleUUID.ActiveLookTxCharacteristic)) {
             byte[] buffer = characteristic.getValue();
             if (this.pendingBuffer != null) {
@@ -171,12 +169,10 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                 if (Command.isValidBuffer(buffer)) {
                     this.pendingBuffer = null;
                     final Command command = new Command(buffer);
-                    Log.w("onTXChanged Buffered", command.toString());
                     this.glasses.callCallback(command);
                 }
             } else if (Command.isValidBuffer(buffer)) {
                 final Command command = new Command(buffer);
-                Log.w("onTXChanged", command.toString());
                 this.glasses.callCallback(command);
             } else {
                 this.addPendingBuffer(buffer);
@@ -196,12 +192,10 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                     this.repairFlowControl.cancel(false);
                     this.repairFlowControl = null;
                 }
-                Log.e("FLOW CONTROL", String.format("Glasses flow control CAN SEND"));
                 if (this.flowControlCanSend.compareAndSet(false, true)) {
                     this.unstackWriteRxCharacteristic();
                 }
             } else if (state == (byte) 0x02) {
-                Log.e("FLOW CONTROL", String.format("Glasses flow control STOP SEND"));
                 this.flowControlCanSend.set(false);
                 if (this.repairFlowControl != null) {
                     this.repairFlowControl.cancel(true);
@@ -209,7 +203,6 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                 final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
                 this.repairFlowControl = executorService.schedule(() -> {
                     GlassesGattCallbackImpl.this.repairFlowControl = null;
-                    Log.e("FLOW CONTROL", String.format("Glasses flow control FORCED CAN SEND"));
                     if (GlassesGattCallbackImpl.this.flowControlCanSend.compareAndSet(false, true)) {
                         GlassesGattCallbackImpl.this.unstackWriteRxCharacteristic();
                     }
@@ -226,7 +219,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                 }
             }
         } else {
-            Log.e("onCharacteristicChanged", Command.bytesToStr(characteristic.getValue()));
+            Log.w("onCharacteristicChanged", String.format("%s: %s", characteristic.getUuid(), Command.bytesToStr(characteristic.getValue())));
         }
     }
 
@@ -238,7 +231,6 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     @Override
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         super.onDescriptorWrite(gatt, descriptor, status);
-        Log.e("onDescriptorWrite", descriptor.getCharacteristic().getUuid().toString());
         if (descriptor.getCharacteristic().getUuid().equals(BleUUID.ActiveLookFlowControlCharacteristic)) {
             this.activateNotification(this.getTxCharacteristic());
         } else if (descriptor.getCharacteristic().getUuid().equals(BleUUID.ActiveLookTxCharacteristic)) {
