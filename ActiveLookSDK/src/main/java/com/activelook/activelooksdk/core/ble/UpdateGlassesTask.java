@@ -94,7 +94,7 @@ class UpdateGlassesTask {
         this.gVersion = new GlassesVersion(gInfo.getFirmwareVersion());
 
         @SuppressLint("DefaultLocale")
-        final String strVersion = String.format("%d.%d.%d",this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
+        final String strVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
         this.progress = new UpdateProgress(discoveredGlasses, GlassesUpdate.State.DOWNLOADING_FIRMWARE, 0,
                 strVersion, "", "", "");
@@ -105,7 +105,7 @@ class UpdateGlassesTask {
         final String fwHistoryURL = String.format("%s/firmwares/%s/%s?compatibility=%d&min-version=%s",
                 BASE_URL, "ALK01A", FW_CHANNEL, FW_COMPAT, strVersion);
 
-        requestQueue.add(new JsonObjectRequest(
+        this.requestQueue.add(new JsonObjectRequest(
                 Request.Method.GET,
                 fwHistoryURL,
                 null,
