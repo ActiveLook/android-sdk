@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class UpdateGlassesTask {
 
@@ -53,6 +54,9 @@ class UpdateGlassesTask {
     private int suotaPatchDataSize = 20;
     private int suotaMtu = 23;
     private int suotaL2capPsm = 0;
+
+    private AtomicBoolean setSpotaGpioMapReady = new AtomicBoolean(false);
+    private AtomicBoolean sendEndSignalReady = new AtomicBoolean(true);
 
     private Firmware firmware;
     private List<Pair<Integer, List<byte[]>>> blocks;
@@ -293,11 +297,15 @@ class UpdateGlassesTask {
                 characteristic,
                 c -> {
                     Log.d("SPOTA", "Wait for notification for setSpotaMemDev.");
+                    this.setSpotaGpioMap(gatt, service);
                 },
                 this::onCharacteristicError);
     }
 
     private void setSpotaGpioMap(final GlassesGatt gatt, final BluetoothGattService service) {
+        if (this.setSpotaGpioMapReady.compareAndSet(false, true)) {
+            return;
+        }
         final int memInfoData = 0x05060300;
         Log.d("SPOTA", "setSpotaGpioMap: " + String.format("%#010x", memInfoData));
         final BluetoothGattCharacteristic characteristic = service.getCharacteristic(GlassesGatt.SPOTA_GPIO_MAP_UUID);
@@ -362,25 +370,38 @@ class UpdateGlassesTask {
     }
 
     private void sendEndSignal(final GlassesGatt gatt, final BluetoothGattService service) {
-        Log.d("SUOTA", "sendEndSignal");
-        final BluetoothGattCharacteristic characteristic = service.getCharacteristic(GlassesGatt.SPOTA_MEM_DEV_UUID);
-        characteristic.setValue(0xfe000000, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
-        gatt.writeCharacteristic(
-                characteristic,
-                c -> this.sendRebootSignal(gatt, service),
-                this::onCharacteristicError);
+        if (!this.sendEndSignalReady.compareAndSet(true, false)) {
+            return;
+        }
+        Log.d("SUOTA", "disable notification");
+        gatt.setCharacteristicNotification(
+                service.getCharacteristic(GlassesGatt.SPOTA_SERV_STATUS_UUID),
+                false,
+                () -> {
+                    Log.d("SUOTA", "sendEndSignal");
+                    final BluetoothGattCharacteristic characteristic = service.getCharacteristic(GlassesGatt.SPOTA_MEM_DEV_UUID);
+                    characteristic.setValue(0xfe000000, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
+                    gatt.writeCharacteristic(
+                            characteristic,
+                            c -> this.sendRebootSignal(gatt, service),
+                            this::onCharacteristicError);
+                },
+                this::onBluetoothError,
+                c -> {
+                    int value = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                    Log.d("Suota notification", String.format("SPOTA_SERV_STATUS notification ignored: %#04x", value));
+                });
     }
 
     private void sendRebootSignal(final GlassesGatt gatt, final BluetoothGattService service) {
         Log.d("SUOTA", "sendRebootSignal");
         final BluetoothGattCharacteristic characteristic = service.getCharacteristic(GlassesGatt.SPOTA_MEM_DEV_UUID);
         characteristic.setValue(0xfd000000, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
-        gatt.writeCharacteristic(
-                characteristic,
-                c -> {
-                    Log.d("SUOTA", String.format("REBOOTING"));
-                },
-                this::onCharacteristicError);
+        if (gatt.writeCharacteristic(characteristic, null, null)) {
+            this.onUpdateSuccess(progress);
+        } else {
+            this.onCharacteristicError(characteristic);
+        }
     }
 
 }
