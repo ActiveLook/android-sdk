@@ -23,6 +23,9 @@ import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DebugActivity extends AppCompatActivity {
@@ -83,21 +86,71 @@ public class DebugActivity extends AppCompatActivity {
         this.connectOneGlasses();
     }
 
+    private void loopCfgRead(final int i, final Glasses g) {
+        if (i > 0) {
+            g.cfgRead("ALooK", info -> {
+                Log.i("Loop", String.format("%d", i));
+            });
+            this.loopCfgRead(i-1, g);
+        }
+    }
+
     private void onGlassesConnected(final Glasses g) {
+        // this.loopCfgRead(10, g);
+
         g.subscribeToBatteryLevelNotifications(level -> Log.i("BATTERY", String.format("Glasses battery level %d", level)));
         g.subscribeToSensorInterfaceNotifications(() -> Log.i("SWIPE", String.format("Glasses swipe")));
         g.subscribeToFlowControlNotifications(fc -> Log.e("FLOW CONTROL", String.format("Glasses flow control %s", fc.name())));
 
-        g.cfgWrite("DebugApp", 1, 42);
-        g.cfgSet("DebugApp");
+        try {
+            g.cfgWrite("ALooKK", 1, 0xDEADBEEF);
+            g.cfgDelete("ALooKK");
+            // g.cfgWrite("ALooKK", 2, 0xDEADBEEF);
+            // g.cfgWrite("ALooK", 3, 0xDEADBEEF);
+            // FFD00013414C6F6F4B0000000000DEADBEEFAA
+            // FFD00013414C6F6F4B0000000006DEADBEEFAA
+
+            for (int i=0; i<1; i++) {
+                g.clear();
+            }
+
+            for (int i=0; i<0; i++) {
+                Log.i("LOAD CONFIG", String.format("NB %d", i));
+                g.loadConfiguration(new BufferedReader(new InputStreamReader(getAssets().open("cfg-4.2.1.7-ALooKK.txt"))));
+            }
+
+            g.cfgList(l -> {
+                // try {
+                //     g.loadConfiguration(new BufferedReader(new InputStreamReader(getAssets().open("cfg-4.2.1.6-ALooK.txt"))));
+                // } catch (IOException e) {
+                //     e.printStackTrace();
+                // }
+                Log.i("CFG LIST", String.format("NB %d", l.size()));
+                for (final ConfigurationDescription cfg : l) {
+                    Log.i("CFG LIST", String.format("-> %s", cfg));
+                    g.cfgRead(cfg.getName(), cfgi -> {
+                        Log.i("CFG INFO", String.format("-> %s %s", cfg.getName(), cfgi));
+                        if (l.indexOf(cfg) == l.size() - 1) {
+                            Log.i("END", "...DEBUG DONE");
+                            g.disconnect();
+                        }
+                    });
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // g.cfgWrite("DebugApp", 1, 42);
+        // g.cfgSet("DebugApp");
 
         // this.runTests01(g);
         // this.runTestsLayout(g);
-        this.runTestsGauge(g);
+        // this.runTestsGauge(g);
         // this.runTestsPage(g);
-        this.runTestsStats(g);
-        this.runTestsConfig(g);
-   }
+        // this.runTestsStats(g);
+        // this.runTestsConfig(g);
+    }
 
     private void runTestsConfig(final Glasses g) {
         g.cfgRead("DebugApp", c -> {
