@@ -115,6 +115,12 @@ class GlassesGatt extends BluetoothGattCallback {
             if (onError != null) onError.accept(null);
             return false;
         }
+        if (this.onCharacteristicWritesSuccess.containsKey(characteristic) || this.onCharacteristicWritesError.containsKey(characteristic)) {
+            if (onError != null) {
+                onError.accept(characteristic);
+            }
+            return false;
+        }
         if (onSuccess != null) this.onCharacteristicWritesSuccess.put(characteristic, onSuccess);
         if (onError != null) this.onCharacteristicWritesError.put(characteristic, onError);
         if (this.gattDelegate.writeCharacteristic(characteristic)) {
