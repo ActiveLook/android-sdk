@@ -106,4 +106,15 @@ final class UpdateProgress implements GlassesUpdate {
         return this.targetConfigurationVersion;
     }
 
+    @Override
+    public String toString() {
+        return "UpdateProgress{" +
+                "state=" + state +
+                ", progress=" + progress +
+                ", sourceFirmwareVersion='" + sourceFirmwareVersion + '\'' +
+                ", targetFirmwareVersion='" + targetFirmwareVersion + '\'' +
+                ", sourceConfigurationVersion='" + sourceConfigurationVersion + '\'' +
+                ", targetConfigurationVersion='" + targetConfigurationVersion + '\'' +
+                '}';
+    }
 }
