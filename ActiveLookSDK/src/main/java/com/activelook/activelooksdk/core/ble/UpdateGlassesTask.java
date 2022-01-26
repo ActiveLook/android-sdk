@@ -125,15 +125,18 @@ class UpdateGlassesTask {
 
     private void onApiFail(final Exception error) {
         error.printStackTrace();
+        this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
     }
 
     private void onBluetoothError() {
         Log.e("SUOTA", "Got onBluetoothError");
+        this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
     }
 
     private void onCharacteristicError(final BluetoothGattCharacteristic characteristic) {
         final Object obj = characteristic == null ? "null" : characteristic.getUuid();
         Log.e("SUOTA", String.format("Got onCharacteristicError %s", obj));
+        this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
     }
 
     void onFirmwareHistoryResponse(final JSONObject jsonObject) {
@@ -186,7 +189,9 @@ class UpdateGlassesTask {
             Log.d("CFG_LATEST", String.format("%s", latest));
             final JSONArray lVersion = latest.getJSONArray("version");
             final int version = lVersion.getInt(3);
-            this.progress = this.progress.withTargetConfigurationVersion(String.format("%d", version));
+            this.progress = this.progress
+                    .withSourceConfigurationVersion(String.format("%d", info.getVersion()))
+                    .withTargetConfigurationVersion(String.format("%d", version));
             if (version > info.getVersion()) {
                 this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_CONFIGURATION));
                 this.requestQueue.add(new FileRequest(
@@ -196,6 +201,7 @@ class UpdateGlassesTask {
                 ));
             } else {
                 Log.d("CFG_LATEST", String.format("No configuration update available"));
+                this.onUpdateSuccess(this.progress);
                 this.onConnected.accept(this.glasses);
             }
         } catch (final JSONException e) {
@@ -208,6 +214,7 @@ class UpdateGlassesTask {
         Log.d("CFG DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
         try {
             this.glasses.loadConfiguration(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response))));
+            this.onUpdateSuccess(this.progress);
             this.onConnected.accept(this.glasses);
         } catch (IOException e) {
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
@@ -285,6 +292,8 @@ class UpdateGlassesTask {
             this.setPatchLength(gatt, service);
         } else {
             Log.e("Suota notification", String.format("SPOTA_SERV_STATUS notification error: %#04x", value));
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
+            this.onConnected.accept(this.glasses);
         }
     }
 
@@ -359,6 +368,8 @@ class UpdateGlassesTask {
                         characteristic,
                         c -> this.sendBlock(gatt, service),
                         this::onCharacteristicError);
+                final int ratioBlock = (100 * this.blockId) / this.blocks.size() + (100 * this.chunkId) / (chunks.size() * this.blocks.size());
+                this.onUpdateProgress(progress.withProgress(ratioBlock));
             } else {
                 this.blockId ++;
                 this.chunkId = 0;
