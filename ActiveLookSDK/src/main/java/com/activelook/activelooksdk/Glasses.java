@@ -137,6 +137,8 @@ public interface Glasses extends Parcelable {
      * Load a configuration into the glasses.
      *
      * @param cfg The reader from which to read configuration.
+     *
+     * @throws IOException if the cfg cannot be read.
      */
     void loadConfiguration(BufferedReader cfg) throws IOException;
     /**
@@ -407,6 +409,8 @@ public interface Glasses extends Parcelable {
     void layoutClear(byte id);
     /**
      * Get the list of layout ids.
+     *
+     * @param onResult The callback handling result.
      */
     void layoutList(Consumer<List<Integer>> onResult);
     /**
@@ -430,6 +434,7 @@ public interface Glasses extends Parcelable {
      * Get a layout parameter.
      *
      * @param id   The id of the layout.
+     * @param onResult The callback handling result.
      */
     void layoutGet(byte id, Consumer<LayoutParameters> onResult);
     /**

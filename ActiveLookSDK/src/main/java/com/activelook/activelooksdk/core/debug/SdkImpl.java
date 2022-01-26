@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 class SdkImpl implements Sdk {
 
-    private AtomicBoolean isScanning = new AtomicBoolean(false);
+    private final AtomicBoolean isScanning = new AtomicBoolean(false);
 
     @Override
     public void startScan(Consumer<DiscoveredGlasses> onDiscoverGlasses) {

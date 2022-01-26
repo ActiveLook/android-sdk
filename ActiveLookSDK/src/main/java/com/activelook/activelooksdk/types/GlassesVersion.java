@@ -16,13 +16,13 @@ package com.activelook.activelooksdk.types;
 
 public final class GlassesVersion {
 
-    private short major;
-    private short minor;
-    private short patch;
-    private char extra;
-    private short year;
-    private short week;
-    private int serial;
+    private final short major;
+    private final short minor;
+    private final short patch;
+    private final char extra;
+    private final short year;
+    private final short week;
+    private final int serial;
 
     public GlassesVersion(final short major, final short minor, final short patch, final char extra, final short year,
                           final short week, final int serial) {
@@ -33,6 +33,21 @@ public final class GlassesVersion {
         this.year = year;
         this.week = week;
         this.serial = serial;
+    }
+
+    public GlassesVersion(final String version) {
+        final String [] mmp = version
+                .replaceAll("[^.0-9]", "")
+                .split("\\.");
+        final String letters = version
+                .replaceAll("[.0-9]", "");
+        this.major = mmp.length > 0 ? Short.parseShort(mmp[0]) : 0;
+        this.minor = mmp.length > 1 ? Short.parseShort(mmp[1]) : 0;
+        this.patch = mmp.length > 2 ? Short.parseShort(mmp[2]) : 0;
+        this.extra = letters.length() > 0 ? letters.charAt(letters.length() - 1) : 0;
+        this.year = 0;
+        this.week = 0;
+        this.serial = 0;
     }
 
     public String getVersion() {

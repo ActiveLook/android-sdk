@@ -7,5 +7,5 @@ dependencyResolutionManagement {
 }
 include ':ActiveLookSDK'
 include ':debugapp'
-include ':demoapp'
 rootProject.name = "Active Look SDK"
+include ':suotaapp'
