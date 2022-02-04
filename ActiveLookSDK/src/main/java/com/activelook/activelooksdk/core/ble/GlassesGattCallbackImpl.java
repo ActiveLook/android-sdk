@@ -187,7 +187,8 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         super.onCharacteristicWrite(gatt, characteristic, status);
         String s = new String(characteristic.getValue(), StandardCharsets.UTF_8);
         Timber.e("SENT GlassesCallbackImpl %s", s);
-        messageLog.postValue("SENT GlassesCallbackImpl:" + s);
+        messageLog.postValue("SENT GlassesCallbackImpl:" + s + getDevice());
+        gatt.readRemoteRssi();
         if (characteristic.equals(this.getRxCharacteristic())) {
             this.isWritingCommand.set(false);
             this.unstackWriteRxCharacteristic();
@@ -226,12 +227,11 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         super.onCharacteristicChanged(gatt, characteristic);
 
         String s = bytesToHex(characteristic.getValue());
-        if (s.isEmpty()) {
-            s = hexToAscii(characteristic.getValue().toString());
-        }
+
         Timber.e("RECEIVED GlassesCallbackImpl %s", s);
 
         messageLog.postValue("RECEIVED GlassesCallbackImpl: " + s);
+        gatt.readRemoteRssi();
 
         if (characteristic.getUuid().equals(BleUUID.ActiveLookTxCharacteristic)) {
             byte[] buffer = characteristic.getValue();
@@ -474,4 +474,11 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         this.onSensorInterfaceEvent = onEvent;
     }
 
+    @Override
+    public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status){
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            Timber.e(String.format("BluetoothGatt ReadRssi[%d]", rssi));
+            messageLog.postValue("RSSI" + rssi);
+        }
+    }
 }
