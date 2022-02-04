@@ -10,6 +10,8 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.core.util.Consumer;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -20,6 +22,7 @@ import timber.log.Timber;
 
 class GlassesGatt extends BluetoothGattCallback {
 
+    public MutableLiveData<String> messageLog = new MutableLiveData<String>("STARTING");
     private static final UUID NOTIFICATION_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     public static final UUID SPOTA_SERVICE_UUID = UUID.fromString("0000fef5-0000-1000-8000-00805f9b34fb");
@@ -236,7 +239,7 @@ class GlassesGatt extends BluetoothGattCallback {
         assert this.gattDelegate == gatt;
         String s = new String(characteristic.getValue(), StandardCharsets.UTF_8);
         Timber.e("Received GlassesGatt %s", s);
-        Log.d("Received GlassesGatt", s);
+        messageLog.postValue("RECEIVED GlassesGatt :" + s);
         super.onCharacteristicRead(gatt, characteristic, status);
         final Consumer<BluetoothGattCharacteristic> onSuccess = this.onCharacteristicReadsSuccess.remove(characteristic);
         final Consumer<BluetoothGattCharacteristic> onError = this.onCharacteristicReadsError.remove(characteristic);
@@ -257,7 +260,7 @@ class GlassesGatt extends BluetoothGattCallback {
 
         String s = new String(characteristic.getValue(), StandardCharsets.UTF_16);
         Timber.e("Sent GlassesGatt %s", s);
-        Log.d("Sent GlassesGatt", message.toString());
+        messageLog.postValue("SENT GlassesGatt: " + s);
         super.onCharacteristicWrite(gatt, characteristic, status);
         final Consumer<BluetoothGattCharacteristic> onSuccess = this.onCharacteristicWritesSuccess.remove(characteristic);
         final Consumer<BluetoothGattCharacteristic> onError = this.onCharacteristicWritesError.remove(characteristic);

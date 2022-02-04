@@ -1,25 +1,31 @@
 package com.activelook.demo.kotlin
 
 import android.Manifest
+import android.content.Intent
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
+import android.text.TextUtils
+import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
+import com.activelook.demo.kotlin.databinding.ActivityDebugAdapterItemBinding
 import com.activelook.demo.kotlin.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
 import timber.log.Timber
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
 
-    private var viewModel : MainViewModel? = null
+    private var viewModel: MainViewModel? = null
+
+    private var adapter: DebugAdapter? = null
+    private var logMessages = mutableListOf<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +40,35 @@ class MainActivity : AppCompatActivity() {
 
         observeSdkLogs()
 
+        adapter = DebugAdapter()
+        binding.rvCommand.layoutManager = LinearLayoutManager(this)
+        binding.rvCommand.adapter = adapter
+//        adapter.submitList(viewModel.getCommandList())
+
+        binding.btnClear.setOnClickListener {
+            logMessages.clear()
+            adapter?.submitList(emptyList())
+        }
+
+        binding.btnShare.setOnClickListener {
+            val joined: String = TextUtils.join("\r\n",  logMessages)
+
+            val sendIntent = Intent(Intent.ACTION_SEND)
+            sendIntent.putExtra(Intent.EXTRA_TEXT, joined)
+            sendIntent.type = "text/html"
+            startActivity(Intent.createChooser(sendIntent, "Logs"))
+        }
+
+        binding.btnSendData.setOnClickListener {
+            // send unique command
+            // marke it random ?
+        }
+
+        binding.btnSendAutoData.setOnClickListener {
+            // send automatique script
+            // stop if started
+        }
+
     }
 
     private fun observeSdkLogs() {
@@ -44,14 +79,25 @@ class MainActivity : AppCompatActivity() {
 
         viewModel?.errorMessage?.observe(this) {
             Timber.e(it)
-            Snackbar.make(binding.fabConnect, "ERROR : $it", Snackbar.LENGTH_LONG)
+            Snackbar.make(binding.btnConnect, "ERROR : $it", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
         }
 
         viewModel?.message?.observe(this) {
             Timber.e(it)
-            Snackbar.make(binding.fabConnect, "message : $it" , Snackbar.LENGTH_LONG)
+            Snackbar.make(binding.btnDisconnect, "message : $it", Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show()
+        }
+
+        viewModel?.connected?.observe(this) {
+            if (it) {
+                viewModel?.observeLogs()?.observe(this) { message ->
+                    logMessages.add(message)
+                    adapter?.addItems(logMessages)
+                }
+            } else {
+                viewModel?.logMessage?.removeObservers(this)
+            }
         }
     }
 
@@ -70,16 +116,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun manageButtonsListener() {
-        binding.fabConnect.setOnClickListener { view ->
+        binding.btnConnect.setOnClickListener { view ->
             Snackbar.make(view, "Connect", Snackbar.LENGTH_SHORT)
                 .setAction("Action", null).show()
             viewModel?.scan()
         }
 
-        binding.fabDisconnect.setOnClickListener { view ->
+        binding.btnDisconnect.setOnClickListener { view ->
             Snackbar.make(view, "Disconnect", Snackbar.LENGTH_SHORT)
                 .setAction("Action", null).show()
-            viewModel?.stopScan ()
+            viewModel?.stopScan()
             viewModel?.disconnect()
         }
     }
@@ -99,10 +145,42 @@ class MainActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+}
 
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
-        return navController.navigateUp(appBarConfiguration)
-                || super.onSupportNavigateUp()
+class DebugAdapter : ListAdapter<String, DebugAdapter.DebugViewHolder>(DIFF_CALLBACK) {
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<String>() {
+            override fun areContentsTheSame(oldItem: String, newItem: String): Boolean {
+                return oldItem == newItem
+            }
+
+            override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
+                return oldItem == newItem
+            }
+        }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = DebugViewHolder(
+        ActivityDebugAdapterItemBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+    )
+
+    override fun onBindViewHolder(holder: DebugViewHolder, position: Int) {
+        return holder.bind(getItem(position))
+    }
+
+    fun addItems(lines: List<String>) {
+        this.submitList(lines)
+        this.notifyDataSetChanged()
+    }
+
+    inner class DebugViewHolder(val binding: ActivityDebugAdapterItemBinding) :
+        RecyclerView.ViewHolder(binding.root) {
+        fun bind(item: String) = with(itemView) {
+            binding.tvCommand.text = item
+        }
     }
 }

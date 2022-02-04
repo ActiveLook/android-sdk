@@ -18,6 +18,7 @@ import android.graphics.Point;
 import android.os.Parcelable;
 
 import androidx.core.util.Consumer;
+import androidx.lifecycle.LiveData;
 
 import com.activelook.activelooksdk.types.Configuration;
 import com.activelook.activelooksdk.types.ConfigurationDescription;
@@ -45,6 +46,8 @@ import java.io.IOException;
 import java.util.List;
 
 public interface Glasses extends Parcelable {
+
+    LiveData<String> getMessageLogs();
 
     /**
      * Get the manufacturer of the glasses.

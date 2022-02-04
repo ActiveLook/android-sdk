@@ -18,6 +18,8 @@ import android.os.Parcel;
 import android.util.Log;
 
 import androidx.core.util.Consumer;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
@@ -39,6 +41,8 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
             return new GlassesImpl[size];
         }
     };
+
+    //TODO une nouvelle Gatt callback dans les Glasses impl (cf GlassesGattCallbackImpl
     final GlassesGattCallbackImpl gattCallbacks;
     private DiscoveredGlassesImpl connectedFrom;
 
@@ -66,6 +70,11 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     @Override
     public void writeBytes(byte[] bytes) {
         this.gattCallbacks.writeRxCharacteristic(bytes);
+    }
+
+    @Override
+    public LiveData getMessageLogs() {
+        return this.gattCallbacks.messageLog;
     }
 
     @Override

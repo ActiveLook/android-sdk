@@ -49,6 +49,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     private final AtomicBoolean isWritingCommand;
     private final BluetoothGatt gatt;
     private int mtu;
+    //TODO  possède une Glasses
     private GlassesImpl glasses;
     private Consumer<GlassesImpl> onConnected;
     private Consumer<Glasses> onDisconnected;
@@ -185,8 +186,8 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
         String s = new String(characteristic.getValue(), StandardCharsets.UTF_8);
-        Timber.e("Sent GlassesCallbackImpl %s", s);
-        Log.d("Sent GlassesCallbackImpl", s);
+        Timber.e("SENT GlassesCallbackImpl %s", s);
+        messageLog.postValue("SENT GlassesCallbackImpl:" + s);
         if (characteristic.equals(this.getRxCharacteristic())) {
             this.isWritingCommand.set(false);
             this.unstackWriteRxCharacteristic();
@@ -202,11 +203,14 @@ class GlassesGattCallbackImpl extends GlassesGatt {
             hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
 
-
-        return hexToAscii(new String(hexChars));
+        Timber.e("bytesToHex : " + new String(hexChars));
+        return new String(hexChars);
+//        return hexToAscii(new String(hexChars));
     }
 
     private String hexToAscii(String hexStr) {
+        //Voir si cest imprimable pour retourner la bonne valeur
+        // exemple 01 donne A qui n'est pas imprimable
         StringBuilder output = new StringBuilder("");
 
         for (int i = 0; i < hexStr.length(); i += 2) {
@@ -220,11 +224,14 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
-        // encode, convert byte[] to base64 encoded string
-        //String s = new String(characteristic.getValue(), StandardCharsets.US_ASCII);
+
         String s = bytesToHex(characteristic.getValue());
-        Timber.e("Received GlassesCallbackImpl %s", s);
-        Log.d("Received GlassesCallbackImpl", s);
+        if (s.isEmpty()) {
+            s = hexToAscii(characteristic.getValue().toString());
+        }
+        Timber.e("RECEIVED GlassesCallbackImpl %s", s);
+
+        messageLog.postValue("RECEIVED GlassesCallbackImpl: " + s);
 
         if (characteristic.getUuid().equals(BleUUID.ActiveLookTxCharacteristic)) {
             byte[] buffer = characteristic.getValue();

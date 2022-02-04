@@ -3,6 +3,7 @@ package com.activelook.demo.kotlin
 import android.app.Application
 import androidx.core.util.Consumer
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.activelook.activelooksdk.DiscoveredGlasses
@@ -24,6 +25,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val errorMessage : MutableLiveData<String?> = MutableLiveData()
 
     val message : MutableLiveData<String?> = MutableLiveData()
+
+    var logMessage : LiveData<String> = MutableLiveData()
+
+    var connected: MutableLiveData<Boolean> = MutableLiveData(false)
 
     init {
         viewModelScope.launch {
@@ -73,6 +78,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 //onconnected
                 message.postValue("Connected Success")
 
+                logMessage = glasses.messageLogs
+
                 connectedGlasses = glasses
                  connectedGlasses?.setOnDisconnected { glasses ->
                      message.postValue("OnDisconnect")
@@ -86,12 +93,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 connectedGlasses?.subscribeToSensorInterfaceNotifications {
                     message.postValue("SensorInterface")
                 }
+
+                connected.postValue(true)
+
             },
             { discoveredGlasses ->
                 //onconnection Fail
                 errorMessage.postValue("Connection Fail")
                 this.discoveredGlasses = null
                 connectedGlasses = null
+                connected.postValue(false)
             },
             { glasses ->
                 // on disconnect
@@ -99,9 +110,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 discoveredGlasses = null
                 connectedGlasses = null
                 glasses.disconnect()
+                connected.postValue(false)
             }
         ) ?:run {
             errorMessage.postValue("No Glasse Connected")
         }
+    }
+
+    fun observeLogs() :LiveData<String>? {
+        return connectedGlasses?.messageLogs
     }
 }
