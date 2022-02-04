@@ -20,6 +20,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.BluetoothStatusCodes;
 import android.util.Log;
 
 import androidx.core.util.Consumer;
@@ -30,12 +31,15 @@ import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import timber.log.Timber;
 
 class GlassesGattCallbackImpl extends GlassesGatt {
 
@@ -88,9 +92,40 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         }
     }
 
+    private void logStatusStateChanged(int status) {
+
+        switch (status) {
+            case BluetoothStatusCodes
+                    .SUCCESS: Log.e("logStatusStateChanged", "SUCCESS");
+                break;
+            case BluetoothStatusCodes
+                    .ERROR_BLUETOOTH_NOT_ALLOWED: Log.e("logStatusStateChanged", "ERROR_BLUETOOTH_NOT_ALLOWED");
+                break;
+            case BluetoothStatusCodes
+                    .ERROR_BLUETOOTH_NOT_ENABLED: Log.e("logStatusStateChanged", "ERROR_BLUETOOTH_NOT_ENABLED");
+                break;
+            case BluetoothStatusCodes
+                    .ERROR_DEVICE_NOT_BONDED: Log.e("logStatusStateChanged", "ERROR_DEVICE_NOT_BONDED");
+                break;
+            case BluetoothStatusCodes
+                    .ERROR_MISSING_BLUETOOTH_CONNECT_PERMISSION: Log.e("logStatusStateChanged", "ERROR_MISSING_BLUETOOTH_CONNECT_PERMISSION");
+                break;
+            case BluetoothStatusCodes
+                    .ERROR_UNKNOWN: Log.e("logStatusStateChanged", "ERROR_UNKNOWN");
+                break;
+            default:
+                Log.e("logStatusStateChanged", "ERROR DEFAULT");
+                break;
+        }
+    }
+
+
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         super.onConnectionStateChange(gatt, status, newState);
+
+        logStatusStateChanged(status);
+
         if (newState == BluetoothProfile.STATE_CONNECTED) {
             this.optimizeMtu(512);
         } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
@@ -149,15 +184,48 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
+        String s = new String(characteristic.getValue(), StandardCharsets.UTF_8);
+        Timber.e("Sent GlassesCallbackImpl %s", s);
+        Log.d("Sent GlassesCallbackImpl", s);
         if (characteristic.equals(this.getRxCharacteristic())) {
             this.isWritingCommand.set(false);
             this.unstackWriteRxCharacteristic();
         }
     }
 
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+    private String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+
+
+        return hexToAscii(new String(hexChars));
+    }
+
+    private String hexToAscii(String hexStr) {
+        StringBuilder output = new StringBuilder("");
+
+        for (int i = 0; i < hexStr.length(); i += 2) {
+            String str = hexStr.substring(i, i + 2);
+            output.append((char) Integer.parseInt(str, 16));
+        }
+
+        return output.toString();
+    }
+
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
+        // encode, convert byte[] to base64 encoded string
+        //String s = new String(characteristic.getValue(), StandardCharsets.US_ASCII);
+        String s = bytesToHex(characteristic.getValue());
+        Timber.e("Received GlassesCallbackImpl %s", s);
+        Log.d("Received GlassesCallbackImpl", s);
+
         if (characteristic.getUuid().equals(BleUUID.ActiveLookTxCharacteristic)) {
             byte[] buffer = characteristic.getValue();
             if (this.pendingBuffer != null) {

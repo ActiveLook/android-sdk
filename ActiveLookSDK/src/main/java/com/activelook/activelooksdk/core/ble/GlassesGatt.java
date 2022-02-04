@@ -7,12 +7,16 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+import android.util.Log;
 
 import androidx.core.util.Consumer;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+
+import timber.log.Timber;
 
 class GlassesGatt extends BluetoothGattCallback {
 
@@ -230,6 +234,9 @@ class GlassesGatt extends BluetoothGattCallback {
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         assert this.gattDelegate == gatt;
+        String s = new String(characteristic.getValue(), StandardCharsets.UTF_8);
+        Timber.e("Received GlassesGatt %s", s);
+        Log.d("Received GlassesGatt", s);
         super.onCharacteristicRead(gatt, characteristic, status);
         final Consumer<BluetoothGattCharacteristic> onSuccess = this.onCharacteristicReadsSuccess.remove(characteristic);
         final Consumer<BluetoothGattCharacteristic> onError = this.onCharacteristicReadsError.remove(characteristic);
@@ -241,6 +248,16 @@ class GlassesGatt extends BluetoothGattCallback {
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         assert this.gattDelegate == gatt;
+
+        StringBuilder message = new StringBuilder();
+
+        for (Byte b : characteristic.getValue()) {
+            message.append(b);
+        }
+
+        String s = new String(characteristic.getValue(), StandardCharsets.UTF_16);
+        Timber.e("Sent GlassesGatt %s", s);
+        Log.d("Sent GlassesGatt", message.toString());
         super.onCharacteristicWrite(gatt, characteristic, status);
         final Consumer<BluetoothGattCharacteristic> onSuccess = this.onCharacteristicWritesSuccess.remove(characteristic);
         final Consumer<BluetoothGattCharacteristic> onError = this.onCharacteristicWritesError.remove(characteristic);
