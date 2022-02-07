@@ -110,6 +110,11 @@ class UpdateGlassesTask {
         this.progress = new UpdateProgress(discoveredGlasses, GlassesUpdate.State.DOWNLOADING_FIRMWARE, 0,
                 strVersion, String.format("%d.0.0", FW_COMPAT), "", "");
 
+        if (this.gVersion.getMajor() > FW_COMPAT) {
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_DOWNGRADE_FORBIDDEN));
+            return;
+        }
+
         Log.d("UPDATE", String.format("Create update task for: %s", gInfo));
 
         @SuppressLint("DefaultLocale")
