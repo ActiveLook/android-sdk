@@ -110,6 +110,11 @@ class UpdateGlassesTask {
         this.progress = new UpdateProgress(discoveredGlasses, GlassesUpdate.State.DOWNLOADING_FIRMWARE, 0,
                 strVersion, String.format("%d.0.0", FW_COMPAT), "", "");
 
+        if (this.gVersion.getMajor() > FW_COMPAT) {
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_DOWNGRADE_FORBIDDEN));
+            return;
+        }
+
         Log.d("UPDATE", String.format("Create update task for: %s", gInfo));
 
         @SuppressLint("DefaultLocale")
@@ -127,7 +132,12 @@ class UpdateGlassesTask {
 
     private void onApiFail(final Exception error) {
         error.printStackTrace();
-        this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
+        if (this.gVersion.getMajor() < FW_COMPAT) {
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+        } else {
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
+            this.onConnected.accept(this.glasses);
+        }
     }
 
     private void onBluetoothError() {
@@ -216,8 +226,11 @@ class UpdateGlassesTask {
         Log.d("CFG DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
         try {
             this.glasses.loadConfiguration(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response))));
-            this.onUpdateSuccess(this.progress);
-            this.onConnected.accept(this.glasses);
+            this.onUpdateProgress(this.progress.withProgress(50));
+            this.glasses.cfgRead("ALooK", info -> {
+                this.onUpdateSuccess(this.progress);
+                this.onConnected.accept(this.glasses);
+            });
         } catch (IOException e) {
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
         }
