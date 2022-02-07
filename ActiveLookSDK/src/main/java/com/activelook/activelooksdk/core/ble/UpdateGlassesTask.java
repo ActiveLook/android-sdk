@@ -216,8 +216,11 @@ class UpdateGlassesTask {
         Log.d("CFG DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
         try {
             this.glasses.loadConfiguration(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response))));
-            this.onUpdateSuccess(this.progress);
-            this.onConnected.accept(this.glasses);
+            this.onUpdateProgress(this.progress.withProgress(50));
+            this.glasses.cfgRead("ALooK", info -> {
+                this.onUpdateSuccess(this.progress);
+                this.onConnected.accept(this.glasses);
+            });
         } catch (IOException e) {
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
         }
