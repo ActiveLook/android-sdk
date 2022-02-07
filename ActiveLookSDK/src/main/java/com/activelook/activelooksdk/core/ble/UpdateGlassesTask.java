@@ -31,13 +31,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 class UpdateGlassesTask {
 
-    static final String BASE_URL = "http://vps468290.ovh.net:8000";
-    static final String FW_CHANNEL = "BETA";
+    static final String BASE_URL = "http://vps468290.ovh.net/v1";
     static final int FW_COMPAT = 4;
 
     static final int BLOCK_SIZE = 240;
 
     private final RequestQueue requestQueue;
+    private final String token;
     private final GlassesImpl glasses;
     private final DiscoveredGlasses discoveredGlasses;
     private final GlassesVersion gVersion;
@@ -83,6 +83,7 @@ class UpdateGlassesTask {
 
     UpdateGlassesTask(
             final RequestQueue requestQueue,
+            final String token,
             final DiscoveredGlasses discoveredGlasses,
             final GlassesImpl glasses,
             final Consumer<Glasses> onConnected,
@@ -91,6 +92,7 @@ class UpdateGlassesTask {
             final Consumer<GlassesUpdate> onUpdateSuccess,
             final Consumer<GlassesUpdate> onUpdateError) {
         this.requestQueue = requestQueue;
+        this.token = token;
         this.discoveredGlasses = discoveredGlasses;
         this.glasses = glasses;
         this.onConnected = onConnected;
@@ -106,13 +108,13 @@ class UpdateGlassesTask {
         final String strVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
         this.progress = new UpdateProgress(discoveredGlasses, GlassesUpdate.State.DOWNLOADING_FIRMWARE, 0,
-                strVersion, "", "", "");
+                strVersion, String.format("%d.0.0", FW_COMPAT), "", "");
 
         Log.d("UPDATE", String.format("Create update task for: %s", gInfo));
 
         @SuppressLint("DefaultLocale")
         final String fwHistoryURL = String.format("%s/firmwares/%s/%s?compatibility=%d&min-version=%s",
-                BASE_URL, "ALK01A", FW_CHANNEL, FW_COMPAT, strVersion);
+                BASE_URL, gInfo.getHardwareVersion(), this.token, FW_COMPAT, strVersion);
 
         this.requestQueue.add(new JsonObjectRequest(
                 Request.Method.GET,
@@ -167,7 +169,7 @@ class UpdateGlassesTask {
 
                     @SuppressLint("DefaultLocale")
                     final String cfgHistoryURL = String.format("%s/configurations/%s/%s?compatibility=%d&max-version=%s",
-                            BASE_URL, "ALK01A", FW_CHANNEL, FW_COMPAT, strVersion);
+                            BASE_URL, this.glasses.getDeviceInformation().getHardwareVersion(), this.token, FW_COMPAT, strVersion);
 
                     this.requestQueue.add(new JsonObjectRequest(
                             Request.Method.GET,

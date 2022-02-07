@@ -48,7 +48,7 @@ public class DebugActivity extends AppCompatActivity {
             Log.d("SDK", "Init");
             Sdk.init(
                     DebugActivity.this,
-                    "unused",
+                    "bdjZ3ulWitvUzVtUHevbll1AiOANEfPYsv5u6RaGcxk",
                     gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateStart   : %s", gu)),
                     gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateProgress: %s", gu)),
                     gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateSuccess : %s", gu)),
