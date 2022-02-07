@@ -127,7 +127,12 @@ class UpdateGlassesTask {
 
     private void onApiFail(final Exception error) {
         error.printStackTrace();
-        this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
+        if (this.gVersion.getMajor() < FW_COMPAT) {
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+        } else {
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
+            this.onConnected.accept(this.glasses);
+        }
     }
 
     private void onBluetoothError() {
