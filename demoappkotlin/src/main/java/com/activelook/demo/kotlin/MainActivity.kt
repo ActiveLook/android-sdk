@@ -8,7 +8,6 @@ import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.ui.AppBarConfiguration
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
@@ -45,30 +44,6 @@ class MainActivity : AppCompatActivity() {
         binding.rvCommand.adapter = adapter
 //        adapter.submitList(viewModel.getCommandList())
 
-        binding.btnClear.setOnClickListener {
-            logMessages.clear()
-            adapter?.submitList(emptyList())
-        }
-
-        binding.btnShare.setOnClickListener {
-            val joined: String = TextUtils.join("\r\n",  logMessages)
-
-            val sendIntent = Intent(Intent.ACTION_SEND)
-            sendIntent.putExtra(Intent.EXTRA_TEXT, joined)
-            sendIntent.type = "text/html"
-            startActivity(Intent.createChooser(sendIntent, "Logs"))
-        }
-
-        binding.btnSendData.setOnClickListener {
-            // send unique command
-            // marke it random ?
-        }
-
-        binding.btnSendAutoData.setOnClickListener {
-            // send automatique script
-            // stop if started
-        }
-
     }
 
     private fun observeSdkLogs() {
@@ -95,9 +70,12 @@ class MainActivity : AppCompatActivity() {
                     logMessages.add(message)
                     adapter?.addItems(logMessages)
                 }
-            } else {
-                viewModel?.logMessage?.removeObservers(this)
             }
+        }
+
+        viewModel?.connectedGlassesLogMessage?.observe(this) { message ->
+            logMessages.add(message)
+            adapter?.addItems(logMessages)
         }
     }
 
@@ -117,16 +95,41 @@ class MainActivity : AppCompatActivity() {
 
     private fun manageButtonsListener() {
         binding.btnConnect.setOnClickListener { view ->
-            Snackbar.make(view, "Connect", Snackbar.LENGTH_SHORT)
+            Snackbar.make(view, "Connecting", Snackbar.LENGTH_SHORT)
                 .setAction("Action", null).show()
             viewModel?.scan()
         }
 
         binding.btnDisconnect.setOnClickListener { view ->
-            Snackbar.make(view, "Disconnect", Snackbar.LENGTH_SHORT)
+            Snackbar.make(view, "Disconnecting", Snackbar.LENGTH_SHORT)
                 .setAction("Action", null).show()
             viewModel?.stopScan()
             viewModel?.disconnect()
+        }
+
+        binding.btnClear.setOnClickListener {
+            logMessages.clear()
+            adapter?.submitList(emptyList())
+            adapter?.notifyDataSetChanged()
+        }
+
+        binding.btnShare.setOnClickListener {
+            val joined: String = TextUtils.join("\r\n",  logMessages)
+
+            val sendIntent = Intent(Intent.ACTION_SEND)
+            sendIntent.putExtra(Intent.EXTRA_TEXT, joined)
+            sendIntent.type = "text/html"
+            startActivity(Intent.createChooser(sendIntent, "Logs"))
+        }
+
+        binding.btnSendData.setOnClickListener {
+            // send unique command
+            // marke it random ?
+        }
+
+        binding.btnSendAutoData.setOnClickListener {
+            // send automatique script
+            // stop if started
         }
     }
 

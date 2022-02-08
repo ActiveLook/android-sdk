@@ -22,6 +22,7 @@ import android.content.Context;
 import android.widget.Toast;
 
 import androidx.core.util.Consumer;
+import androidx.lifecycle.LiveData;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
@@ -102,6 +103,10 @@ class SdkImpl implements Sdk {
 
     void update(final DiscoveredGlasses discoveredGlasses, final GlassesImpl glasses, final Consumer<Glasses> onConnected) {
         this.updater.update(discoveredGlasses, glasses, onConnected);
+    }
+
+    LiveData<String> getLogs() {
+        return null;
     }
 
 }

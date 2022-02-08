@@ -251,6 +251,8 @@ class GlassesGattCallbackImpl extends GlassesGatt {
             }
         } else if (characteristic.getUuid().equals(BleUUID.BatteryLevelCharacteristic)) {
             if (this.onBatteryLevelEvent != null) {
+                //TODO voir pour ajouter un log specific pour les consumer ici onBatteryLevelEvent
+                
                 this.onBatteryLevelEvent.accept((int) characteristic.getValue()[0]);
             }
         } else if (characteristic.getUuid().equals(BleUUID.ActiveLookSensorInterfaceCharacteristic)) {

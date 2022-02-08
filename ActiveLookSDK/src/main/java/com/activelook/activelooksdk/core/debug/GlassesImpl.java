@@ -52,6 +52,7 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
 
     @Override
     public LiveData getMessageLogs() {
+        //TODO
         throw new RuntimeException("This is a crash");
     }
 

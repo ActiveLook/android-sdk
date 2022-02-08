@@ -26,7 +26,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val message : MutableLiveData<String?> = MutableLiveData()
 
-    var logMessage : LiveData<String> = MutableLiveData()
+    var connectedGlassesLogMessage : MutableLiveData<String> = MutableLiveData("Starting Logs")
 
     var connected: MutableLiveData<Boolean> = MutableLiveData(false)
 
@@ -36,15 +36,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 getApplication<Application>().applicationContext,
                 "unused",
                 { gu: GlassesUpdate? ->
+                    connectedGlassesLogMessage.postValue("onUpdateStart " + String.format(" %s", gu))
                     Timber.e("onUpdateStart ", String.format(" %s", gu))
                 },
                 { gu: GlassesUpdate? ->
+                    connectedGlassesLogMessage.postValue("onUpdateProgress: %s" + String.format(" %s", gu))
                     Timber.e("onUpdateProgress: %s", String.format(" %s", gu))
                 },
                 { gu: GlassesUpdate? ->
+                    connectedGlassesLogMessage.postValue("onUpdateSuccess : %s" + String.format(" %s", gu))
                     Timber.e("onUpdateSuccess : %s", String.format(" %s", gu))
                 }
             ) { gu: GlassesUpdate? ->
+                connectedGlassesLogMessage.postValue("onUpdateError   : %s" + String.format(" %s", gu))
                 Timber.e("onUpdateError   : %s", String.format(" %s", gu))
             }
         }
@@ -78,19 +82,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 //onconnected
                 message.postValue("Connected Success")
 
-                logMessage = glasses.messageLogs
+                //connectedGlassesLogMessage.postValue(glasses.messageLogs.value)
 
                 connectedGlasses = glasses
                  connectedGlasses?.setOnDisconnected { glasses ->
+                     connectedGlassesLogMessage.postValue("OnDisconnect")
                      message.postValue("OnDisconnect")
                      glasses.disconnect()
                  }
 
                 connectedGlasses?.subscribeToFlowControlNotifications { status ->
+                    connectedGlassesLogMessage.postValue(String.format("Flow control: %s", status.name))
                     message.postValue(String.format("Flow control: %s", status.name))
                 }
 
                 connectedGlasses?.subscribeToSensorInterfaceNotifications {
+                    connectedGlassesLogMessage.postValue("SensorInterface")
                     message.postValue("SensorInterface")
                 }
 
@@ -117,7 +124,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun observeLogs() :LiveData<String>? {
+    fun observeLogs() : LiveData<String>? {
         return connectedGlasses?.messageLogs
     }
 }

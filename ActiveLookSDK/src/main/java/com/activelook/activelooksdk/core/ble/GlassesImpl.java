@@ -126,6 +126,7 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
 
     @Override
     public void subscribeToBatteryLevelNotifications(Consumer<Integer> onEvent) {
+        //TODO voir pour envoyer le message par la gatt
         this.gattCallbacks.subscribeToBatteryLevelNotifications(onEvent);
     }
 
