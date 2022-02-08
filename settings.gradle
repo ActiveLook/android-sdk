@@ -6,6 +6,5 @@ dependencyResolutionManagement {
     }
 }
 include ':ActiveLookSDK'
-include ':debugapp'
 rootProject.name = "Active Look SDK"
 include ':demoappkotlin'
