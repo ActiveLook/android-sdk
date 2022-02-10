@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -20,9 +21,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ActiveLookSDK"
         android:name=".DemoApplication">
+        <service android:name=".NotificationService" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:label="@string/app_name"
             android:theme="@style/Theme.ActiveLookSDK.NoActionBar">
             <intent-filter>
