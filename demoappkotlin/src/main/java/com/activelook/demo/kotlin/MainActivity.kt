@@ -7,11 +7,14 @@ import android.text.TextUtils
 import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.activelook.activelooksdk.LogData
+import com.activelook.activelooksdk.LogTypeMessage
 import com.activelook.demo.kotlin.databinding.ActivityDebugAdapterItemBinding
 import com.activelook.demo.kotlin.databinding.ActivityMainBinding
 import com.google.android.material.snackbar.Snackbar
@@ -24,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     private var viewModel: MainViewModel? = null
 
     private var adapter: DebugAdapter? = null
-    private var logMessages = mutableListOf<String>()
+    private var logMessages = mutableListOf<LogData>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -156,14 +159,14 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-class DebugAdapter : ListAdapter<String, DebugAdapter.DebugViewHolder>(DIFF_CALLBACK) {
+class DebugAdapter : ListAdapter<LogData, DebugAdapter.DebugViewHolder>(DIFF_CALLBACK) {
     companion object {
-        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<String>() {
-            override fun areContentsTheSame(oldItem: String, newItem: String): Boolean {
-                return oldItem == newItem
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<LogData>() {
+            override fun areContentsTheSame(oldItem: LogData, newItem: LogData): Boolean {
+                return oldItem.message == newItem.message
             }
 
-            override fun areItemsTheSame(oldItem: String, newItem: String): Boolean {
+            override fun areItemsTheSame(oldItem: LogData, newItem: LogData): Boolean {
                 return oldItem == newItem
             }
         }
@@ -181,15 +184,26 @@ class DebugAdapter : ListAdapter<String, DebugAdapter.DebugViewHolder>(DIFF_CALL
         return holder.bind(getItem(position))
     }
 
-    fun addItems(lines: List<String>) {
+    fun addItems(lines: List<LogData>) {
         this.submitList(lines)
         this.notifyDataSetChanged()
     }
 
     inner class DebugViewHolder(val binding: ActivityDebugAdapterItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: String) = with(itemView) {
-            binding.tvCommand.text = item
+        fun bind(item: LogData) = with(itemView) {
+            binding.tvCommand.text = item.message
+            when (item.type) {
+                LogTypeMessage.TYPE_RECEIVED -> {
+                    binding.tvCommand.setBackgroundColor(ContextCompat.getColor(context, R.color.teal_700))
+                }
+                LogTypeMessage.TYPE_SENT -> {
+                    binding.tvCommand.setBackgroundColor(ContextCompat.getColor(context, R.color.purple_200))
+                }
+                else -> {
+                    binding.tvCommand.setBackgroundColor(ContextCompat.getColor(context, R.color.white))
+                }
+            }
         }
     }
 }

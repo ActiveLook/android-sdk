@@ -26,6 +26,8 @@ import android.util.Log;
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.Glasses;
+import com.activelook.activelooksdk.LogData;
+import com.activelook.activelooksdk.LogTypeMessage;
 import com.activelook.activelooksdk.core.Command;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
@@ -190,7 +192,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
             message.append(String.format("%02X", b));
         }
         Timber.e("SENT GlassesCallbackImpl %s", message);
-        messageLog.postValue("SENT GlassesCallbackImpl:" + message + getDevice());
+        messageLog.postValue(new LogData("SENT GlassesCallbackImpl:" + message + getDevice(), LogTypeMessage.TYPE_SENT));
         gatt.readRemoteRssi();
         if (characteristic.equals(this.getRxCharacteristic())) {
             this.isWritingCommand.set(false);
@@ -208,7 +210,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         }
 
         Timber.e("RECEIVED GlassesCallbackImpl %s", message);
-        messageLog.postValue("RECEIVED GlassesCallbackImpl: " + message);
+        messageLog.postValue(new LogData("RECEIVED GlassesCallbackImpl: " + message, LogTypeMessage.TYPE_RECEIVED));
 
         gatt.readRemoteRssi();
 
@@ -459,7 +461,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status){
         if (status == BluetoothGatt.GATT_SUCCESS) {
             Timber.e(String.format("BluetoothGatt ReadRssi[%d]", rssi));
-            messageLog.postValue("RSSI" + rssi);
+            messageLog.postValue(new LogData("RSSI" + rssi, LogTypeMessage.TYPE_RSI));
         }
     }
 }

@@ -13,6 +13,9 @@ import androidx.core.util.Consumer;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.activelook.activelooksdk.LogData;
+import com.activelook.activelooksdk.LogTypeMessage;
+
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +25,7 @@ import timber.log.Timber;
 
 class GlassesGatt extends BluetoothGattCallback {
 
-    public MutableLiveData<String> messageLog = new MutableLiveData<String>("STARTING");
+    public MutableLiveData<LogData> messageLog = new MutableLiveData<LogData>(null);
     private static final UUID NOTIFICATION_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     public static final UUID SPOTA_SERVICE_UUID = UUID.fromString("0000fef5-0000-1000-8000-00805f9b34fb");
@@ -243,7 +246,7 @@ class GlassesGatt extends BluetoothGattCallback {
         }
 
         Timber.e("Received GlassesGatt %s", message);
-        messageLog.postValue("RECEIVED GlassesGatt :" + message);
+        messageLog.postValue(new LogData("RECEIVED GlassesGatt :" + message, LogTypeMessage.TYPE_RECEIVED));
         super.onCharacteristicRead(gatt, characteristic, status);
         final Consumer<BluetoothGattCharacteristic> onSuccess = this.onCharacteristicReadsSuccess.remove(characteristic);
         final Consumer<BluetoothGattCharacteristic> onError = this.onCharacteristicReadsError.remove(characteristic);
@@ -263,7 +266,7 @@ class GlassesGatt extends BluetoothGattCallback {
         }
 
         Timber.e("Sent GlassesGatt %s", message);
-        messageLog.postValue("SENT GlassesGatt: " + message);
+        messageLog.postValue(new LogData("SENT GlassesGatt: " + message, LogTypeMessage.TYPE_SENT));
         super.onCharacteristicWrite(gatt, characteristic, status);
         final Consumer<BluetoothGattCharacteristic> onSuccess = this.onCharacteristicWritesSuccess.remove(characteristic);
         final Consumer<BluetoothGattCharacteristic> onError = this.onCharacteristicWritesError.remove(characteristic);

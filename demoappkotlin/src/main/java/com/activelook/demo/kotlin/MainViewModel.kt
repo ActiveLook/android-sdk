@@ -3,12 +3,10 @@ package com.activelook.demo.kotlin
 import android.app.Application
 import android.util.Log
 import androidx.core.util.Consumer
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.activelook.activelooksdk.DiscoveredGlasses
 import com.activelook.activelooksdk.Glasses
+import com.activelook.activelooksdk.LogData
 import com.activelook.activelooksdk.Sdk
 import com.activelook.activelooksdk.types.*
 import kotlinx.coroutines.launch
@@ -164,7 +162,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun observeLogs(): LiveData<String>? {
+    fun observeLogs(): LiveData<LogData>? {
         return connectedGlasses?.messageLogs
     }
 

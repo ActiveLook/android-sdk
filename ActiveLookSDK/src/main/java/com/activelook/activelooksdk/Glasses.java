@@ -47,7 +47,7 @@ import java.util.List;
 
 public interface Glasses extends Parcelable {
 
-    LiveData<String> getMessageLogs();
+    LiveData<LogData> getMessageLogs();
 
     void sendData(String command, final Consumer<String> onResult);
 
