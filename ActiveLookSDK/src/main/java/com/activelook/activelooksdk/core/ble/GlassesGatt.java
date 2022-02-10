@@ -237,9 +237,13 @@ class GlassesGatt extends BluetoothGattCallback {
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         assert this.gattDelegate == gatt;
-        String s = new String(characteristic.getValue(), StandardCharsets.UTF_8);
-        Timber.e("Received GlassesGatt %s", s);
-        messageLog.postValue("RECEIVED GlassesGatt :" + s);
+        StringBuilder message = new StringBuilder();
+        for (Byte b : characteristic.getValue()) {
+            message.append(String.format("%02X", b));
+        }
+
+        Timber.e("Received GlassesGatt %s", message);
+        messageLog.postValue("RECEIVED GlassesGatt :" + message);
         super.onCharacteristicRead(gatt, characteristic, status);
         final Consumer<BluetoothGattCharacteristic> onSuccess = this.onCharacteristicReadsSuccess.remove(characteristic);
         final Consumer<BluetoothGattCharacteristic> onError = this.onCharacteristicReadsError.remove(characteristic);
@@ -255,12 +259,11 @@ class GlassesGatt extends BluetoothGattCallback {
         StringBuilder message = new StringBuilder();
 
         for (Byte b : characteristic.getValue()) {
-            message.append(b);
+            message.append(String.format("%02X", b));
         }
 
-        String s = new String(characteristic.getValue(), StandardCharsets.UTF_16);
-        Timber.e("Sent GlassesGatt %s", s);
-        messageLog.postValue("SENT GlassesGatt: " + s);
+        Timber.e("Sent GlassesGatt %s", message);
+        messageLog.postValue("SENT GlassesGatt: " + message);
         super.onCharacteristicWrite(gatt, characteristic, status);
         final Consumer<BluetoothGattCharacteristic> onSuccess = this.onCharacteristicWritesSuccess.remove(characteristic);
         final Consumer<BluetoothGattCharacteristic> onError = this.onCharacteristicWritesError.remove(characteristic);

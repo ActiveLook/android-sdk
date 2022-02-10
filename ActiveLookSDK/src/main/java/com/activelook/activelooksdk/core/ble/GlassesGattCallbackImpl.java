@@ -185,9 +185,12 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
-        String s = new String(characteristic.getValue(), StandardCharsets.UTF_8);
-        Timber.e("SENT GlassesCallbackImpl %s", s);
-        messageLog.postValue("SENT GlassesCallbackImpl:" + s + getDevice());
+        StringBuilder message = new StringBuilder();
+        for (Byte b : characteristic.getValue()) {
+            message.append(String.format("%02X", b));
+        }
+        Timber.e("SENT GlassesCallbackImpl %s", message);
+        messageLog.postValue("SENT GlassesCallbackImpl:" + message + getDevice());
         gatt.readRemoteRssi();
         if (characteristic.equals(this.getRxCharacteristic())) {
             this.isWritingCommand.set(false);
@@ -195,42 +198,18 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         }
     }
 
-    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
-    private String bytesToHex(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
-        for (int j = 0; j < bytes.length; j++) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
-        }
-
-        Timber.e("bytesToHex : " + new String(hexChars));
-        return new String(hexChars);
-//        return hexToAscii(new String(hexChars));
-    }
-
-    private String hexToAscii(String hexStr) {
-        //Voir si cest imprimable pour retourner la bonne valeur
-        // exemple 01 donne A qui n'est pas imprimable
-        StringBuilder output = new StringBuilder("");
-
-        for (int i = 0; i < hexStr.length(); i += 2) {
-            String str = hexStr.substring(i, i + 2);
-            output.append((char) Integer.parseInt(str, 16));
-        }
-
-        return output.toString();
-    }
-
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
         super.onCharacteristicChanged(gatt, characteristic);
 
-        String s = bytesToHex(characteristic.getValue());
+        StringBuilder message = new StringBuilder();
+        for (Byte b : characteristic.getValue()) {
+            message.append(String.format("%02X", b));
+        }
 
-        Timber.e("RECEIVED GlassesCallbackImpl %s", s);
+        Timber.e("RECEIVED GlassesCallbackImpl %s", message);
+        messageLog.postValue("RECEIVED GlassesCallbackImpl: " + message);
 
-        messageLog.postValue("RECEIVED GlassesCallbackImpl: " + s);
         gatt.readRemoteRssi();
 
         if (characteristic.getUuid().equals(BleUUID.ActiveLookTxCharacteristic)) {
