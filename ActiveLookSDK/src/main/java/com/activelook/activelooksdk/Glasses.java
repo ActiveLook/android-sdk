@@ -49,6 +49,8 @@ public interface Glasses extends Parcelable {
 
     LiveData<String> getMessageLogs();
 
+    void sendData(String command, final Consumer<String> onResult);
+
     /**
      * Get the manufacturer of the glasses.
      *

@@ -39,8 +39,11 @@ import com.activelook.activelooksdk.types.Utils;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
+import timber.log.Timber;
 
 public abstract class AbstractGlasses implements Glasses {
 
@@ -444,6 +447,35 @@ public abstract class AbstractGlasses implements Glasses {
                 new Command(ID_fontList),
                 bytes -> onResult.accept(CommandData.toFontInfoList(bytes))
         );
+    }
+
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len/2];
+
+        for(int i = 0; i < len; i+=2){
+            data[i/2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i+1), 16));
+        }
+
+        return data;
+    }
+
+    @Override
+    public void sendData(String command, final Consumer<String> onResult) {
+
+        byte[] commandBytes = hexStringToByteArray(command);
+        Timber.e("command: %s", Arrays.toString(commandBytes));
+
+        this.writeCommand(commandBytes,
+                bytes -> onResult.accept(Arrays.toString(bytes))
+        );
+
+    }
+
+    private void writeCommand(byte[] command, final Consumer<byte[]> callback) {
+        QueryId qid = this.nextQueryId();
+        this.registerCallback(qid, callback);
+        this.writeBytes(command);
     }
 
     // TODO @Override
