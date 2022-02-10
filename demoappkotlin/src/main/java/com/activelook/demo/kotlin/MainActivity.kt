@@ -48,8 +48,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun observeSdkLogs() {
         viewModel?.scanResult?.observe(this) { glasse ->
-            Timber.e("scanResult Glasse : %s", glasse?.name ?: "no name")
-            viewModel?.connect()
+            if (glasse != null) {
+                Timber.e("scanResult Glasse : %s", glasse?.name ?: "no name")
+                viewModel?.connect()
+            }
         }
 
         viewModel?.errorMessage?.observe(this) {
@@ -74,8 +76,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewModel?.connectedGlassesLogMessage?.observe(this) { message ->
-            logMessages.add(message)
-            adapter?.addItems(logMessages)
+            //logMessages.add(message)
+            //adapter?.addItems(logMessages)
         }
     }
 
@@ -125,11 +127,15 @@ class MainActivity : AppCompatActivity() {
         binding.btnSendData.setOnClickListener {
             // send unique command
             // marke it random ?
+            viewModel?.runTestsConfig()
+            viewModel?.runTestsStats()
+            viewModel?.runTestsGauge()
         }
 
         binding.btnSendAutoData.setOnClickListener {
             // send automatique script
             // stop if started
+            viewModel?.parseCSV()
         }
     }
 
