@@ -184,7 +184,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
 
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        super.onCharacteristicWrite(gatt, characteristic, status);
+        //super.onCharacteristicWrite(gatt, characteristic, status);
         StringBuilder message = new StringBuilder();
         for (Byte b : characteristic.getValue()) {
             message.append(String.format("%02X", b));
@@ -200,7 +200,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
 
     @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-        super.onCharacteristicChanged(gatt, characteristic);
+        //super.onCharacteristicChanged(gatt, characteristic);
 
         StringBuilder message = new StringBuilder();
         for (Byte b : characteristic.getValue()) {
