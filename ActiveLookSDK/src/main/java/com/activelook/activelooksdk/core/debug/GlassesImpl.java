@@ -54,8 +54,14 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     @Override
     public MutableLiveData getMessageLogs() {
         //TODO
-        throw new RuntimeException("This is a crash");
+        throw new RuntimeException("getMessageLogs");
     }
+
+   @Override
+   public MutableLiveData getRSILogs(){
+       //TODO
+       throw new RuntimeException("getRSILogs");
+   }
 
     @Override
     public String getManufacturer() {

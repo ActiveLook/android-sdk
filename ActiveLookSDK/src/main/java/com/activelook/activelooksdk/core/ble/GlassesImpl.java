@@ -78,6 +78,11 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     }
 
     @Override
+    public MutableLiveData getRSILogs() {
+        return this.gattCallbacks.rssiLog;
+    }
+
+    @Override
     public String getManufacturer() {
         return this.connectedFrom.getManufacturer();
     }

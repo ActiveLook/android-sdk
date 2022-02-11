@@ -32,6 +32,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // All logs from BLE Gatt
     var allLogs = mutableListOf<LogData>()
     var logsFlow = MutableLiveData<List<LogData>>()
+    var rssiLogs = MutableLiveData<String>()
 
     init {
         viewModelScope.launch {
@@ -89,6 +90,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         connectedGlasses?.disconnect()
         connectedGlasses = null
         GlassesRepository.connectedGlasses = null
+
+        connectedGlasses?.rsiLogs?.removeObserver {
+            Timber.e("rsiLogs?.removeObserver")
+            Timber.e(it)
+        }
+
+        connectedGlasses?.messageLogs?.removeObserver {
+            Timber.e("messageLogs?.removeObserver")
+            Timber.e(it.message)
+        }
     }
 
     fun scan() {
@@ -148,6 +159,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     connectedGlasses?.messageLogs?.observeForever {
                         allLogs.add(it)
                         logsFlow.postValue(allLogs)
+                    }
+
+                    connectedGlasses?.rsiLogs?.observeForever {
+                        rssiLogs.postValue(it)
                     }
                 }
             },

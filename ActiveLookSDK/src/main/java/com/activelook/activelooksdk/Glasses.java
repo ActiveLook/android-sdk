@@ -50,6 +50,8 @@ public interface Glasses extends Parcelable {
 
     MutableLiveData<LogData> getMessageLogs();
 
+    MutableLiveData<String> getRSILogs();
+
     void sendData(String command, final Consumer<String> onResult);
 
     /**

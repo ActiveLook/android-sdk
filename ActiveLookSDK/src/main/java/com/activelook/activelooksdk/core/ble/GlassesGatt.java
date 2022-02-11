@@ -26,6 +26,7 @@ import timber.log.Timber;
 class GlassesGatt extends BluetoothGattCallback {
 
     public MutableLiveData<LogData> messageLog = new MutableLiveData<LogData>(null);
+    public MutableLiveData<String> rssiLog = new MutableLiveData<String>(null);
     private static final UUID NOTIFICATION_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
     public static final UUID SPOTA_SERVICE_UUID = UUID.fromString("0000fef5-0000-1000-8000-00805f9b34fb");

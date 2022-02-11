@@ -21,6 +21,9 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothStatusCodes;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.core.util.Consumer;
@@ -62,6 +65,9 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     private Runnable onSensorInterfaceEvent;
     private ScheduledFuture<?> repairFlowControl;
 
+    private Handler mainHandler;
+    private Runnable rssiRunnable;
+
     GlassesGattCallbackImpl(BluetoothDevice device, GlassesImpl bleGlasses,
                             Consumer<GlassesImpl> onConnected,
                             Runnable onConnectionFail,
@@ -83,6 +89,24 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         this.setOnDisconnected(onDisconnected);
         this.gatt = this.gattDelegate;
         sdk.registerConnectedGlasses(this.glasses);
+
+        mainHandler = new Handler(Looper.getMainLooper());
+
+        rssiRunnable = new Runnable() {
+            @Override
+            public void run() {
+                gatt.readRemoteRssi();
+                mainHandler.postDelayed(this, 500);
+            }
+        };
+    }
+
+    private void startRSSILogs() {
+        mainHandler.post(rssiRunnable);
+    }
+
+    private void stopRSSILogs() {
+        mainHandler.removeCallbacks(rssiRunnable);
     }
 
     private void optimizeMtu(final int optimalMtu) {
@@ -100,23 +124,30 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         switch (status) {
             case BluetoothStatusCodes
                     .SUCCESS: Log.e("logStatusStateChanged", "SUCCESS");
+                messageLog.postValue(new LogData("SUCCESS", LogTypeMessage.TYPE_CONNECTION_STATE));
                 break;
             case BluetoothStatusCodes
                     .ERROR_BLUETOOTH_NOT_ALLOWED: Log.e("logStatusStateChanged", "ERROR_BLUETOOTH_NOT_ALLOWED");
+                messageLog.postValue(new LogData("ERROR_BLUETOOTH_NOT_ALLOWED", LogTypeMessage.TYPE_CONNECTION_STATE));
                 break;
             case BluetoothStatusCodes
                     .ERROR_BLUETOOTH_NOT_ENABLED: Log.e("logStatusStateChanged", "ERROR_BLUETOOTH_NOT_ENABLED");
+                messageLog.postValue(new LogData("ERROR_BLUETOOTH_NOT_ENABLED", LogTypeMessage.TYPE_CONNECTION_STATE));
                 break;
             case BluetoothStatusCodes
                     .ERROR_DEVICE_NOT_BONDED: Log.e("logStatusStateChanged", "ERROR_DEVICE_NOT_BONDED");
+                messageLog.postValue(new LogData("ERROR_DEVICE_NOT_BONDED", LogTypeMessage.TYPE_CONNECTION_STATE));
                 break;
             case BluetoothStatusCodes
                     .ERROR_MISSING_BLUETOOTH_CONNECT_PERMISSION: Log.e("logStatusStateChanged", "ERROR_MISSING_BLUETOOTH_CONNECT_PERMISSION");
+                messageLog.postValue(new LogData("ERROR_MISSING_BLUETOOTH_CONNECT_PERMISSION", LogTypeMessage.TYPE_CONNECTION_STATE));
                 break;
             case BluetoothStatusCodes
                     .ERROR_UNKNOWN: Log.e("logStatusStateChanged", "ERROR_UNKNOWN");
+                messageLog.postValue(new LogData("ERROR_UNKNOWN", LogTypeMessage.TYPE_CONNECTION_STATE));
                 break;
             default:
+                messageLog.postValue(new LogData("ERROR DEFAULT", LogTypeMessage.TYPE_CONNECTION_STATE));
                 Log.e("logStatusStateChanged", "ERROR DEFAULT");
                 break;
         }
@@ -131,12 +162,14 @@ class GlassesGattCallbackImpl extends GlassesGatt {
 
         if (newState == BluetoothProfile.STATE_CONNECTED) {
             this.optimizeMtu(512);
+            startRSSILogs();
         } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
             if (this.onConnectionFail != null) {
                 this.onConnectionFail.run();
             } else if (this.onDisconnected != null) {
                 this.onDisconnected.accept(this.glasses);
             }
+            stopRSSILogs();
             this.disconnect();
         }
     }
@@ -193,7 +226,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         }
         Timber.e("SENT GlassesCallbackImpl %s", message);
         messageLog.postValue(new LogData("SENT GlassesCallbackImpl:" + message + getDevice(), LogTypeMessage.TYPE_SENT));
-        gatt.readRemoteRssi();
+//        gatt.readRemoteRssi();
         if (characteristic.equals(this.getRxCharacteristic())) {
             this.isWritingCommand.set(false);
             this.unstackWriteRxCharacteristic();
@@ -212,7 +245,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         Timber.e("RECEIVED GlassesCallbackImpl %s", message);
         messageLog.postValue(new LogData("RECEIVED GlassesCallbackImpl: " + message, LogTypeMessage.TYPE_RECEIVED));
 
-        gatt.readRemoteRssi();
+//        gatt.readRemoteRssi();
 
         if (characteristic.getUuid().equals(BleUUID.ActiveLookTxCharacteristic)) {
             byte[] buffer = characteristic.getValue();
@@ -387,6 +420,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     }
 
     void disconnect() {
+        stopRSSILogs();
         this.gatt.disconnect();
         this.gatt.close();
         BleSdkSingleton.getInstance().unregisterConnectedGlasses(this.glasses);
@@ -461,6 +495,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status){
         if (status == BluetoothGatt.GATT_SUCCESS) {
             Timber.e(String.format("BluetoothGatt ReadRssi[%d]", rssi));
+            rssiLog.postValue(String.format("%d", rssi));
             messageLog.postValue(new LogData("RSSI" + rssi, LogTypeMessage.TYPE_RSI));
         }
     }

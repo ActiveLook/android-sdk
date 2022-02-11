@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -67,8 +68,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         //use to log data sent and received on Bluetooth Gatt
-        viewModel?.logsFlow?.observeForever {
+        viewModel?.logsFlow?.observe(this) {
             adapter?.addItems(it)
+        }
+
+        viewModel?.rssiLogs?.observe(this) {
+            findViewById<TextView>(R.id.tv_rsi).text = it
         }
 
         //used to log callback
