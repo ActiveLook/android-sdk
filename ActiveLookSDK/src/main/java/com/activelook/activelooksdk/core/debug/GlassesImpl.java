@@ -19,6 +19,7 @@ import android.util.Log;
 
 import androidx.core.util.Consumer;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.activelook.activelooksdk.Glasses;
 import com.activelook.activelooksdk.core.AbstractGlasses;
@@ -51,7 +52,7 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     }
 
     @Override
-    public LiveData getMessageLogs() {
+    public MutableLiveData getMessageLogs() {
         //TODO
         throw new RuntimeException("This is a crash");
     }

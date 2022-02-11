@@ -19,6 +19,7 @@ import android.os.Parcelable;
 
 import androidx.core.util.Consumer;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.activelook.activelooksdk.types.Configuration;
 import com.activelook.activelooksdk.types.ConfigurationDescription;
@@ -47,7 +48,7 @@ import java.util.List;
 
 public interface Glasses extends Parcelable {
 
-    LiveData<LogData> getMessageLogs();
+    MutableLiveData<LogData> getMessageLogs();
 
     void sendData(String command, final Consumer<String> onResult);
 

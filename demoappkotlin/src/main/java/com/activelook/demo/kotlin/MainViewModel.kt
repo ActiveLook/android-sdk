@@ -9,6 +9,7 @@ import com.activelook.activelooksdk.Glasses
 import com.activelook.activelooksdk.LogData
 import com.activelook.activelooksdk.Sdk
 import com.activelook.activelooksdk.types.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -20,16 +21,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var discoveredGlasses: DiscoveredGlasses? = null
     private var connectedGlasses: Glasses? = null
 
-    // voir pour mettre un state de connection
-    val errorMessage: MutableLiveData<String?> = MutableLiveData()
 
+    val errorMessage: MutableLiveData<String?> = MutableLiveData()
     //used for snackbar basic info
     val message: MutableLiveData<String?> = MutableLiveData()
 
     //the logs received on the Glasses callback
     var connectedGlassesLogMessage: MutableLiveData<String> = MutableLiveData("Starting Logs")
 
-    var connected: MutableLiveData<Boolean> = MutableLiveData(false)
+    // All logs from BLE Gatt
+    var allLogs = mutableListOf<LogData>()
+    var logsFlow = MutableLiveData<List<LogData>>()
 
     init {
         viewModelScope.launch {
@@ -85,6 +87,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun disconnect() {
         connectedGlasses?.disconnect()
+        connectedGlasses = null
+        GlassesRepository.connectedGlasses = null
     }
 
     fun scan() {
@@ -95,6 +99,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 discoveredGlasses = glasses
             })
         }
+    }
+
+    fun getAllLogsMessages() : List<LogData> {
+        return allLogs
     }
 
     fun connect() {
@@ -136,8 +144,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     message.postValue("SensorInterface")
                 }
 
-                connected.postValue(true)
-
+                viewModelScope.launch(Dispatchers.Main) {
+                    connectedGlasses?.messageLogs?.observeForever {
+                        allLogs.add(it)
+                        logsFlow.postValue(allLogs)
+                    }
+                }
             },
             { discoveredGlasses ->
                 //onconnection Fail
@@ -145,7 +157,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 this.discoveredGlasses = null
                 connectedGlasses = null
                 GlassesRepository.connectedGlasses = null
-                connected.postValue(false)
             },
             { glasses ->
                 // on disconnect
@@ -155,17 +166,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 connectedGlasses = null
                 GlassesRepository.connectedGlasses = null
                 glasses.disconnect()
-                connected.postValue(false)
             }
         ) ?: run {
             errorMessage.postValue("No Glasse Connected")
         }
     }
-
-    fun observeLogs(): LiveData<LogData>? {
-        return connectedGlasses?.messageLogs
-    }
-
 
     fun runTestsConfig() {
         connectedGlasses?.also {

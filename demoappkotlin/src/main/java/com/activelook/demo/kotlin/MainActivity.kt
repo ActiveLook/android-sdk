@@ -3,8 +3,10 @@ package com.activelook.demo.kotlin
 import android.Manifest
 import android.content.Intent
 import android.os.Bundle
-import android.text.TextUtils
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -27,25 +29,20 @@ class MainActivity : AppCompatActivity() {
     private var viewModel: MainViewModel? = null
 
     private var adapter: DebugAdapter? = null
-    private var logMessages = mutableListOf<LogData>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         manageButtonsListener()
         managePermissions()
-
-        viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
-
         observeSdkLogs()
 
         adapter = DebugAdapter()
         binding.rvCommand.layoutManager = LinearLayoutManager(this)
         binding.rvCommand.adapter = adapter
-//        adapter.submitList(viewModel.getCommandList())
 
     }
 
@@ -69,15 +66,12 @@ class MainActivity : AppCompatActivity() {
                 .setAction("Action", null).show()
         }
 
-        viewModel?.connected?.observe(this) {
-            if (it) {
-                viewModel?.observeLogs()?.observe(this) { message ->
-                    logMessages.add(message)
-                    adapter?.addItems(logMessages)
-                }
-            }
+        //use to log data sent and received on Bluetooth Gatt
+        viewModel?.logsFlow?.observeForever {
+            adapter?.addItems(it)
         }
 
+        //used to log callback
         viewModel?.connectedGlassesLogMessage?.observe(this) { message ->
             //logMessages.add(message)
             //adapter?.addItems(logMessages)
@@ -113,16 +107,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnClear.setOnClickListener {
-            logMessages.clear()
             adapter?.submitList(emptyList())
             adapter?.notifyDataSetChanged()
         }
 
         binding.btnShare.setOnClickListener {
-            val joined: String = TextUtils.join("\r\n",  logMessages)
+
+            val logs = StringBuilder()
+            viewModel?.getAllLogsMessages()?.forEach {
+                logs.append(it.message)
+                logs.append("\r\n")
+            }
 
             val sendIntent = Intent(Intent.ACTION_SEND)
-            sendIntent.putExtra(Intent.EXTRA_TEXT, joined)
+            sendIntent.putExtra(Intent.EXTRA_TEXT, logs.toString())
             sendIntent.type = "text/html"
             startActivity(Intent.createChooser(sendIntent, "Logs"))
         }
@@ -181,7 +179,7 @@ class DebugAdapter : ListAdapter<LogData, DebugAdapter.DebugViewHolder>(DIFF_CAL
     )
 
     override fun onBindViewHolder(holder: DebugViewHolder, position: Int) {
-        return holder.bind(getItem(position))
+        return holder.bind(getItem(position), position)
     }
 
     fun addItems(lines: List<LogData>) {
@@ -191,17 +189,32 @@ class DebugAdapter : ListAdapter<LogData, DebugAdapter.DebugViewHolder>(DIFF_CAL
 
     inner class DebugViewHolder(val binding: ActivityDebugAdapterItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: LogData) = with(itemView) {
-            binding.tvCommand.text = item.message
+        fun bind(item: LogData, position: Int) = with(itemView) {
+            binding.tvCommand.text = position.toString() + " " + item.message
             when (item.type) {
                 LogTypeMessage.TYPE_RECEIVED -> {
-                    binding.tvCommand.setBackgroundColor(ContextCompat.getColor(context, R.color.teal_700))
+                    binding.tvCommand.setBackgroundColor(
+                        ContextCompat.getColor(
+                            context,
+                            R.color.teal_700
+                        )
+                    )
                 }
                 LogTypeMessage.TYPE_SENT -> {
-                    binding.tvCommand.setBackgroundColor(ContextCompat.getColor(context, R.color.purple_200))
+                    binding.tvCommand.setBackgroundColor(
+                        ContextCompat.getColor(
+                            context,
+                            R.color.purple_200
+                        )
+                    )
                 }
                 else -> {
-                    binding.tvCommand.setBackgroundColor(ContextCompat.getColor(context, R.color.white))
+                    binding.tvCommand.setBackgroundColor(
+                        ContextCompat.getColor(
+                            context,
+                            R.color.white
+                        )
+                    )
                 }
             }
         }

@@ -73,7 +73,7 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     }
 
     @Override
-    public LiveData getMessageLogs() {
+    public MutableLiveData getMessageLogs() {
         return this.gattCallbacks.messageLog;
     }
 
