@@ -56,4 +56,17 @@ public interface Sdk {
      */
     boolean isScanning();
 
+    /**
+     * Connect to glasses given an address and call callback on success.
+     *
+     * @param onConnected      Callback to call on success
+     * @param onConnectionFail Callback to call on failure
+     * @param onDisconnected   Callback to set for disconnected events.
+     */
+    void connect(
+            String address,
+            Consumer<Glasses> onConnected,
+            Consumer<String> onConnectionFail,
+            Consumer<Glasses> onDisconnected
+    );
 }

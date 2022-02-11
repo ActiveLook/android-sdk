@@ -20,6 +20,7 @@ import android.util.Log;
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
+import com.activelook.activelooksdk.Glasses;
 import com.activelook.activelooksdk.Sdk;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -57,6 +58,15 @@ class SdkImpl implements Sdk {
     @Override
     public boolean isScanning() {
         return this.isScanning.get();
+    }
+
+    @Override
+    public void connect(
+            String address, Consumer<Glasses> onConnected,
+            Consumer<String> onConnectionFail,
+            Consumer<Glasses> onDisconnected
+    ) {
+        new GlassesImpl(address, onConnected);
     }
 
 }

@@ -24,6 +24,7 @@ import android.widget.Toast;
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
+import com.activelook.activelooksdk.Glasses;
 import com.activelook.activelooksdk.Sdk;
 import com.activelook.activelooksdk.exceptions.UnsupportedBleException;
 
@@ -33,7 +34,7 @@ class SdkImpl implements Sdk {
 
     private final Context context;
     private final BluetoothManager manager;
-    private final BluetoothAdapter adapter;
+    final BluetoothAdapter adapter;
     private final BluetoothLeScanner scanner;
     private final HashMap<String, GlassesImpl> connectedGlasses = new HashMap<>();
     private ScanCallback scanCallback;
@@ -71,6 +72,16 @@ class SdkImpl implements Sdk {
     @Override
     public boolean isScanning() {
         return this.scanCallback != null;
+    }
+
+    @Override
+    public void connect(
+            String address,
+            Consumer<Glasses> onConnected,
+            Consumer<String> onConnectionFail,
+            Consumer<Glasses> onDisconnected
+    ) {
+        registerConnectedGlasses(new GlassesImpl(address, onConnected, onConnectionFail, onDisconnected));
     }
 
     void registerConnectedGlasses(GlassesImpl bleGlasses) {
