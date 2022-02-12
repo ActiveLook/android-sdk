@@ -111,7 +111,7 @@ public class LayoutParameters {
         return this;
     }
 
-    public LayoutParameters addSubCommandPoint(byte x, short y) {
+    public LayoutParameters addSubCommandPoint(short x, short y) {
         this.subCommands.add((byte) 0x06).addInt16(x).addInt16(y);
         return this;
     }
