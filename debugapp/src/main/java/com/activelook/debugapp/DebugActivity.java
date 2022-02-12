@@ -325,7 +325,7 @@ public class DebugActivity extends AppCompatActivity {
         g.cfgWrite("DebugApp", 1, 42);
 
         g.imgSave((byte) 0x01, img1);
-        g.imgSave1bpp(img2);
+        g.imgSave1bpp((byte) 0x02, img2);
         g.imgStream(img2, (short) 20, (short) 30);
 
         g.imgList(l -> {

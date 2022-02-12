@@ -189,7 +189,7 @@ public class BitmapsCommands extends MainActivity2 {
                 }),
                 item("imgSave1bpp", glasses -> {
                     glasses.cfgWrite("DemoApp", 1, 42);
-                    glasses.imgSave1bpp(img2);
+                    glasses.imgSave1bpp((byte) 0x03, img2);
                 }),
                 item("imgDisplay", glasses -> {
                     glasses.clear();

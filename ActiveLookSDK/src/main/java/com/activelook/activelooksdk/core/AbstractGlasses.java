@@ -423,8 +423,9 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     // TODO @Override
-    public void imgSave1bpp(final int width, final byte[] bytes) {
+    public void imgSave1bpp(final byte id, final int width, final byte[] bytes) {
         final CommandData data = new CommandData()
+                .addUInt8(id)
                 .addUInt32(bytes.length)
                 .addUInt16(width);
         this.writeCommand(new Command(ID_imgSave1bpp, data));
@@ -434,8 +435,8 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void imgSave1bpp(final Image1bppData imgData) {
-        this.imgSave1bpp(imgData.getWidth(), imgData.getBytes());
+    public void imgSave1bpp(final byte id, final Image1bppData imgData) {
+        this.imgSave1bpp(id, imgData.getWidth(), imgData.getBytes());
     }
 
     @Override
