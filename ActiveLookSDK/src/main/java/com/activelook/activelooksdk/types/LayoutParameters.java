@@ -127,7 +127,7 @@ public class LayoutParameters {
     }
 
     public LayoutParameters addSubCommandText(short x, short y, String txt) {
-        this.subCommands.add((byte) 0x09).addInt16(x).addInt16(y).addUInt8((short) txt.length()).addNulTerminatedStrings(txt);
+        this.subCommands.add((byte) 0x09).addInt16(x).addInt16(y).addUInt8((short) txt.length()).addNonNulTerminatedStrings(txt);
         return this;
     }
 
