@@ -116,6 +116,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         return allLogs
     }
 
+    fun clearLogs() {
+        allLogs.clear()
+        logsFlow.postValue(allLogs)
+    }
+
     fun connect() {
         discoveredGlasses?.connect(
             { glasses ->

@@ -112,8 +112,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.btnClear.setOnClickListener {
-            adapter?.submitList(emptyList())
-            adapter?.notifyDataSetChanged()
+            viewModel?.clearLogs()
+//            adapter?.submitList(emptyList())
+//            adapter?.notifyDataSetChanged()
         }
 
         binding.btnShare.setOnClickListener {
