@@ -49,6 +49,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
     private final AtomicBoolean flowControlCanSend;
     private final AtomicBoolean isWritingCommand;
     private final BluetoothGatt gatt;
+    private final ScheduledExecutorService executorService;
     private int mtu;
     private GlassesImpl glasses;
     private Consumer<Glasses> onConnected;
@@ -70,6 +71,7 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         this.pendingWriteRxCharacteristic = new ConcurrentLinkedDeque<>();
         this.flowControlCanSend = new AtomicBoolean(true);
         this.isWritingCommand = new AtomicBoolean(false);
+        this.executorService = Executors.newSingleThreadScheduledExecutor();
         this.mtu = 20;
         this.glasses = bleGlasses;
         this.onBatteryLevelEvent = null;
@@ -154,7 +156,6 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
         if (characteristic.equals(this.getRxCharacteristic())) {
             // this.isWritingCommand.set(false);
             // this.unstackWriteRxCharacteristic();
-            final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
             executorService.schedule(() -> {
                 this.isWritingCommand.set(false);
                 this.unstackWriteRxCharacteristic();
@@ -209,7 +210,6 @@ class GlassesGattCallbackImpl extends BluetoothGattCallback {
                 if (this.repairFlowControl != null) {
                     this.repairFlowControl.cancel(true);
                 }
-                final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
                 this.repairFlowControl = executorService.schedule(() -> {
                     GlassesGattCallbackImpl.this.repairFlowControl = null;
                     Log.e("FLOW CONTROL", String.format("Glasses flow control FORCED CAN SEND"));
