@@ -346,7 +346,7 @@ public interface Glasses extends Parcelable {
      *
      * @param data 1bpp Image data configuration object.
      */
-    void imgSave1bpp(Image1bppData data);
+    void imgSave1bpp(byte id, Image1bppData data);
     /**
      * Give the list of font saved into the device with their size.
      *
