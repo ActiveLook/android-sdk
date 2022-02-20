@@ -405,16 +405,23 @@ public abstract class AbstractGlasses implements Glasses {
         this.imgDelete((byte) 0xFF);
     }
 
+    private void send1bppData(final byte command, final int width, final byte[] bytes) {
+        // Each chunk must contain only complete lines
+        final int lineBytes = (width - 1) / 8 + 1;
+        final int chunkSize = (240 / lineBytes) * lineBytes;
+        for (final CommandData chunkData : new CommandData(bytes).split(chunkSize)) {
+            this.writeCommand(new Command(ID_imgStream, chunkData));
+        }
+    }
+
     // TODO @Override
     public void imgStream(final short x, final short y, final int width, final byte[] bytes) {
-        final CommandData data = new CommandData()
+        final CommandData header = new CommandData()
                 .addUInt32(bytes.length)
                 .addUInt16(width)
                 .addInt16(x, y);
-        this.writeCommand(new Command(ID_imgStream, data));
-        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
-            this.writeCommand(new Command(ID_imgStream, chunkData));
-        }
+        this.writeCommand(new Command(ID_imgStream, header));
+        send1bppData(ID_imgStream, width, bytes);
     }
 
     @Override
@@ -429,9 +436,7 @@ public abstract class AbstractGlasses implements Glasses {
                 .addUInt32(bytes.length)
                 .addUInt16(width);
         this.writeCommand(new Command(ID_imgSave1bpp, data));
-        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
-            this.writeCommand(new Command(ID_imgSave1bpp, chunkData));
-        }
+        send1bppData(ID_imgSave1bpp, width, bytes);
     }
 
     @Override
