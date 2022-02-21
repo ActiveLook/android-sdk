@@ -14,6 +14,8 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.core.ble;
 
+import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.util.Log;
 
@@ -40,23 +42,43 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
         }
     };
     private final GlassesGattCallbackImpl gattCallbacks;
-    private DiscoveredGlassesImpl connectedFrom;
+
+    private String manufacturer;
+    private BluetoothDevice device;
 
     GlassesImpl(DiscoveredGlassesImpl discoveredGlasses, Consumer<Glasses> onConnected,
                 Consumer<DiscoveredGlasses> onConnectionFail,
                 Consumer<Glasses> onDisconnected) {
         super();
-        this.connectedFrom = discoveredGlasses;
+        this.manufacturer = discoveredGlasses.getManufacturer();
+        this.device = discoveredGlasses.scanResult.getDevice();
         this.gattCallbacks = new GlassesGattCallbackImpl(
-                this.connectedFrom.scanResult.getDevice(),
+                device,
                 this,
                 onConnected,
                 () -> onConnectionFail.accept(discoveredGlasses),
                 onDisconnected);
     }
 
+    GlassesImpl(String address, Consumer<Glasses> onConnected,
+                Consumer<String> onConnectionFail,
+                Consumer<Glasses> onDisconnected) {
+        super();
+        this.manufacturer = "";
+        final SdkImpl sdk = BleSdkSingleton.getInstance();
+        this.device = sdk.adapter.getRemoteDevice(address);
+        this.gattCallbacks = new GlassesGattCallbackImpl(
+                device,
+                this,
+                onConnected,
+                () -> onConnectionFail.accept(address),
+                onDisconnected);
+    }
+
     protected GlassesImpl(Parcel in) {
-        this.connectedFrom = in.readParcelable(DiscoveredGlassesImpl.class.getClassLoader());
+        this.manufacturer = in.readString();
+        this.device = in.readParcelable(BluetoothDevice.class.getClassLoader());
+
         final SdkImpl sdk = BleSdkSingleton.getInstance();
         GlassesImpl registered = sdk.getConnectedBleGlasses(this.getAddress());
         this.gattCallbacks = registered.gattCallbacks;
@@ -72,17 +94,17 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
 
     @Override
     public String getManufacturer() {
-        return this.connectedFrom.getManufacturer();
+        return manufacturer;
     }
 
     @Override
     public String getName() {
-        return this.connectedFrom.getName();
+        return device.getName();
     }
 
     @Override
     public String getAddress() {
-        return this.connectedFrom.getAddress();
+        return device.getAddress();
     }
 
     @Override
@@ -143,11 +165,13 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeParcelable(this.connectedFrom, flags);
+        dest.writeString(manufacturer);
+        device.writeToParcel(dest, flags);
     }
 
     public void readFromParcel(Parcel source) {
-        this.connectedFrom = source.readParcelable(DiscoveredGlassesImpl.class.getClassLoader());
+        this.manufacturer = source.readString();
+        this.device = source.readParcelable(BluetoothDevice.class.getClassLoader());
     }
 
 }

@@ -37,31 +37,46 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
             return new GlassesImpl[size];
         }
     };
-    private DiscoveredGlassesImpl connectedFrom;
+
+    private String name;
+    private String address;
+    private String manufacturer;
 
     GlassesImpl(DiscoveredGlassesImpl discoveredGlasses, Consumer<Glasses> onConnected) {
         super();
-        this.connectedFrom = discoveredGlasses;
+        name = discoveredGlasses.getName();
+        address = discoveredGlasses.getAddress();
+        this.manufacturer = discoveredGlasses.getManufacturer();
+        onConnected.accept(this);
+    }
+    GlassesImpl(String address, Consumer<Glasses> onConnected) {
+        super();
+        name = "";
+        address = address;
+        manufacturer = "";
         onConnected.accept(this);
     }
 
+
     protected GlassesImpl(Parcel in) {
-        this.connectedFrom = in.readParcelable(DiscoveredGlassesImpl.class.getClassLoader());
+        name = in.readString();
+        address = in.readString();
+        manufacturer = in.readString();
     }
 
     @Override
     public String getManufacturer() {
-        return this.connectedFrom.getManufacturer();
+        return this.manufacturer;
     }
 
     @Override
     public String getName() {
-        return this.connectedFrom.getName();
+        return this.name;
     }
 
     @Override
     public String getAddress() {
-        return this.connectedFrom.getAddress();
+        return this.address;
     }
 
     @Override
@@ -117,11 +132,15 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeParcelable(this.connectedFrom, flags);
+        dest.writeString(name);
+        dest.writeString(address);
+        dest.writeString(manufacturer);
     }
 
     public void readFromParcel(Parcel source) {
-        this.connectedFrom = source.readParcelable(DiscoveredGlassesImpl.class.getClassLoader());
+        name = source.readString();
+        address = source.readString();
+        manufacturer = source.readString();
     }
 
 }

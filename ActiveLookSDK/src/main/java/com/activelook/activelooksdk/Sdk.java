@@ -56,4 +56,26 @@ public interface Sdk {
      */
     boolean isScanning();
 
+    /**
+     * Connect to glasses given an address and call callback on success.
+     *
+     * @param onConnected      Callback to call on success
+     * @param onConnectionFail Callback to call on failure
+     * @param onDisconnected   Callback to set for disconnected events.
+     */
+    void connect(
+            String address,
+            Consumer<Glasses> onConnected,
+            Consumer<String> onConnectionFail,
+            Consumer<Glasses> onDisconnected
+    );
+
+    /**
+     * Close the connection to the glasses. This is supposed to be called to cancel
+     * connection that has not connected yet and thus the glasses object is not
+     * available.
+     *
+     * @param address Address of the glasses being connected
+     */
+    void stopConnect(String address);
 }
