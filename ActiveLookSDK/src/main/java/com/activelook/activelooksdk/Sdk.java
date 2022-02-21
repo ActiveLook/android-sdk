@@ -69,4 +69,13 @@ public interface Sdk {
             Consumer<String> onConnectionFail,
             Consumer<Glasses> onDisconnected
     );
+
+    /**
+     * Close the connection to the glasses. This is supposed to be called to cancel
+     * connection that has not connected yet and thus the glasses object is not
+     * available.
+     *
+     * @param address Address of the glasses being connected
+     */
+    void stopConnect(String address);
 }

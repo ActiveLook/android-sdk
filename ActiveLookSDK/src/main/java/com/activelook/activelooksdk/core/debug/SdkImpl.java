@@ -69,4 +69,7 @@ class SdkImpl implements Sdk {
         new GlassesImpl(address, onConnected);
     }
 
+    @Override
+    public void stopConnect(String address) {
+    }
 }

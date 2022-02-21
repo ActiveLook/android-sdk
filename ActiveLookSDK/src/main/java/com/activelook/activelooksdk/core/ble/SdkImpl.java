@@ -84,6 +84,14 @@ class SdkImpl implements Sdk {
         registerConnectedGlasses(new GlassesImpl(address, onConnected, onConnectionFail, onDisconnected));
     }
 
+    @Override
+    public void stopConnect(String address) {
+        GlassesImpl gls = connectedGlasses.get(address);
+        if (gls != null) {
+            gls.disconnect();
+        }
+    }
+
     void registerConnectedGlasses(GlassesImpl bleGlasses) {
         this.connectedGlasses.put(bleGlasses.getAddress(), bleGlasses);
     }
