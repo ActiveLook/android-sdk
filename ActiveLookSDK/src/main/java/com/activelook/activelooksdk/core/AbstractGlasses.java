@@ -631,7 +631,7 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void pageDisplay(byte id, String [] texts) {
-        final Command command = new Command(ID_pageDisplay).addData(id);
+        final Command command = new Command(ID_pageDisplay).addDataByte(id);
         for(String text: texts) {
             command.addData(text, true);
         }

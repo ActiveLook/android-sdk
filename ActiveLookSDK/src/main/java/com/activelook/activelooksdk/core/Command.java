@@ -314,7 +314,7 @@ public class Command {
 
     public Command addData(String value, boolean nulTerminated) {
         if (nulTerminated == true) {
-            return this.addData(value.getBytes(StandardCharsets.US_ASCII)).addData((byte) 0x00);
+            return this.addData(value.getBytes(StandardCharsets.US_ASCII)).addDataByte((byte) 0x00);
         }
         return this.addData(value.getBytes(StandardCharsets.US_ASCII));
     }
