@@ -616,12 +616,12 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void pageGet(byte id, Consumer<PageInfo> onResult) {
-        this.writeCommand(new Command(ID_pageList), bytes -> onResult.accept(new PageInfo(bytes)));
+        this.writeCommand(new Command(ID_pageGet).addDataByte(id), bytes -> onResult.accept(new PageInfo(bytes)));
     }
 
     @Override
     public void pageDelete(byte id) {
-        this.writeCommand(new Command(ID_pageDelete).addData(id));
+        this.writeCommand(new Command(ID_pageDelete).addDataByte(id));
     }
 
     @Override
@@ -631,7 +631,7 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void pageDisplay(byte id, String [] texts) {
-        final Command command = new Command(ID_pageDisplay).addData(id);
+        final Command command = new Command(ID_pageDisplay).addDataByte(id);
         for(String text: texts) {
             command.addData(text, true);
         }
@@ -640,7 +640,7 @@ public abstract class AbstractGlasses implements Glasses {
 
     @Override
     public void pageClear(byte id) {
-        this.writeCommand(new Command(ID_pageClear).addData(id));
+        this.writeCommand(new Command(ID_pageClear).addDataByte(id));
     }
     @Override
     public void pageList(Consumer<List<Integer>> onResult) {
