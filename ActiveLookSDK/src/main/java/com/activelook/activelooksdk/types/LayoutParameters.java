@@ -32,7 +32,7 @@ public class LayoutParameters {
     private final byte textY;
     private final Rotation rotation;
     private final boolean textOpacity;
-    private CommandData subCommands;
+    private final CommandData subCommands;
 
     public LayoutParameters(byte id,
                             short x, byte y, short width, byte height,

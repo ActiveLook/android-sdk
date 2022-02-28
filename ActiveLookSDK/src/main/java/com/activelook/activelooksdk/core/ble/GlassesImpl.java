@@ -39,10 +39,10 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
             return new GlassesImpl[size];
         }
     };
-    private final GlassesGattCallbackImpl gattCallbacks;
+    final GlassesGattCallbackImpl gattCallbacks;
     private DiscoveredGlassesImpl connectedFrom;
 
-    GlassesImpl(DiscoveredGlassesImpl discoveredGlasses, Consumer<Glasses> onConnected,
+    GlassesImpl(DiscoveredGlassesImpl discoveredGlasses, Consumer<GlassesImpl> onConnected,
                 Consumer<DiscoveredGlasses> onConnectionFail,
                 Consumer<Glasses> onDisconnected) {
         super();
@@ -65,8 +65,6 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
 
     @Override
     public void writeBytes(byte[] bytes) {
-        Log.w("writeCommand", Command.bytesToStr(bytes));
-        Log.w("writeCommand", String.format("payload length: %d", bytes.length));
         this.gattCallbacks.writeRxCharacteristic(bytes);
     }
 

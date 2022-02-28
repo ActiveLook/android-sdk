@@ -16,7 +16,6 @@ package com.activelook.activelooksdk.core.ble;
 
 import java.util.UUID;
 
-@SuppressWarnings("SpellCheckingInspection")
 interface BleUUID {
 
     /**

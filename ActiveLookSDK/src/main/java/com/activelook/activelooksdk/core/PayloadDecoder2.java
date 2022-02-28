@@ -50,7 +50,7 @@ public final class PayloadDecoder2 {
     /*
     HELPERS FOR DECODING RECEIVED PAYLOADS
      */
-    private byte [] bytes;
+    private final byte [] bytes;
     private int offset;
 
     private PayloadDecoder2(final byte [] bytes) {

@@ -24,22 +24,37 @@ import android.widget.Toast;
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
+import com.activelook.activelooksdk.Glasses;
 import com.activelook.activelooksdk.Sdk;
 import com.activelook.activelooksdk.exceptions.UnsupportedBleException;
+import com.activelook.activelooksdk.types.GlassesUpdate;
 
 import java.util.HashMap;
 
 class SdkImpl implements Sdk {
 
     private final Context context;
+    private final GlassesUpdater updater;
     private final BluetoothManager manager;
     private final BluetoothAdapter adapter;
     private final BluetoothLeScanner scanner;
     private final HashMap<String, GlassesImpl> connectedGlasses = new HashMap<>();
     private ScanCallback scanCallback;
 
-    SdkImpl(Context context) throws UnsupportedBleException {
+    SdkImpl(Context context,
+            String token,
+            Consumer<GlassesUpdate> onUpdateStart,
+            Consumer<GlassesUpdate> onUpdateProgress,
+            Consumer<GlassesUpdate> onUpdateSuccess,
+            Consumer<GlassesUpdate> onUpdateError) throws UnsupportedBleException {
         this.context = context;
+        this.updater = new GlassesUpdater(
+                context,
+                token,
+                onUpdateStart,
+                onUpdateProgress,
+                onUpdateSuccess,
+                onUpdateError);
         this.manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         this.adapter = this.manager.getAdapter();
         if (this.adapter == null) {
@@ -83,6 +98,10 @@ class SdkImpl implements Sdk {
 
     GlassesImpl getConnectedBleGlasses(final String address) {
         return this.connectedGlasses.get(address);
+    }
+
+    void update(final DiscoveredGlasses discoveredGlasses, final GlassesImpl glasses, final Consumer<Glasses> onConnected) {
+        this.updater.update(discoveredGlasses, glasses, onConnected);
     }
 
 }
