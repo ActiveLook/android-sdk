@@ -99,7 +99,6 @@ class GlassesGattCallbackImpl extends GlassesGatt {
             } else if (this.onDisconnected != null) {
                 this.onDisconnected.accept(this.glasses);
             }
-            this.disconnect();
         }
     }
 
