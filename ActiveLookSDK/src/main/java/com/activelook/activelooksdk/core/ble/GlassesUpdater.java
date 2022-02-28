@@ -36,6 +36,7 @@ class GlassesUpdater {
     public void update(final DiscoveredGlasses discoveredGlasses, final GlassesImpl glasses, final Consumer<Glasses> onConnected) {
         new UpdateGlassesTask(
                 this.requestQueue,
+                this.token,
                 discoveredGlasses,
                 glasses,
                 onConnected,
