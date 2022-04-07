@@ -12,25 +12,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
-package com.activelook.activelooksdk.types;
+package com.activelook.activelooksdk.types
 
-public enum DemoPattern implements Utils.FieldWithValue {
+import com.activelook.activelooksdk.types.Utils.FieldWithValue
+
+enum class DemoPattern : FieldWithValue {
     FILL {
-        @Override
-        public byte[] toBytes() {
-            return new byte[]{(byte) 0x00};
+        override fun toBytes(): ByteArray {
+            return byteArrayOf(0x00.toByte())
         }
     },
     CROSS {
-        @Override
-        public byte[] toBytes() {
-            return new byte[]{(byte) 0x01};
+        override fun toBytes(): ByteArray {
+            return byteArrayOf(0x01.toByte())
         }
     },
     IMAGE {
-        @Override
-        public byte[] toBytes() {
-            return new byte[]{(byte) 0x02};
+        override fun toBytes(): ByteArray {
+            return byteArrayOf(0x02.toByte())
         }
-    },
+    }
 }
