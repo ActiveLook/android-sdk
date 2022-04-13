@@ -20,7 +20,7 @@ public interface GlassesUpdate {
 
     DiscoveredGlasses getDiscoveredGlasses();
     State getState();
-    int getProgress();
+    double getProgress();
     String getSourceFirmwareVersion();
     String getTargetFirmwareVersion();
     String getSourceConfigurationVersion();

@@ -391,7 +391,7 @@ class UpdateGlassesTask {
                         characteristic,
                         c -> this.sendBlock(gatt, service),
                         this::onCharacteristicError);
-                final int ratioBlock = (100 * this.blockId) / this.blocks.size() + (100 * this.chunkId) / (chunks.size() * this.blocks.size());
+                final double ratioBlock = 100d * ( this.blockId + this.chunkId / (double) chunks.size()) / this.blocks.size();
                 this.onUpdateProgress(progress.withProgress(ratioBlock));
             } else {
                 this.blockId ++;
