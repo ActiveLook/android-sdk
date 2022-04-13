@@ -100,8 +100,8 @@ class SdkImpl implements Sdk {
         return this.connectedGlasses.get(address);
     }
 
-    void update(final DiscoveredGlasses discoveredGlasses, final GlassesImpl glasses, final Consumer<Glasses> onConnected) {
-        this.updater.update(discoveredGlasses, glasses, onConnected);
+    void update(final DiscoveredGlasses discoveredGlasses, final GlassesImpl glasses, final Consumer<Glasses> onConnected, Consumer<DiscoveredGlasses> onConnectionFail) {
+        this.updater.update(discoveredGlasses, glasses, onConnected, onConnectionFail);
     }
 
 }
