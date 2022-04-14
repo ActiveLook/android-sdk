@@ -230,7 +230,7 @@ public class Command {
 
     public QueryId getQueryId() {
         if (this.queryId != null) {
-            return new QueryId(this.queryId[0]);
+            return new QueryId(this.queryId);
         } else {
             return null;
         }
