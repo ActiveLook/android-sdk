@@ -14,43 +14,68 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.core;
 
+import java.util.Arrays;
+
 public class QueryId {
 
-    private final byte value;
+    private final byte[] values;
+
+    public QueryId(byte[] values) {
+        this.values = values;
+    }
 
     public QueryId(byte value) {
-        this.value = value;
+        this.values = new byte[]{ value };
     }
 
     public QueryId() {
-        this((byte) 0);
+        this(new byte [] { 1 });
     }
 
     byte[] toBytes() {
-        return new byte[]{this.value};
+        return this.values;
     }
 
     public QueryId next() {
-        return new QueryId((byte) ((this.value + 1) & 0xFF));
-    }
-
-    @Override
-    public int hashCode() {
-        return (int) this.value;
+        byte [] nextId = new byte [this.values.length];
+        System.arraycopy(this.values, 0, nextId, 0, this.values.length);
+        int id = 0;
+        while (id < nextId.length && nextId[id] == (byte) 0xFF) {
+            id ++;
+        }
+        if (id < nextId.length) {
+            nextId[id] ++;
+        } else {
+            nextId = new byte [this.values.length + 1];
+            if (nextId.length > 15) {
+                return new QueryId();
+            } else {
+                for (id=0; id<nextId.length; id++) {
+                    nextId[id] = (byte) 0x00;
+                }
+                nextId[nextId.length - 1] ++;
+            }
+        }
+        return new QueryId(nextId);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof QueryId)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         QueryId queryId = (QueryId) o;
-        return value == queryId.value;
+        return Arrays.equals(values, queryId.values);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(values);
     }
 
     @Override
     public String toString() {
         return "QueryId{" +
-                "value=" + value +
+                "values=" + Arrays.toString(values) +
                 '}';
     }
 
