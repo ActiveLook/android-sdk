@@ -16,7 +16,7 @@ package com.activelook.activelooksdk.types
 
 import com.activelook.activelooksdk.types.Utils.FieldWithValue
 
-enum class DemoPattern : FieldWithValue {
+enum class DemoPatternOld : FieldWithValue {
     FILL {
         override fun toBytes(): ByteArray {
             return byteArrayOf(0x00.toByte())
