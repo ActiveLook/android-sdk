@@ -13,7 +13,8 @@
 
 plugins {
     id 'com.android.library'
-    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-android'
+    id 'maven-publish'
 }
 
 android {
@@ -22,6 +23,8 @@ android {
     defaultConfig {
         minSdk 16
         targetSdk 31
+        versionCode sdkVersionCode
+        versionName "$sdkVersionName"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -39,6 +42,25 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+    }
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            release(MavenPublication) {
+                from components.release
+                groupId = "$sdkGroupId"
+                artifactId = "internal"
+                version = "$sdkVersionName"
+            }
+        }
     }
 }
 

@@ -11,8 +11,8 @@ android {
     defaultConfig {
         minSdk 21
         targetSdk 31
-        versionCode 420
-        versionName "4.2.0"
+        versionCode sdkVersionCode
+        versionName "$sdkVersionName"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -31,36 +31,24 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-}
 
-task javadoc(type: Javadoc, dependsOn: clean) {
-    failOnError  false
-    source = android.sourceSets.main.java.sourceFiles
-    configurations.implementation.setCanBeResolved(true)
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    classpath += configurations.implementation
-}
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    archiveClassifier.set('javadoc')
-    from javadoc.destinationDir
-}
-
-task sourcesJar(type: Jar) {
-    archiveClassifier.set('sources')
-    from android.sourceSets.main.java.srcDirs
 }
 
 afterEvaluate {
-    javadoc.classpath += files(android.libraryVariants.collect { variant ->
-        variant.javaCompileProvider.get().classpath.files
-    })
     publishing {
         publications {
             release(MavenPublication) {
                 from components.release
-                artifact sourcesJar
-                artifact javadocJar
+                groupId = "$sdkGroupId"
+                artifactId = "sdk"
+                version = "$sdkVersionName"
             }
         }
     }
