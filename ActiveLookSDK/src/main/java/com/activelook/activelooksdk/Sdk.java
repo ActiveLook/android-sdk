@@ -87,4 +87,19 @@ public interface Sdk {
             Consumer<DiscoveredGlasses> onConnectionFail,
             Consumer<Glasses> onDisconnected
     );
+
+    /**
+     * Cancel previously initiated glasses connection.
+     *
+     * @param discoveredGlasses The glasses we are connecting to
+     */
+    void cancelConnection(DiscoveredGlasses discoveredGlasses);
+
+    /**
+     * Cancel previously initiated glasses connection.
+     *
+     * @param serializedGlasses The glasses we are connecting to
+     */
+    void cancelConnection(SerializedGlasses serializedGlasses);
+
 }
