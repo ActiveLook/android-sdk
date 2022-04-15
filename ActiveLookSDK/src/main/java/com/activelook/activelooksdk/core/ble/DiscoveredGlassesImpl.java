@@ -110,10 +110,13 @@ class DiscoveredGlassesImpl implements DiscoveredGlasses {
         final SdkImpl sdk = BleSdkSingleton.getInstance();
         final Consumer<GlassesImpl> updater = g -> {
             g.lockConnection();
-            sdk.update(this, g, onConnected, onConnectionFail);
-            g.unlockConnection();
+            sdk.registerConnectedGlasses(g);
+            sdk.update(this, g,
+                    g2 -> { g.unlockConnection(); onConnected.accept(g2); },
+                    onConnectionFail
+            );
         };
-        sdk.registerConnectedGlasses(new GlassesImpl(this, updater, onConnectionFail, onDisconnected));
+        new GlassesImpl(this, updater, onConnectionFail, onDisconnected);
     }
 
     /**
@@ -123,9 +126,10 @@ class DiscoveredGlassesImpl implements DiscoveredGlasses {
     public void cancelConnection() {
         final SdkImpl sdk = BleSdkSingleton.getInstance();
         final GlassesImpl glasses = sdk.getConnectedBleGlasses(this.getAddress());
-        if (glasses != null) {
-            glasses.disconnect();
+        if (glasses == null) {
+            throw new UnsupportedOperationException("Already disconnected.");
         }
+        glasses.disconnect();
     }
 
     @Override

@@ -71,13 +71,11 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         this.onFlowControlEvent = null;
         this.onSensorInterfaceEvent = null;
         this.repairFlowControl = null;
-        final SdkImpl sdk = BleSdkSingleton.getInstance();
         this.setOnConnect(onConnected);
         this.setOnConnectionFail(onConnectionFail);
         this.setOnDisconnected(onDisconnected);
         this.gatt = this.gattDelegate;
         this.connectionLocked = false;
-        sdk.registerConnectedGlasses(this.glasses);
     }
 
     private void optimizeMtu(final int optimalMtu) {
