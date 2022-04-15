@@ -73,4 +73,18 @@ public interface Sdk {
      */
     boolean isScanning();
 
+    /**
+     * Connect to glasses and call callback on success.
+     *
+     * @param serializedGlasses The previously connected glasses representation
+     * @param onConnected       Callback to call on success
+     * @param onConnectionFail  Callback to call on failure
+     * @param onDisconnected    Callback to set for disconnected events.
+     */
+    void connect(
+            SerializedGlasses serializedGlasses,
+            Consumer<Glasses> onConnected,
+            Consumer<DiscoveredGlasses> onConnectionFail,
+            Consumer<Glasses> onDisconnected
+    );
 }
