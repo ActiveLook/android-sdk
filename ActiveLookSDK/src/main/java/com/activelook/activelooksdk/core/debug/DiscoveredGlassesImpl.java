@@ -75,6 +75,14 @@ class DiscoveredGlassesImpl implements DiscoveredGlasses {
         new GlassesImpl(this, onConnected);
     }
 
+    /**
+     * Cancel previously initiated glasses connection.
+     */
+    @Override
+    public void cancelConnection() {
+        throw new UnsupportedOperationException("Already connected");
+    }
+
     @Override
     public int describeContents() {
         return 0;

@@ -20,6 +20,7 @@ import android.util.Log;
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.Glasses;
+import com.activelook.activelooksdk.SerializedGlasses;
 import com.activelook.activelooksdk.core.AbstractGlasses;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
@@ -62,6 +63,29 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     @Override
     public String getAddress() {
         return this.connectedFrom.getAddress();
+    }
+
+    /**
+     * Get a serialized representation of this glasses for persistence storage
+     */
+    @Override
+    public SerializedGlasses getSerializedGlasses() {
+        return new SerializedGlasses() {
+            @Override
+            public String getAddress() {
+                return GlassesImpl.this.getAddress();
+            }
+
+            @Override
+            public String getManufacturer() {
+                return GlassesImpl.this.getManufacturer();
+            }
+
+            @Override
+            public String getName() {
+                return GlassesImpl.this.getName();
+            }
+        };
     }
 
     @Override
