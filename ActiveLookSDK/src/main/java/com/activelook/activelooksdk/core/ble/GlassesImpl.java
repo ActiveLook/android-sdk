@@ -140,6 +140,14 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
         return gVersion.compareTo(version);
     }
 
+    void lockConnection() {
+        this.gattCallbacks.lockConnection();
+    }
+
+    void unlockConnection() {
+        this.gattCallbacks.unlockConnection();
+    }
+
     @Override
     public void disconnect() {
         this.gattCallbacks.disconnect();

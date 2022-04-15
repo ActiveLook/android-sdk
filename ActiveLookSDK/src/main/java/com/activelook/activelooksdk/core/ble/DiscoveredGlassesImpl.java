@@ -109,9 +109,23 @@ class DiscoveredGlassesImpl implements DiscoveredGlasses {
     ) {
         final SdkImpl sdk = BleSdkSingleton.getInstance();
         final Consumer<GlassesImpl> updater = g -> {
+            g.lockConnection();
             sdk.update(this, g, onConnected, onConnectionFail);
+            g.unlockConnection();
         };
         sdk.registerConnectedGlasses(new GlassesImpl(this, updater, onConnectionFail, onDisconnected));
+    }
+
+    /**
+     * Cancel previously initiated glasses connection.
+     */
+    @Override
+    public void cancelConnection() {
+        final SdkImpl sdk = BleSdkSingleton.getInstance();
+        final GlassesImpl glasses = sdk.getConnectedBleGlasses(this.getAddress());
+        if (glasses != null) {
+            glasses.disconnect();
+        }
     }
 
     @Override
