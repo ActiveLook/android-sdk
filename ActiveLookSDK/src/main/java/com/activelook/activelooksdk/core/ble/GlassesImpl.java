@@ -14,6 +14,7 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.core.ble;
 
+import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.util.Log;
 
@@ -21,6 +22,7 @@ import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
+import com.activelook.activelooksdk.SerializedGlasses;
 import com.activelook.activelooksdk.core.AbstractGlasses;
 import com.activelook.activelooksdk.core.Command;
 import com.activelook.activelooksdk.types.DeviceInformation;
@@ -40,23 +42,38 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
         }
     };
     final GlassesGattCallbackImpl gattCallbacks;
-    private DiscoveredGlassesImpl connectedFrom;
+    private DiscoveredGlasses connectedFrom;
+    private BluetoothDevice device;
 
     GlassesImpl(DiscoveredGlassesImpl discoveredGlasses, Consumer<GlassesImpl> onConnected,
                 Consumer<DiscoveredGlasses> onConnectionFail,
                 Consumer<Glasses> onDisconnected) {
         super();
         this.connectedFrom = discoveredGlasses;
+        this.device = discoveredGlasses.scanResult.getDevice();
         this.gattCallbacks = new GlassesGattCallbackImpl(
-                this.connectedFrom.scanResult.getDevice(),
+                this.device,
                 this,
                 onConnected,
                 () -> onConnectionFail.accept(discoveredGlasses),
                 onDisconnected);
     }
 
+    public GlassesImpl(DiscoveredGlassesFromSerializedGlassesImpl discoveredGlassesFromSerializedGlasses, BluetoothDevice device, Consumer<GlassesImpl> onConnected, Consumer<DiscoveredGlasses> onConnectionFail, Consumer<Glasses> onDisconnected) {
+        super();
+        this.connectedFrom = discoveredGlassesFromSerializedGlasses;
+        this.device = device;
+        this.gattCallbacks = new GlassesGattCallbackImpl(
+                this.device,
+                this,
+                onConnected,
+                () -> onConnectionFail.accept(discoveredGlassesFromSerializedGlasses),
+                onDisconnected);
+    }
+
     protected GlassesImpl(Parcel in) {
-        this.connectedFrom = in.readParcelable(DiscoveredGlassesImpl.class.getClassLoader());
+        this.connectedFrom = in.readParcelable(DiscoveredGlasses.class.getClassLoader());
+        this.device = in.readParcelable(BluetoothDevice.class.getClassLoader());
         final SdkImpl sdk = BleSdkSingleton.getInstance();
         GlassesImpl registered = sdk.getConnectedBleGlasses(this.getAddress());
         this.gattCallbacks = registered.gattCallbacks;
@@ -81,6 +98,29 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     @Override
     public String getAddress() {
         return this.connectedFrom.getAddress();
+    }
+
+    /**
+     * Get a serialized representation of this glasses for persistence storage
+     */
+    @Override
+    public SerializedGlasses getSerializedGlasses() {
+        return new SerializedGlasses() {
+            @Override
+            public String getAddress() {
+                return GlassesImpl.this.getAddress();
+            }
+
+            @Override
+            public String getManufacturer() {
+                return GlassesImpl.this.getManufacturer();
+            }
+
+            @Override
+            public String getName() {
+                return GlassesImpl.this.getName();
+            }
+        };
     }
 
     @Override
@@ -142,10 +182,12 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(this.connectedFrom, flags);
+        dest.writeParcelable(this.device, flags);
     }
 
     public void readFromParcel(Parcel source) {
-        this.connectedFrom = source.readParcelable(DiscoveredGlassesImpl.class.getClassLoader());
+        this.connectedFrom = source.readParcelable(DiscoveredGlasses.class.getClassLoader());
+        this.device = source.readParcelable(BluetoothDevice.class.getClassLoader());
     }
 
 }
