@@ -15,4 +15,10 @@ package com.activelook.activelooksdk;
 
 import java.io.Serializable;
 
-public interface SerializedGlasses extends Serializable {}
+public interface SerializedGlasses extends Serializable {
+    String getAddress();
+
+    String getManufacturer();
+
+    String getName();
+}
