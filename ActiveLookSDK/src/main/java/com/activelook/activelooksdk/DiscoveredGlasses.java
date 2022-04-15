@@ -54,4 +54,8 @@ public interface DiscoveredGlasses extends Parcelable {
             Consumer<Glasses> onDisconnected
     );
 
+    /**
+     * Cancel previously initiated glasses connection.
+     */
+    void cancelConnection();
 }

@@ -7,7 +7,7 @@ final class UpdateProgress implements GlassesUpdate {
 
     private final DiscoveredGlasses discoveredGlasses;
     private final State state;
-    private final int progress;
+    private final double progress;
     private final String sourceFirmwareVersion;
     private final String targetFirmwareVersion;
     private final String sourceConfigurationVersion;
@@ -15,7 +15,7 @@ final class UpdateProgress implements GlassesUpdate {
 
     UpdateProgress(final DiscoveredGlasses discoveredGlasses,
                           final State state,
-                          final int progress,
+                          final double progress,
                           final String sourceFirmwareVersion,
                           final String targetFirmwareVersion,
                           final String sourceConfigurationVersion,
@@ -36,7 +36,7 @@ final class UpdateProgress implements GlassesUpdate {
                 sourceConfigurationVersion, targetConfigurationVersion);
     }
 
-    UpdateProgress withProgress(final int progress) {
+    UpdateProgress withProgress(final double progress) {
         return new UpdateProgress(
                 discoveredGlasses, state, progress,
                 sourceFirmwareVersion, targetFirmwareVersion,
@@ -82,7 +82,7 @@ final class UpdateProgress implements GlassesUpdate {
     }
 
     @Override
-    public final int getProgress() {
+    public final double getProgress() {
         return this.progress;
     }
 

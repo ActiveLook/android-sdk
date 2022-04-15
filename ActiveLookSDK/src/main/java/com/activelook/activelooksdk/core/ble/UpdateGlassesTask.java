@@ -44,6 +44,7 @@ class UpdateGlassesTask {
     private UpdateProgress progress;
 
     private final Consumer<Glasses> onConnected;
+    private final Consumer<DiscoveredGlasses> onConnectionFail;
 
     private final Consumer<GlassesUpdate> onUpdateStartCallback;
     private final Consumer<GlassesUpdate> onUpdateProgressCallback;
@@ -87,6 +88,7 @@ class UpdateGlassesTask {
             final DiscoveredGlasses discoveredGlasses,
             final GlassesImpl glasses,
             final Consumer<Glasses> onConnected,
+            final Consumer<DiscoveredGlasses> onConnectionFail,
             final Consumer<GlassesUpdate> onUpdateStart,
             final Consumer<GlassesUpdate> onUpdateProgress,
             final Consumer<GlassesUpdate> onUpdateSuccess,
@@ -96,6 +98,7 @@ class UpdateGlassesTask {
         this.discoveredGlasses = discoveredGlasses;
         this.glasses = glasses;
         this.onConnected = onConnected;
+        this.onConnectionFail = onConnectionFail;
         this.onUpdateStartCallback = onUpdateStart;
         this.onUpdateProgressCallback = onUpdateProgress;
         this.onUpdateSuccessCallback = onUpdateSuccess;
@@ -112,6 +115,7 @@ class UpdateGlassesTask {
 
         if (this.gVersion.getMajor() > FW_COMPAT) {
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_DOWNGRADE_FORBIDDEN));
+            this.onConnectionFail.accept(this.discoveredGlasses);
             return;
         }
 
@@ -134,6 +138,7 @@ class UpdateGlassesTask {
         error.printStackTrace();
         if (this.gVersion.getMajor() < FW_COMPAT) {
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+            this.onConnectionFail.accept(this.discoveredGlasses);
         } else {
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
             this.onConnected.accept(this.glasses);
@@ -143,12 +148,14 @@ class UpdateGlassesTask {
     private void onBluetoothError() {
         Log.e("SUOTA", "Got onBluetoothError");
         this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+        this.onConnectionFail.accept(this.discoveredGlasses);
     }
 
     private void onCharacteristicError(final BluetoothGattCharacteristic characteristic) {
         final Object obj = characteristic == null ? "null" : characteristic.getUuid();
         Log.e("SUOTA", String.format("Got onCharacteristicError %s", obj));
         this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+        this.onConnectionFail.accept(this.discoveredGlasses);
     }
 
     void onFirmwareHistoryResponse(final JSONObject jsonObject) {
@@ -233,6 +240,7 @@ class UpdateGlassesTask {
             });
         } catch (IOException e) {
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+            this.onConnectionFail.accept(this.discoveredGlasses);
         }
     }
 
@@ -383,7 +391,7 @@ class UpdateGlassesTask {
                         characteristic,
                         c -> this.sendBlock(gatt, service),
                         this::onCharacteristicError);
-                final int ratioBlock = (100 * this.blockId) / this.blocks.size() + (100 * this.chunkId) / (chunks.size() * this.blocks.size());
+                final double ratioBlock = 100d * ( this.blockId + this.chunkId / (double) chunks.size()) / this.blocks.size();
                 this.onUpdateProgress(progress.withProgress(ratioBlock));
             } else {
                 this.blockId ++;
