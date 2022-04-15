@@ -14,7 +14,9 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.core.ble;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -23,6 +25,7 @@ import android.widget.Toast;
 
 import androidx.core.util.Consumer;
 
+import com.activelook.activelooksdk.SerializedGlasses;
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
 import com.activelook.activelooksdk.Sdk;
@@ -71,12 +74,14 @@ class SdkImpl implements Sdk {
         Toast.makeText(this.context, text, Toast.LENGTH_SHORT).show();
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void startScan(Consumer<DiscoveredGlasses> onDiscoverGlasses) {
         this.scanCallback = new ScanCallbackImpl(onDiscoverGlasses);
         this.scanner.startScan(this.scanCallback);
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void stopScan() {
         this.scanner.stopScan(this.scanCallback);
@@ -86,6 +91,47 @@ class SdkImpl implements Sdk {
     @Override
     public boolean isScanning() {
         return this.scanCallback != null;
+    }
+
+    /**
+     * Connect to glasses and call callback on success.
+     *
+     * @param serializedGlasses The previously connected glasses representation
+     * @param onConnected       Callback to call on success
+     * @param onConnectionFail  Callback to call on failure
+     * @param onDisconnected    Callback to set for disconnected events.
+     */
+    @SuppressLint("MissingPermission")
+    @Override
+    public void connect(
+            final SerializedGlasses serializedGlasses,
+            final Consumer<Glasses> onConnected,
+            final Consumer<DiscoveredGlasses> onConnectionFail,
+            final Consumer<Glasses> onDisconnected) {
+        final BluetoothDevice device = this.adapter.getRemoteDevice(serializedGlasses.getAddress());
+        final DiscoveredGlasses dg = new DiscoveredGlassesFromSerializedGlassesImpl(serializedGlasses, device);
+        dg.connect(onConnected, onConnectionFail, onDisconnected);
+    }
+
+    /**
+     * Cancel previously initiated glasses connection.
+     *
+     * @param discoveredGlasses The glasses we are connecting to
+     */
+    @Override
+    public void cancelConnection(DiscoveredGlasses discoveredGlasses) {
+        discoveredGlasses.cancelConnection();
+    }
+
+    /**
+     * Cancel previously initiated glasses connection.
+     *
+     * @param serializedGlasses The glasses we are connecting to
+     */
+    @Override
+    public void cancelConnection(SerializedGlasses serializedGlasses) {
+        final BluetoothDevice device = this.adapter.getRemoteDevice(serializedGlasses.getAddress());
+        new DiscoveredGlassesFromSerializedGlassesImpl(serializedGlasses, device).cancelConnection();;
     }
 
     void registerConnectedGlasses(GlassesImpl bleGlasses) {
@@ -100,8 +146,8 @@ class SdkImpl implements Sdk {
         return this.connectedGlasses.get(address);
     }
 
-    void update(final DiscoveredGlasses discoveredGlasses, final GlassesImpl glasses, final Consumer<Glasses> onConnected) {
-        this.updater.update(discoveredGlasses, glasses, onConnected);
+    void update(final DiscoveredGlasses discoveredGlasses, final GlassesImpl glasses, final Consumer<Glasses> onConnected, Consumer<DiscoveredGlasses> onConnectionFail) {
+        this.updater.update(discoveredGlasses, glasses, onConnected, onConnectionFail);
     }
 
 }

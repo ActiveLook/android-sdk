@@ -20,7 +20,7 @@ public interface GlassesUpdate {
 
     DiscoveredGlasses getDiscoveredGlasses();
     State getState();
-    int getProgress();
+    double getProgress();
     String getSourceFirmwareVersion();
     String getTargetFirmwareVersion();
     String getSourceConfigurationVersion();
@@ -30,6 +30,7 @@ public interface GlassesUpdate {
         UPDATING_FIRMWARE,
         DOWNLOADING_CONFIGURATION,
         UPDATING_CONFIGURATION,
+        UP_TO_DATE,
         ERROR_UPDATE_FAIL,
         ERROR_UPDATE_FORBIDDEN,
         ERROR_DOWNGRADE_FORBIDDEN,

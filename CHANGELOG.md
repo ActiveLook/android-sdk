@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## Version 4.2.3
+
+### New features
+- add a failure callback for updating errors
+- add an up to date state for updates
+- Allow cancelling connection
+- Add a serialized glasses object allowing reconnecting without scanning
+
+### Changes
+- make update progress a double
+- update dependencies
+- On connection lost, directly trigger the disconnected glasses callback
+
 ## Version 4.2.2
 
 ### New features

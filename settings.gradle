@@ -5,6 +5,7 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+include ':internal'
 include ':ActiveLookSDK'
 include ':debugapp'
 rootProject.name = "Active Look SDK"

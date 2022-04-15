@@ -65,6 +65,11 @@ public interface Glasses extends Parcelable {
      */
     String getAddress();
     /**
+     * Get a serialized representation of this glasses for persistence storage
+     */
+    SerializedGlasses getSerializedGlasses();
+
+    /**
      * Check if the glasses firmware is at least of the one provvided.
      *
      * @param version the version to compare the firmware version to.

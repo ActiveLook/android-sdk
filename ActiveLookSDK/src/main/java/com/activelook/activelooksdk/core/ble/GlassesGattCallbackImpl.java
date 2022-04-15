@@ -54,6 +54,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     private Consumer<FlowControlStatus> onFlowControlEvent;
     private Runnable onSensorInterfaceEvent;
     private ScheduledFuture<?> repairFlowControl;
+    private boolean connectionLocked;
 
     GlassesGattCallbackImpl(BluetoothDevice device, GlassesImpl bleGlasses,
                             Consumer<GlassesImpl> onConnected,
@@ -70,12 +71,11 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         this.onFlowControlEvent = null;
         this.onSensorInterfaceEvent = null;
         this.repairFlowControl = null;
-        final SdkImpl sdk = BleSdkSingleton.getInstance();
         this.setOnConnect(onConnected);
         this.setOnConnectionFail(onConnectionFail);
         this.setOnDisconnected(onDisconnected);
         this.gatt = this.gattDelegate;
-        sdk.registerConnectedGlasses(this.glasses);
+        this.connectionLocked = false;
     }
 
     private void optimizeMtu(final int optimalMtu) {
@@ -327,7 +327,18 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         }
     }
 
+    void lockConnection() {
+        this.connectionLocked = true;
+    }
+
+    void unlockConnection() {
+        this.connectionLocked = false;
+    }
+
     void disconnect() {
+        if (this.connectionLocked == true) {
+            throw new UnsupportedOperationException("Cannot disconnect now.");
+        }
         this.gatt.disconnect();
         this.gatt.close();
         BleSdkSingleton.getInstance().unregisterConnectedGlasses(this.glasses);
