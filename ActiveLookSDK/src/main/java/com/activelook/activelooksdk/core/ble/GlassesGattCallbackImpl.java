@@ -140,6 +140,13 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                     new String(characteristic.getValue(), StandardCharsets.UTF_8));
             this.setOnConnectionFail(null);
             if (this.onConnected != null) {
+                this.pendingWriteRxCharacteristic.clear();
+                this.flowControlCanSend.set(true);
+                this.isWritingCommand.set(false);
+                if (this.repairFlowControl != null) {
+                    this.repairFlowControl.cancel(false);
+                    this.repairFlowControl = null;
+                }
                 this.onConnected.accept(this.glasses);
             }
         }
