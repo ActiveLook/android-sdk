@@ -211,7 +211,7 @@ class UpdateGlassesTask {
 
     private void onBatteryLevelNotification(final String latestApiPath, final int batteryLevel) {
         if (batteryLevel < 10) {
-            this.onUpdateError(this.progress.withBatteryLevel(batteryLevel).withStatus(GlassesUpdate.State.ERROR_UPDATE_LOW_BATTERY));
+            this.onUpdateError(this.progress.withBatteryLevel(batteryLevel).withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL_LOW_BATTERY));
         } else {
             this.glasses.subscribeToBatteryLevelNotifications(bl -> {
                 this.onUpdateProgress(this.progress.withBatteryLevel(bl));
