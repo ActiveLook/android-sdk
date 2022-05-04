@@ -21,6 +21,7 @@ public interface GlassesUpdate {
     DiscoveredGlasses getDiscoveredGlasses();
     State getState();
     double getProgress();
+    int getBatteryLevel();
     String getSourceFirmwareVersion();
     String getTargetFirmwareVersion();
     String getSourceConfigurationVersion();
@@ -32,6 +33,7 @@ public interface GlassesUpdate {
         UPDATING_CONFIGURATION,
         UP_TO_DATE,
         ERROR_UPDATE_FAIL,
+        ERROR_UPDATE_LOW_BATTERY,
         ERROR_UPDATE_FORBIDDEN,
         ERROR_DOWNGRADE_FORBIDDEN,
     }

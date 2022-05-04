@@ -111,6 +111,7 @@ class UpdateGlassesTask {
         final String strVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
         this.progress = new UpdateProgress(discoveredGlasses, GlassesUpdate.State.DOWNLOADING_FIRMWARE, 0,
+                this.glasses.getDeviceInformation().getBatteryLevel(),
                 strVersion, String.format("%d.0.0", FW_COMPAT), "", "");
 
         if (this.gVersion.getMajor() > FW_COMPAT) {
