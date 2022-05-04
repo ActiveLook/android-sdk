@@ -17,6 +17,7 @@ package com.activelook.activelooksdk;
 import android.content.Context;
 
 import androidx.core.util.Consumer;
+import androidx.core.util.Predicate;
 
 import com.activelook.activelooksdk.core.ble.BleSdkSingleton;
 import com.activelook.activelooksdk.core.debug.DebugSdkSingleton;
@@ -29,13 +30,14 @@ final class SdkSingleton {
     static final synchronized Sdk init(Context applicationContext,
                                        String token,
                                        Consumer<GlassesUpdate> onUpdateStart,
+                                       Predicate<GlassesUpdate> onUpdateAvailableCallback,
                                        Consumer<GlassesUpdate> onUpdateProgress,
                                        Consumer<GlassesUpdate> onUpdateSuccess,
                                        Consumer<GlassesUpdate> onUpdateError) {
         if (SdkSingleton.singleton == null) {
             try {
                 SdkSingleton.singleton = BleSdkSingleton.init(applicationContext, token, onUpdateStart,
-                        onUpdateProgress, onUpdateSuccess, onUpdateError);
+                        onUpdateAvailableCallback, onUpdateProgress, onUpdateSuccess, onUpdateError);
             } catch (UnsupportedOperationException e) {
                 if (BuildConfig.DEBUG) {
                     SdkSingleton.singleton = DebugSdkSingleton.getInstance();

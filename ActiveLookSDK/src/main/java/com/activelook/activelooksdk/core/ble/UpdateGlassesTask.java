@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.core.util.Consumer;
 import androidx.core.util.Pair;
+import androidx.core.util.Predicate;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
@@ -43,6 +44,7 @@ class UpdateGlassesTask {
     private final GlassesVersion gVersion;
     private UpdateProgress progress;
 
+    private final Predicate<GlassesUpdate> onUpdateAvailableCallback;
     private final Consumer<Glasses> onConnected;
     private final Consumer<DiscoveredGlasses> onConnectionFail;
 
@@ -87,6 +89,7 @@ class UpdateGlassesTask {
             final String token,
             final DiscoveredGlasses discoveredGlasses,
             final GlassesImpl glasses,
+            final Predicate<GlassesUpdate> onUpdateAvailableCallback,
             final Consumer<Glasses> onConnected,
             final Consumer<DiscoveredGlasses> onConnectionFail,
             final Consumer<GlassesUpdate> onUpdateStart,
@@ -97,6 +100,7 @@ class UpdateGlassesTask {
         this.token = token;
         this.discoveredGlasses = discoveredGlasses;
         this.glasses = glasses;
+        this.onUpdateAvailableCallback = onUpdateAvailableCallback;
         this.onConnected = onConnected;
         this.onConnectionFail = onConnectionFail;
         this.onUpdateStartCallback = onUpdateStart;
@@ -210,7 +214,7 @@ class UpdateGlassesTask {
             this.onUpdateError(this.progress.withBatteryLevel(batteryLevel).withStatus(GlassesUpdate.State.ERROR_UPDATE_LOW_BATTERY));
         } else {
             this.glasses.subscribeToBatteryLevelNotifications(bl -> {
-                this.progress = this.progress.withBatteryLevel(bl);
+                this.onUpdateProgress(this.progress.withBatteryLevel(bl));
             });
             this.resumeOnFirmwareHistoryResponse(latestApiPath);
         }
@@ -269,6 +273,12 @@ class UpdateGlassesTask {
 
     private void onFirmwareDownloaded(final byte[] response) {
         this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
+        if(!this.onUpdateAvailableCallback.test(this.progress)) {
+            this.glasses.unsubscribeToBatteryLevelNotifications();
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+            this.onConnectionFail.accept(this.discoveredGlasses);
+            return;
+        }
         Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
         this.firmware = new Firmware(response);
         this.suotaUpdate(this.glasses.gattCallbacks);
