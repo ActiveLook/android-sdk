@@ -173,12 +173,14 @@ class UpdateGlassesTask {
                             || (major == this.gVersion.getMajor() && minor >  this.gVersion.getMinor())
                             || (major == this.gVersion.getMajor() && minor == this.gVersion.getMinor() && patch > this.gVersion.getPatch())
             ) {
-                this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_FIRMWARE));
-                this.requestQueue.add(new FileRequest(
-                        String.format("%s%s", BASE_URL, latest.getString("api_path")),
-                        this::onFirmwareDownloaded,
-                        this::onApiFail
-                ));
+                final String latestApiPath = latest.getString("api_path");
+                final int bl0 = this.glasses.getDeviceInformation().getBatteryLevel();
+                if (bl0 < 10) {
+                    this.onBatteryLevelNotification(latestApiPath, bl0);
+                    this.glasses.subscribeToBatteryLevelNotifications(bl -> this.onBatteryLevelNotification(latestApiPath, bl));
+                } else {
+                    this.resumeOnFirmwareHistoryResponse(latestApiPath);
+                }
             } else {
                 Log.d("FW_LATEST", String.format("No firmware update available"));
                 this.glasses.cfgRead("ALooK", info -> {
@@ -201,6 +203,26 @@ class UpdateGlassesTask {
         } catch (final JSONException e) {
             this.onApiFail(e);
         }
+    }
+
+    private void onBatteryLevelNotification(final String latestApiPath, final int batteryLevel) {
+        if (batteryLevel < 10) {
+            this.onUpdateError(this.progress.withBatteryLevel(batteryLevel).withStatus(GlassesUpdate.State.ERROR_UPDATE_LOW_BATTERY));
+        } else {
+            this.glasses.subscribeToBatteryLevelNotifications(bl -> {
+                this.progress = this.progress.withBatteryLevel(bl);
+            });
+            this.resumeOnFirmwareHistoryResponse(latestApiPath);
+        }
+    }
+
+    private void resumeOnFirmwareHistoryResponse(final String latestApiPath) {
+        this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_FIRMWARE));
+        this.requestQueue.add(new FileRequest(
+                String.format("%s%s", BASE_URL, latestApiPath),
+                this::onFirmwareDownloaded,
+                this::onApiFail
+        ));
     }
 
     private void onConfigurationHistoryResponse(final JSONObject jsonObject, final ConfigurationElementsInfo info) {
@@ -429,6 +451,8 @@ class UpdateGlassesTask {
     }
 
     private void sendRebootSignal(final GlassesGatt gatt, final BluetoothGattService service) {
+        Log.d("SUOTA", "unsubscribeToBatteryLevelNotifications");
+        this.glasses.unsubscribeToBatteryLevelNotifications();
         Log.d("SUOTA", "sendRebootSignal");
         final BluetoothGattCharacteristic characteristic = service.getCharacteristic(GlassesGatt.SPOTA_MEM_DEV_UUID);
         characteristic.setValue(0xfd000000, BluetoothGattCharacteristic.FORMAT_UINT32, 0);
