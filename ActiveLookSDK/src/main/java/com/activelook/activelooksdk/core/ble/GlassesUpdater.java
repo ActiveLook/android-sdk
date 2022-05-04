@@ -3,6 +3,7 @@ package com.activelook.activelooksdk.core.ble;
 import android.content.Context;
 
 import androidx.core.util.Consumer;
+import androidx.core.util.Predicate;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
@@ -15,6 +16,7 @@ class GlassesUpdater {
     private final RequestQueue requestQueue;
     private final String token;
     private final Consumer<GlassesUpdate> onUpdateStart;
+    private final Predicate<GlassesUpdate> onUpdateAvailableCallback;
     private final Consumer<GlassesUpdate> onUpdateProgress;
     private final Consumer<GlassesUpdate> onUpdateSuccess;
     private final Consumer<GlassesUpdate> onUpdateError;
@@ -22,11 +24,13 @@ class GlassesUpdater {
     GlassesUpdater(final Context context,
                    final String token,
                    final Consumer<GlassesUpdate> onUpdateStart,
+                   final Predicate<GlassesUpdate> onUpdateAvailableCallback,
                    final Consumer<GlassesUpdate> onUpdateProgress,
                    final Consumer<GlassesUpdate> onUpdateSuccess,
                    final Consumer<GlassesUpdate> onUpdateError) {
         this.token = token;
         this.onUpdateStart = onUpdateStart;
+        this.onUpdateAvailableCallback = onUpdateAvailableCallback;
         this.onUpdateProgress = onUpdateProgress;
         this.onUpdateSuccess = onUpdateSuccess;
         this.onUpdateError = onUpdateError;
@@ -39,6 +43,7 @@ class GlassesUpdater {
                 this.token,
                 discoveredGlasses,
                 glasses,
+                this.onUpdateAvailableCallback,
                 onConnected,
                 onConnectionFail,
                 this.onUpdateStart,

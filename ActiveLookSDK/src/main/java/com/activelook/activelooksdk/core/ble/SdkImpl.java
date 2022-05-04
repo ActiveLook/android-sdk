@@ -24,6 +24,7 @@ import android.content.Context;
 import android.widget.Toast;
 
 import androidx.core.util.Consumer;
+import androidx.core.util.Predicate;
 
 import com.activelook.activelooksdk.SerializedGlasses;
 import com.activelook.activelooksdk.DiscoveredGlasses;
@@ -47,6 +48,7 @@ class SdkImpl implements Sdk {
     SdkImpl(Context context,
             String token,
             Consumer<GlassesUpdate> onUpdateStart,
+            Predicate<GlassesUpdate> onUpdateAvailableCallback,
             Consumer<GlassesUpdate> onUpdateProgress,
             Consumer<GlassesUpdate> onUpdateSuccess,
             Consumer<GlassesUpdate> onUpdateError) throws UnsupportedBleException {
@@ -55,6 +57,7 @@ class SdkImpl implements Sdk {
                 context,
                 token,
                 onUpdateStart,
+                onUpdateAvailableCallback,
                 onUpdateProgress,
                 onUpdateSuccess,
                 onUpdateError);
