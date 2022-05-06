@@ -270,8 +270,13 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         this.glasses = bleGlasses;
     }
 
-    void setOnDisconnected(Consumer<Glasses> onDisconnected) {
-        this.onDisconnected = g -> { GlassesGattCallbackImpl.this.unlockConnection(); onDisconnected.accept(g); };
+    void setOnDisconnected(Consumer<Glasses> onDisconnectedCallback) {
+        this.onDisconnected = g -> {
+            GlassesGattCallbackImpl.this.unlockConnection();
+            if (onDisconnectedCallback != null) {
+                onDisconnectedCallback.accept(g);
+            }
+        };
     }
 
     void setOnConnectionFail(Runnable onConnectionFail) {
