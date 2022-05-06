@@ -80,7 +80,7 @@ public class DiscoveredGlassesFromSerializedGlassesImpl implements DiscoveredGla
             sdk.registerConnectedGlasses(g);
             sdk.update(this, g,
                 g2 -> { g.unlockConnection(); onConnected.accept(g2); },
-                onConnectionFail
+                g3 -> { g.unlockConnection(); onConnectionFail.accept(g3); }
             );
         };
         new GlassesImpl(this, this.device, updater, onConnectionFail, onDisconnected);

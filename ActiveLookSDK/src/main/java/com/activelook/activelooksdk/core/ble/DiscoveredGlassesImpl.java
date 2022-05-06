@@ -113,7 +113,7 @@ class DiscoveredGlassesImpl implements DiscoveredGlasses {
             sdk.registerConnectedGlasses(g);
             sdk.update(this, g,
                     g2 -> { g.unlockConnection(); onConnected.accept(g2); },
-                    onConnectionFail
+                    g3 -> { g.unlockConnection(); onConnectionFail.accept(g3); }
             );
         };
         new GlassesImpl(this, updater, onConnectionFail, onDisconnected);
