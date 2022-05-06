@@ -17,6 +17,8 @@ import com.activelook.activelooksdk.types.GlassesUpdate;
 import com.activelook.activelooksdk.types.GlassesVersion;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONArray;
@@ -27,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -139,13 +142,24 @@ class UpdateGlassesTask {
         ));
     }
 
-    private void onApiFail(final Exception error) {
+    private void onApiFail(final VolleyError error) {
         error.printStackTrace();
-        if (this.gVersion.getMajor() < FW_COMPAT) {
-            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+        if (error.networkResponse.statusCode == HttpURLConnection.HTTP_FORBIDDEN) {
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
             this.onConnectionFail.accept(this.discoveredGlasses);
         } else {
-            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
+            this.onApiJSONException(null);
+        }
+    }
+
+    private void onApiJSONException(final JSONException error) {
+        if (error != null) {
+            error.printStackTrace();
+        }
+        this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+        if (this.gVersion.getMajor() < FW_COMPAT) {
+            this.onConnectionFail.accept(this.discoveredGlasses);
+        } else {
             this.onConnected.accept(this.glasses);
         }
     }
@@ -205,7 +219,7 @@ class UpdateGlassesTask {
                 });
             }
         } catch (final JSONException e) {
-            this.onApiFail(e);
+            this.onApiJSONException(e);
         }
     }
 
@@ -251,7 +265,7 @@ class UpdateGlassesTask {
                 this.onConnected.accept(this.glasses);
             }
         } catch (final JSONException e) {
-            this.onApiFail(e);
+            this.onApiJSONException(e);
         }
     }
 
