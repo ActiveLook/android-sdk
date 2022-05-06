@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## Version 4.2.4
+
+### New features
+- Add a callback in the SDK init for triggering the glasses update.
+
+### Changes
+- Forbid glasses usage if the token is not valid
+- Disable glasses update if battery under 10%
+
+### Fixes
+- fix inconsistent connection state while updating
+
 ## Version 4.2.3
 
 ### New features
