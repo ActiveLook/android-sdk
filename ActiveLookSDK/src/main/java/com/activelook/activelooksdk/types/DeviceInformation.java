@@ -22,6 +22,7 @@ public class DeviceInformation {
     private String hardwareVersion;
     private String firmwareVersion;
     private String softwareVersion;
+    private int batteryLevel;
 
     public String getManufacturerName() {
         return manufacturerName;
@@ -71,6 +72,14 @@ public class DeviceInformation {
         this.softwareVersion = softwareVersion;
     }
 
+    public int getBatteryLevel() {
+        return batteryLevel;
+    }
+
+    public void setBatteryLevel(int batteryLevel) {
+        this.batteryLevel = batteryLevel;
+    }
+
     @Override
     public String toString() {
         return "DeviceInformation{" +
@@ -80,6 +89,8 @@ public class DeviceInformation {
                 ", hardwareVersion='" + hardwareVersion + '\'' +
                 ", firmwareVersion='" + firmwareVersion + '\'' +
                 ", softwareVersion='" + softwareVersion + '\'' +
+                ", batteryLevel='" + batteryLevel + '\'' +
                 '}';
     }
+
 }

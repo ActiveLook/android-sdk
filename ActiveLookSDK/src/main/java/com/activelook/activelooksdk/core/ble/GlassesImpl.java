@@ -27,6 +27,7 @@ import com.activelook.activelooksdk.core.AbstractGlasses;
 import com.activelook.activelooksdk.core.Command;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
+import com.activelook.internal.SimpleSerializedGlasses;
 
 class GlassesImpl extends AbstractGlasses implements Glasses {
 
@@ -105,22 +106,7 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
      */
     @Override
     public SerializedGlasses getSerializedGlasses() {
-        return new SerializedGlasses() {
-            @Override
-            public String getAddress() {
-                return GlassesImpl.this.getAddress();
-            }
-
-            @Override
-            public String getManufacturer() {
-                return GlassesImpl.this.getManufacturer();
-            }
-
-            @Override
-            public String getName() {
-                return GlassesImpl.this.getName();
-            }
-        };
+        return new SimpleSerializedGlasses(this.getAddress(), this.getManufacturer(), this.getName());
     }
 
     @Override

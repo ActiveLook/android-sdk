@@ -49,10 +49,14 @@ public class DebugActivity extends AppCompatActivity {
             Sdk.init(
                     DebugActivity.this,
                     "bdjZ3ulWitvUzVtUHevbll1AiOANEfPYsv5u6RaGcxk",
-                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateStart   : %s", gu)),
-                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateProgress: %s", gu)),
-                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateSuccess : %s", gu)),
-                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateError   : %s", gu))
+                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateStart               : %s", gu)),
+                    gu -> {
+                          Log.d("GLASSES_UPDATE", String.format("onUpdateAvailableCallback   : %s", gu));
+                        return true;
+                    },
+                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateProgress            : %s", gu)),
+                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateSuccess             : %s", gu)),
+                    gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateError               : %s", gu))
            );
             this.connectOneGlasses();
         });

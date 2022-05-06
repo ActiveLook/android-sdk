@@ -138,8 +138,19 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         } else if (characteristic.getUuid().equals(BleUUID.SoftwareVersionCharacteristic)) {
             this.deviceInfo.setSoftwareVersion(
                     new String(characteristic.getValue(), StandardCharsets.UTF_8));
+            final BluetoothGattService batteryService = this.gatt.getService(BleUUID.BatteryService);
+            this.gatt.readCharacteristic(batteryService.getCharacteristic(BleUUID.BatteryLevelCharacteristic));
+        } else if (characteristic.getUuid().equals(BleUUID.BatteryLevelCharacteristic)) {
+            this.deviceInfo.setBatteryLevel((int) characteristic.getValue()[0]);
             this.setOnConnectionFail(null);
             if (this.onConnected != null) {
+                this.pendingWriteRxCharacteristic.clear();
+                this.flowControlCanSend.set(true);
+                this.isWritingCommand.set(false);
+                if (this.repairFlowControl != null) {
+                    this.repairFlowControl.cancel(false);
+                    this.repairFlowControl = null;
+                }
                 this.onConnected.accept(this.glasses);
             }
         }
@@ -174,8 +185,10 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                 this.addPendingBuffer(buffer);
             }
         } else if (characteristic.getUuid().equals(BleUUID.BatteryLevelCharacteristic)) {
+            final int bl = characteristic.getValue()[0];
+            this.deviceInfo.setBatteryLevel(bl);
             if (this.onBatteryLevelEvent != null) {
-                this.onBatteryLevelEvent.accept((int) characteristic.getValue()[0]);
+                this.onBatteryLevelEvent.accept(bl);
             }
         } else if (characteristic.getUuid().equals(BleUUID.ActiveLookSensorInterfaceCharacteristic)) {
             if (this.onSensorInterfaceEvent != null) {
@@ -257,8 +270,13 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         this.glasses = bleGlasses;
     }
 
-    void setOnDisconnected(Consumer<Glasses> onDisconnected) {
-        this.onDisconnected = onDisconnected;
+    void setOnDisconnected(Consumer<Glasses> onDisconnectedCallback) {
+        this.onDisconnected = g -> {
+            GlassesGattCallbackImpl.this.unlockConnection();
+            if (onDisconnectedCallback != null) {
+                onDisconnectedCallback.accept(g);
+            }
+        };
     }
 
     void setOnConnectionFail(Runnable onConnectionFail) {

@@ -17,6 +17,7 @@ package com.activelook.activelooksdk.core.ble;
 import android.content.Context;
 
 import androidx.core.util.Consumer;
+import androidx.core.util.Predicate;
 
 import com.activelook.activelooksdk.types.GlassesUpdate;
 
@@ -27,11 +28,12 @@ public final class BleSdkSingleton {
     public static final synchronized SdkImpl init(Context applicationContext,
                                                   String token,
                                                   Consumer<GlassesUpdate> onUpdateStart,
+                                                  Predicate<GlassesUpdate> onUpdateAvailableCallback,
                                                   Consumer<GlassesUpdate> onUpdateProgress,
                                                   Consumer<GlassesUpdate> onUpdateSuccess,
                                                   Consumer<GlassesUpdate> onUpdateError) {
         if (BleSdkSingleton.singleton == null) {
-            BleSdkSingleton.singleton = new SdkImpl(applicationContext, token, onUpdateStart,
+            BleSdkSingleton.singleton = new SdkImpl(applicationContext, token, onUpdateStart, onUpdateAvailableCallback,
                     onUpdateProgress, onUpdateSuccess, onUpdateError);
         }
         return BleSdkSingleton.singleton;
