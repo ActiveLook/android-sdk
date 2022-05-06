@@ -7,6 +7,7 @@ import android.util.Log;
 
 import androidx.core.util.Consumer;
 import androidx.core.util.Pair;
+import androidx.core.util.Predicate;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
@@ -16,6 +17,8 @@ import com.activelook.activelooksdk.types.GlassesUpdate;
 import com.activelook.activelooksdk.types.GlassesVersion;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONArray;
@@ -26,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,6 +47,7 @@ class UpdateGlassesTask {
     private final GlassesVersion gVersion;
     private UpdateProgress progress;
 
+    private final Predicate<GlassesUpdate> onUpdateAvailableCallback;
     private final Consumer<Glasses> onConnected;
     private final Consumer<DiscoveredGlasses> onConnectionFail;
 
@@ -87,6 +92,7 @@ class UpdateGlassesTask {
             final String token,
             final DiscoveredGlasses discoveredGlasses,
             final GlassesImpl glasses,
+            final Predicate<GlassesUpdate> onUpdateAvailableCallback,
             final Consumer<Glasses> onConnected,
             final Consumer<DiscoveredGlasses> onConnectionFail,
             final Consumer<GlassesUpdate> onUpdateStart,
@@ -97,6 +103,7 @@ class UpdateGlassesTask {
         this.token = token;
         this.discoveredGlasses = discoveredGlasses;
         this.glasses = glasses;
+        this.onUpdateAvailableCallback = onUpdateAvailableCallback;
         this.onConnected = onConnected;
         this.onConnectionFail = onConnectionFail;
         this.onUpdateStartCallback = onUpdateStart;
@@ -111,6 +118,7 @@ class UpdateGlassesTask {
         final String strVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
         this.progress = new UpdateProgress(discoveredGlasses, GlassesUpdate.State.DOWNLOADING_FIRMWARE, 0,
+                this.glasses.getDeviceInformation().getBatteryLevel(),
                 strVersion, String.format("%d.0.0", FW_COMPAT), "", "");
 
         if (this.gVersion.getMajor() > FW_COMPAT) {
@@ -134,13 +142,24 @@ class UpdateGlassesTask {
         ));
     }
 
-    private void onApiFail(final Exception error) {
+    private void onApiFail(final VolleyError error) {
         error.printStackTrace();
-        if (this.gVersion.getMajor() < FW_COMPAT) {
-            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+        if (error.networkResponse.statusCode == HttpURLConnection.HTTP_FORBIDDEN) {
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
             this.onConnectionFail.accept(this.discoveredGlasses);
         } else {
-            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
+            this.onApiJSONException(null);
+        }
+    }
+
+    private void onApiJSONException(final JSONException error) {
+        if (error != null) {
+            error.printStackTrace();
+        }
+        this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+        if (this.gVersion.getMajor() < FW_COMPAT) {
+            this.onConnectionFail.accept(this.discoveredGlasses);
+        } else {
             this.onConnected.accept(this.glasses);
         }
     }
@@ -172,12 +191,14 @@ class UpdateGlassesTask {
                             || (major == this.gVersion.getMajor() && minor >  this.gVersion.getMinor())
                             || (major == this.gVersion.getMajor() && minor == this.gVersion.getMinor() && patch > this.gVersion.getPatch())
             ) {
-                this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_FIRMWARE));
-                this.requestQueue.add(new FileRequest(
-                        String.format("%s%s", BASE_URL, latest.getString("api_path")),
-                        this::onFirmwareDownloaded,
-                        this::onApiFail
-                ));
+                final String latestApiPath = latest.getString("api_path");
+                final int bl0 = this.glasses.getDeviceInformation().getBatteryLevel();
+                if (bl0 < 10) {
+                    this.onBatteryLevelNotification(latestApiPath, bl0);
+                    this.glasses.subscribeToBatteryLevelNotifications(bl -> this.onBatteryLevelNotification(latestApiPath, bl));
+                } else {
+                    this.resumeOnFirmwareHistoryResponse(latestApiPath);
+                }
             } else {
                 Log.d("FW_LATEST", String.format("No firmware update available"));
                 this.glasses.cfgRead("ALooK", info -> {
@@ -198,8 +219,28 @@ class UpdateGlassesTask {
                 });
             }
         } catch (final JSONException e) {
-            this.onApiFail(e);
+            this.onApiJSONException(e);
         }
+    }
+
+    private void onBatteryLevelNotification(final String latestApiPath, final int batteryLevel) {
+        if (batteryLevel < 10) {
+            this.onUpdateError(this.progress.withBatteryLevel(batteryLevel).withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL_LOW_BATTERY));
+        } else {
+            this.glasses.subscribeToBatteryLevelNotifications(bl -> {
+                this.onUpdateProgress(this.progress.withBatteryLevel(bl));
+            });
+            this.resumeOnFirmwareHistoryResponse(latestApiPath);
+        }
+    }
+
+    private void resumeOnFirmwareHistoryResponse(final String latestApiPath) {
+        this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_FIRMWARE));
+        this.requestQueue.add(new FileRequest(
+                String.format("%s%s", BASE_URL, latestApiPath),
+                this::onFirmwareDownloaded,
+                this::onApiFail
+        ));
     }
 
     private void onConfigurationHistoryResponse(final JSONObject jsonObject, final ConfigurationElementsInfo info) {
@@ -224,7 +265,7 @@ class UpdateGlassesTask {
                 this.onConnected.accept(this.glasses);
             }
         } catch (final JSONException e) {
-            this.onApiFail(e);
+            this.onApiJSONException(e);
         }
     }
 
@@ -246,6 +287,12 @@ class UpdateGlassesTask {
 
     private void onFirmwareDownloaded(final byte[] response) {
         this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
+        if(!this.onUpdateAvailableCallback.test(this.progress)) {
+            this.glasses.unsubscribeToBatteryLevelNotifications();
+            this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
+            this.onConnectionFail.accept(this.discoveredGlasses);
+            return;
+        }
         Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
         this.firmware = new Firmware(response);
         this.suotaUpdate(this.glasses.gattCallbacks);
@@ -428,6 +475,8 @@ class UpdateGlassesTask {
     }
 
     private void sendRebootSignal(final GlassesGatt gatt, final BluetoothGattService service) {
+        Log.d("SUOTA", "unsubscribeToBatteryLevelNotifications");
+        this.glasses.unsubscribeToBatteryLevelNotifications();
         Log.d("SUOTA", "sendRebootSignal");
         final BluetoothGattCharacteristic characteristic = service.getCharacteristic(GlassesGatt.SPOTA_MEM_DEV_UUID);
         characteristic.setValue(0xfd000000, BluetoothGattCharacteristic.FORMAT_UINT32, 0);

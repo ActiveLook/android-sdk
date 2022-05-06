@@ -19,6 +19,7 @@ import android.content.Context;
 import com.activelook.activelooksdk.types.GlassesUpdate;
 
 import androidx.core.util.Consumer;
+import androidx.core.util.Predicate;
 
 /**
  * Main entry point for the Active Look SDK.
@@ -29,24 +30,26 @@ public interface Sdk {
     /**
      * Initialize the Active Look SDK with the associated context.
      *
-     * @param applicationContext The Application context
-     * @param token              The token used for authenticating with the firmware repository.
-     * @param onUpdateStart      Registered callback for update start event notification.
-     * @param onUpdateProgress   Registered callback for update progress event notification.
-     * @param onUpdateSuccess    Registered callback for update success event notification.
-     * @param onUpdateError      Registered callback for update error event notification.
+     * @param applicationContext        The Application context
+     * @param token                     The token used for authenticating with the firmware repository.
+     * @param onUpdateStart             Registered callback for update start event notification.
+     * @param onUpdateAvailableCallback Registered callback which should return true to start updating.
+     * @param onUpdateProgress          Registered callback for update progress event notification.
+     * @param onUpdateSuccess           Registered callback for update success event notification.
+     * @param onUpdateError             Registered callback for update error event notification.
      * @return The Active Look SDK instance
      */
     static Sdk init(
             Context applicationContext,
             String token,
             Consumer<GlassesUpdate> onUpdateStart,
+            Predicate<GlassesUpdate> onUpdateAvailableCallback,
             Consumer<GlassesUpdate> onUpdateProgress,
             Consumer<GlassesUpdate> onUpdateSuccess,
             Consumer<GlassesUpdate> onUpdateError
     ) {
-        return SdkSingleton.init(applicationContext, token, onUpdateStart, onUpdateProgress, onUpdateSuccess,
-                onUpdateError);
+        return SdkSingleton.init(applicationContext, token, onUpdateStart, onUpdateAvailableCallback,
+                onUpdateProgress, onUpdateSuccess, onUpdateError);
     }
     /**
      * Get the Active Look SDK instance.

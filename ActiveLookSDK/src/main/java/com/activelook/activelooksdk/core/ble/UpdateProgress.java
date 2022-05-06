@@ -8,6 +8,7 @@ final class UpdateProgress implements GlassesUpdate {
     private final DiscoveredGlasses discoveredGlasses;
     private final State state;
     private final double progress;
+    private final int batteryLevel;
     private final String sourceFirmwareVersion;
     private final String targetFirmwareVersion;
     private final String sourceConfigurationVersion;
@@ -16,6 +17,7 @@ final class UpdateProgress implements GlassesUpdate {
     UpdateProgress(final DiscoveredGlasses discoveredGlasses,
                           final State state,
                           final double progress,
+                          final int batteryLevel,
                           final String sourceFirmwareVersion,
                           final String targetFirmwareVersion,
                           final String sourceConfigurationVersion,
@@ -23,6 +25,7 @@ final class UpdateProgress implements GlassesUpdate {
         this.discoveredGlasses = discoveredGlasses;
         this.state = state;
         this.progress = progress;
+        this.batteryLevel = batteryLevel;
         this.sourceFirmwareVersion = sourceFirmwareVersion;
         this.targetFirmwareVersion = targetFirmwareVersion;
         this.sourceConfigurationVersion = sourceConfigurationVersion;
@@ -31,42 +34,49 @@ final class UpdateProgress implements GlassesUpdate {
 
     UpdateProgress withStatus(final State state) {
         return new UpdateProgress(
-                discoveredGlasses, state, progress,
+                discoveredGlasses, state, progress, batteryLevel,
                 sourceFirmwareVersion, targetFirmwareVersion,
                 sourceConfigurationVersion, targetConfigurationVersion);
     }
 
     UpdateProgress withProgress(final double progress) {
         return new UpdateProgress(
-                discoveredGlasses, state, progress,
+                discoveredGlasses, state, progress, batteryLevel,
+                sourceFirmwareVersion, targetFirmwareVersion,
+                sourceConfigurationVersion, targetConfigurationVersion);
+    }
+
+    UpdateProgress withBatteryLevel(final int batteryLevel) {
+        return new UpdateProgress(
+                discoveredGlasses, state, progress, batteryLevel,
                 sourceFirmwareVersion, targetFirmwareVersion,
                 sourceConfigurationVersion, targetConfigurationVersion);
     }
 
     UpdateProgress withSourceFirmwareVersion(final String sourceFirmwareVersion) {
         return new UpdateProgress(
-                discoveredGlasses, state, progress,
+                discoveredGlasses, state, progress, batteryLevel,
                 sourceFirmwareVersion, targetFirmwareVersion,
                 sourceConfigurationVersion, targetConfigurationVersion);
     }
 
     UpdateProgress withTargetFirmwareVersion(final String targetFirmwareVersion) {
         return new UpdateProgress(
-                discoveredGlasses, state, progress,
+                discoveredGlasses, state, progress, batteryLevel,
                 sourceFirmwareVersion, targetFirmwareVersion,
                 sourceConfigurationVersion, targetConfigurationVersion);
     }
 
     UpdateProgress withSourceConfigurationVersion(final String sourceConfigurationVersion) {
         return new UpdateProgress(
-                discoveredGlasses, state, progress,
+                discoveredGlasses, state, progress, batteryLevel,
                 sourceFirmwareVersion, targetFirmwareVersion,
                 sourceConfigurationVersion, targetConfigurationVersion);
     }
 
     UpdateProgress withTargetConfigurationVersion(final String targetConfigurationVersion) {
         return new UpdateProgress(
-                discoveredGlasses, state, progress,
+                discoveredGlasses, state, progress, batteryLevel,
                 sourceFirmwareVersion, targetFirmwareVersion,
                 sourceConfigurationVersion, targetConfigurationVersion);
     }
@@ -84,6 +94,11 @@ final class UpdateProgress implements GlassesUpdate {
     @Override
     public final double getProgress() {
         return this.progress;
+    }
+
+    @Override
+    public final int getBatteryLevel() {
+        return this.batteryLevel;
     }
 
     @Override
@@ -111,6 +126,7 @@ final class UpdateProgress implements GlassesUpdate {
         return "UpdateProgress{" +
                 "state=" + state +
                 ", progress=" + progress +
+                ", batteryLevel=" + batteryLevel +
                 ", sourceFirmwareVersion='" + sourceFirmwareVersion + '\'' +
                 ", targetFirmwareVersion='" + targetFirmwareVersion + '\'' +
                 ", sourceConfigurationVersion='" + sourceConfigurationVersion + '\'' +
