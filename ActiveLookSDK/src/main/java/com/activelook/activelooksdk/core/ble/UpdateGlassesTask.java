@@ -17,7 +17,6 @@ import com.activelook.activelooksdk.types.GlassesUpdate;
 import com.activelook.activelooksdk.types.GlassesVersion;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 
@@ -144,7 +143,7 @@ class UpdateGlassesTask {
 
     private void onApiFail(final VolleyError error) {
         error.printStackTrace();
-        if (error.networkResponse.statusCode == HttpURLConnection.HTTP_FORBIDDEN) {
+        if (error.networkResponse != null && error.networkResponse.statusCode == HttpURLConnection.HTTP_FORBIDDEN) {
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
             this.onConnectionFail.accept(this.discoveredGlasses);
         } else {
@@ -185,13 +184,14 @@ class UpdateGlassesTask {
             final int major = lVersion.getInt(0);
             final int minor = lVersion.getInt(1);
             final int patch = lVersion.getInt(2);
-            this.progress = this.progress.withTargetFirmwareVersion(String.format("%d.%d.%d", major, minor, patch));
+            final String strVersion = String.format("%d.%d.%d", major, minor, patch);
+            this.progress = this.progress.withTargetFirmwareVersion(strVersion);
             if (
                     major > this.gVersion.getMajor()
                             || (major == this.gVersion.getMajor() && minor >  this.gVersion.getMinor())
                             || (major == this.gVersion.getMajor() && minor == this.gVersion.getMinor() && patch > this.gVersion.getPatch())
             ) {
-                final String latestApiPath = latest.getString("api_path");
+                final String latestApiPath = String.format("/firmwares/%s/%s/%s", this.glasses.getDeviceInformation().getHardwareVersion(), this.token, strVersion);
                 final int bl0 = this.glasses.getDeviceInformation().getBatteryLevel();
                 if (bl0 < 10) {
                     this.onBatteryLevelNotification(latestApiPath, bl0);
@@ -203,11 +203,11 @@ class UpdateGlassesTask {
                 Log.d("FW_LATEST", String.format("No firmware update available"));
                 this.glasses.cfgRead("ALooK", info -> {
                     @SuppressLint("DefaultLocale")
-                    final String strVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
+                    final String gStrVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
                     @SuppressLint("DefaultLocale")
                     final String cfgHistoryURL = String.format("%s/configurations/%s/%s?compatibility=%d&max-version=%s",
-                            BASE_URL, this.glasses.getDeviceInformation().getHardwareVersion(), this.token, FW_COMPAT, strVersion);
+                            BASE_URL, this.glasses.getDeviceInformation().getHardwareVersion(), this.token, FW_COMPAT, gStrVersion);
 
                     this.requestQueue.add(new JsonObjectRequest(
                             Request.Method.GET,
@@ -248,14 +248,19 @@ class UpdateGlassesTask {
             final JSONObject latest = jsonObject.getJSONObject("latest");
             Log.d("CFG_LATEST", String.format("%s", latest));
             final JSONArray lVersion = latest.getJSONArray("version");
+            final int major = lVersion.getInt(0);
+            final int minor = lVersion.getInt(1);
+            final int patch = lVersion.getInt(2);
             final int version = lVersion.getInt(3);
             this.progress = this.progress
                     .withSourceConfigurationVersion(String.format("%d", info.getVersion()))
                     .withTargetConfigurationVersion(String.format("%d", version));
             if (version > info.getVersion()) {
                 this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_CONFIGURATION));
+                final String strVersion = String.format("%d.%d.%d.%d", major, minor, patch, version);
+                final String latestApiPath = String.format("/configurations/%s/%s/%s", this.glasses.getDeviceInformation().getHardwareVersion(), this.token, strVersion);
                 this.requestQueue.add(new FileRequest(
-                        String.format("%s%s", BASE_URL, latest.getString("api_path")),
+                        String.format("%s%s", BASE_URL, latestApiPath),
                         this::onConfigurationDownloaded,
                         this::onApiFail
                 ));

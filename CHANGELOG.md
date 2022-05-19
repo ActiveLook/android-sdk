@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 4.2.4.1
+
+### Fixes
+- Api path for retrieving firmware and configuration
+- NullPointerException in web request
+
 ## Version 4.2.4
 
 ### New features
