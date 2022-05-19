@@ -17,7 +17,6 @@ import com.activelook.activelooksdk.types.GlassesUpdate;
 import com.activelook.activelooksdk.types.GlassesVersion;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 
@@ -144,7 +143,7 @@ class UpdateGlassesTask {
 
     private void onApiFail(final VolleyError error) {
         error.printStackTrace();
-        if (error.networkResponse.statusCode == HttpURLConnection.HTTP_FORBIDDEN) {
+        if (error.networkResponse != null && error.networkResponse.statusCode == HttpURLConnection.HTTP_FORBIDDEN) {
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FORBIDDEN));
             this.onConnectionFail.accept(this.discoveredGlasses);
         } else {
