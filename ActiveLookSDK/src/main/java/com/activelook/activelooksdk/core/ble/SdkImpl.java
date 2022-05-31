@@ -20,7 +20,10 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.widget.Toast;
 
 import androidx.core.util.Consumer;
@@ -33,6 +36,7 @@ import com.activelook.activelooksdk.Sdk;
 import com.activelook.activelooksdk.exceptions.UnsupportedBleException;
 import com.activelook.activelooksdk.types.GlassesUpdate;
 
+import java.util.Collection;
 import java.util.HashMap;
 
 class SdkImpl implements Sdk {
@@ -43,6 +47,8 @@ class SdkImpl implements Sdk {
     private final BluetoothAdapter adapter;
     private final BluetoothLeScanner scanner;
     private final HashMap<String, GlassesImpl> connectedGlasses = new HashMap<>();
+    private final BroadcastReceiver broadcastReceiver;
+    private Collection<GlassesImpl> disconnectedGlasses;
     private ScanCallback scanCallback;
 
     SdkImpl(Context context,
@@ -66,6 +72,35 @@ class SdkImpl implements Sdk {
         if (this.adapter == null) {
             throw new UnsupportedBleException();
         }
+        this.broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                final String action = intent.getAction();
+                if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                    final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+                    switch (state) {
+                        case BluetoothAdapter.STATE_OFF:
+                            break;
+                        case BluetoothAdapter.STATE_TURNING_OFF:
+                            SdkImpl.this.disconnectedGlasses = SdkImpl.this.connectedGlasses.values();
+                            for(final GlassesImpl g: SdkImpl.this.disconnectedGlasses) {
+                                g.disconnect();
+                            }
+                            break;
+                        case BluetoothAdapter.STATE_ON:
+                            if (SdkImpl.this.disconnectedGlasses != null) {
+                                for(final GlassesImpl g: SdkImpl.this.disconnectedGlasses) {
+                                    g.gattCallbacks.connect();
+                                }
+                            }
+                            break;
+                        case BluetoothAdapter.STATE_TURNING_ON:
+                            break;
+                    }
+                }
+            }
+        };
+        this.context.registerReceiver(this.broadcastReceiver, new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
         this.scanner = this.adapter.getBluetoothLeScanner();
     }
 
@@ -151,6 +186,12 @@ class SdkImpl implements Sdk {
 
     void update(final DiscoveredGlasses discoveredGlasses, final GlassesImpl glasses, final Consumer<Glasses> onConnected, Consumer<DiscoveredGlasses> onConnectionFail) {
         this.updater.update(discoveredGlasses, glasses, onConnected, onConnectionFail);
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        this.context.unregisterReceiver(this.broadcastReceiver);
+        super.finalize();
     }
 
 }
