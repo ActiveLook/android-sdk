@@ -15,6 +15,7 @@ import com.activelook.activelooksdk.types.ConfigurationElementsInfo;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.GlassesUpdate;
 import com.activelook.activelooksdk.types.GlassesVersion;
+import com.activelook.activelooksdk.types.Utils;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
@@ -29,6 +30,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -277,8 +279,21 @@ class UpdateGlassesTask {
             this.glasses.cfgSet("ALooK");
             this.glasses.layoutDisplay((byte) 0x09, "");
 
-            this.glasses.loadConfiguration(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response))));
-            this.onUpdateProgress(this.progress.withProgress(50));
+            final ArrayList<String> lines = new ArrayList<>();
+            final BufferedReader bReader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response)));
+            String line;
+            while ((line = bReader.readLine()) != null) {
+                lines.add(line);
+            }
+            final int nbLines = lines.size();
+            for (int i = 0; i < nbLines; i++) {
+                final int idxLine = i;
+                this.glasses.gattCallbacks.writeRxCharacteristic(
+                    Utils.hexStringToBytes(lines.get(idxLine)),
+                    p -> UpdateGlassesTask.this.onUpdateProgress(progress.withProgress((idxLine + p) * 100d / nbLines))
+                );
+            }
+
             this.glasses.cfgRead("ALooK", info -> {
                 this.onUpdateSuccess(this.progress);
                 this.onConnected.accept(this.glasses);
