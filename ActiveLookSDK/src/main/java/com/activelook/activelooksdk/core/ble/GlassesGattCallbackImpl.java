@@ -326,20 +326,14 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                 System.arraycopy(buffer, 0, payload, offset, buffer.length);
                 offset += buffer.length;
             }
-            if (this.flowControlCanSend.get()) {
-                if (!this.getRxCharacteristic().setValue(payload)) {
-                    this.pendingWriteRxCharacteristic.addFirst(payload);
-                    this.isWritingCommand.set(false);
-                    this.unstackWriteRxCharacteristic();
-                } else {
-                    this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-                    if (!this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
-                        this.pendingWriteRxCharacteristic.addFirst(payload);
-                        this.isWritingCommand.set(false);
-                        this.unstackWriteRxCharacteristic();
-                    }
+            boolean rollback = true;
+            if (this.flowControlCanSend.get() && this.getRxCharacteristic().setValue(payload)) {
+                this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+                if (this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
+                    rollback = false;
                 }
-            } else {
+            }
+            if (rollback) {
                 this.pendingWriteRxCharacteristic.addFirst(payload);
                 this.isWritingCommand.set(false);
                 this.unstackWriteRxCharacteristic();
