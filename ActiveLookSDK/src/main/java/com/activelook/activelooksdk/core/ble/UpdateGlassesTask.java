@@ -32,6 +32,7 @@ import java.net.HttpURLConnection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@SuppressLint("DefaultLocale")
 class UpdateGlassesTask {
 
     static final String BASE_URL = "http://vps468290.ovh.net/v1";
@@ -113,7 +114,6 @@ class UpdateGlassesTask {
         final DeviceInformation gInfo = glasses.getDeviceInformation();
         this.gVersion = new GlassesVersion(gInfo.getFirmwareVersion());
 
-        @SuppressLint("DefaultLocale")
         final String strVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
         this.progress = new UpdateProgress(discoveredGlasses, GlassesUpdate.State.DOWNLOADING_FIRMWARE, 0,
@@ -128,7 +128,6 @@ class UpdateGlassesTask {
 
         Log.d("UPDATE", String.format("Create update task for: %s", gInfo));
 
-        @SuppressLint("DefaultLocale")
         final String fwHistoryURL = String.format("%s/firmwares/%s/%s?compatibility=%d&min-version=%s",
                 BASE_URL, gInfo.getHardwareVersion(), this.token, FW_COMPAT, strVersion);
 
@@ -202,10 +201,8 @@ class UpdateGlassesTask {
             } else {
                 Log.d("FW_LATEST", String.format("No firmware update available"));
                 this.glasses.cfgRead("ALooK", info -> {
-                    @SuppressLint("DefaultLocale")
                     final String gStrVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
-                    @SuppressLint("DefaultLocale")
                     final String cfgHistoryURL = String.format("%s/configurations/%s/%s?compatibility=%d&max-version=%s",
                             BASE_URL, this.glasses.getDeviceInformation().getHardwareVersion(), this.token, FW_COMPAT, gStrVersion);
 
