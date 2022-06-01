@@ -199,7 +199,7 @@ class UpdateGlassesTask {
                     this.resumeOnFirmwareHistoryResponse(latestApiPath);
                 }
             } else {
-                Log.d("FW_LATEST", String.format("No firmware update available"));
+                Log.d("FW_LATEST", "No firmware update available");
                 this.glasses.cfgRead("ALooK", info -> {
                     final String gStrVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
@@ -262,7 +262,7 @@ class UpdateGlassesTask {
                         this::onApiFail
                 ));
             } else {
-                Log.d("CFG_LATEST", String.format("No configuration update available"));
+                Log.d("CFG_LATEST", "No configuration update available");
                 this.onUpdateSuccess(this.progress);
                 this.onConnected.accept(this.glasses);
             }
@@ -273,7 +273,7 @@ class UpdateGlassesTask {
 
     private void onConfigurationDownloaded(final byte[] response) {
         this.onUpdateProgress(this.progress.withStatus(GlassesUpdate.State.UPDATING_CONFIGURATION).withProgress(0));
-        Log.d("CFG DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
+        Log.d("CFG DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
         try {
             this.glasses.loadConfiguration(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response))));
             this.onUpdateProgress(this.progress.withProgress(50));
@@ -295,7 +295,7 @@ class UpdateGlassesTask {
             this.onConnectionFail.accept(this.discoveredGlasses);
             return;
         }
-        Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
+        Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
         this.firmware = new Firmware(response);
         this.suotaUpdate(this.glasses.gattCallbacks);
     }
@@ -346,7 +346,7 @@ class UpdateGlassesTask {
     }
 
     private void enableNotifications(final GlassesGatt gatt, final BluetoothGattService service) {
-        Log.d("SUOTA", String.format("Enabling notification"));
+        Log.d("SUOTA", "Enabling notification");
         gatt.setCharacteristicNotification(
                 service.getCharacteristic(GlassesGatt.SPOTA_SERV_STATUS_UUID),
                 true,
