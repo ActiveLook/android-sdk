@@ -274,6 +274,9 @@ class UpdateGlassesTask {
         this.onUpdateProgress(this.progress.withStatus(GlassesUpdate.State.UPDATING_CONFIGURATION).withProgress(0));
         Log.d("CFG DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
         try {
+            this.glasses.cfgSet("ALooK");
+            this.glasses.layoutDisplay((byte) 0x09, "");
+
             this.glasses.loadConfiguration(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response))));
             this.onUpdateProgress(this.progress.withProgress(50));
             this.glasses.cfgRead("ALooK", info -> {
