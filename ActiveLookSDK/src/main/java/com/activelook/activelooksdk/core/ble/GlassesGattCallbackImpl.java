@@ -31,6 +31,9 @@ import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
 
 import java.nio.charset.StandardCharsets;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -42,7 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class GlassesGattCallbackImpl extends GlassesGatt {
 
     private final DeviceInformation deviceInfo;
-    private final ConcurrentLinkedDeque<byte []> pendingWriteRxCharacteristic;
+    private final ConcurrentLinkedDeque<Map.Entry<byte [], Consumer<Double>>> pendingWriteRxCharacteristic;
     private final AtomicBoolean flowControlCanSend;
     private final AtomicBoolean isWritingCommand;
     private final BluetoothGatt gatt;
@@ -290,51 +293,82 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     }
 
     void writeRxCharacteristic(byte[] bytes) {
-        this.pendingWriteRxCharacteristic.add(bytes);
+        this.writeRxCharacteristic(bytes, null);
+    }
+
+    void writeRxCharacteristic(byte[] bytes, Consumer<Double> progressCallback) {
+        this.pendingWriteRxCharacteristic.add(new AbstractMap.SimpleImmutableEntry<>(bytes, progressCallback));
         this.unstackWriteRxCharacteristic();
     }
 
     synchronized void unstackWriteRxCharacteristic() {
         if (this.flowControlCanSend.get() && this.pendingWriteRxCharacteristic.size() > 0 && this.isWritingCommand.compareAndSet(false, true)) {
-            final ConcurrentLinkedDeque<byte []> stack = new ConcurrentLinkedDeque<>();
+            final ConcurrentLinkedDeque<Map.Entry<byte[], Consumer<Double>>> stack = new ConcurrentLinkedDeque<>();
             final int writeMTU = this.mtu - 3;
             int stackSize = 0;
             while (stackSize < writeMTU && this.pendingWriteRxCharacteristic.size() > 0 && stack.size() < 1) {
-                final byte [] buffer = this.pendingWriteRxCharacteristic.poll();
+                final Map.Entry<byte[], Consumer<Double>> entry = this.pendingWriteRxCharacteristic.poll();
+                assert entry != null;
+                final byte [] buffer = entry.getKey();
                 if (buffer.length > 0) {
-                    stack.add(buffer);
+                    stack.add(entry);
                     stackSize += buffer.length;
                 }
             }
             final byte [] payload;
+            Runnable lastNotifier = null;
             if (stackSize > writeMTU) {
                 payload = new byte [writeMTU];
                 final int sizeOutOfPayload = stackSize - writeMTU;
                 final byte[] remainingBuffer = new byte [sizeOutOfPayload];
-                final byte[] incompleteBuffer = stack.pollLast();
+                final Map.Entry<byte[], Consumer<Double>> lastEntry = stack.pollLast();
+                assert lastEntry != null;
+                final byte[] incompleteBuffer = lastEntry.getKey();
+                final Consumer<Double> incompleteCallback = lastEntry.getValue();
                 final int sizeInPayload = incompleteBuffer.length - sizeOutOfPayload;
                 final int incompleteBufferOffset = writeMTU - sizeInPayload;
                 System.arraycopy(incompleteBuffer, 0, payload, incompleteBufferOffset, sizeInPayload);
                 System.arraycopy(incompleteBuffer, sizeInPayload, remainingBuffer, 0, sizeOutOfPayload);
-                this.pendingWriteRxCharacteristic.addFirst(remainingBuffer);
+                this.pendingWriteRxCharacteristic.addFirst(new AbstractMap.SimpleImmutableEntry<>(remainingBuffer, incompleteCallback));
+                if (incompleteCallback != null) {
+                    lastNotifier = () -> incompleteCallback.accept(sizeInPayload / (double) incompleteBuffer.length);
+                }
             } else {
                 payload = new byte [stackSize];
             }
             int offset = 0;
+            final ArrayList<Runnable> notifiers = new ArrayList<>();
             while (!stack.isEmpty()) {
-                final byte [] buffer = stack.poll();
+                final Map.Entry<byte[], Consumer<Double>> firstEntry = stack.poll();
+                assert firstEntry != null;
+                final byte [] buffer = firstEntry.getKey();
+                final Consumer<Double> completeCallback = firstEntry.getValue();
                 System.arraycopy(buffer, 0, payload, offset, buffer.length);
                 offset += buffer.length;
+                if (completeCallback != null) {
+                    notifiers.add(() -> completeCallback.accept(1d));
+                }
+            }
+            if (lastNotifier != null) {
+                notifiers.add(lastNotifier);
             }
             boolean rollback = true;
             if (this.flowControlCanSend.get() && this.getRxCharacteristic().setValue(payload)) {
                 this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
                 if (this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
+                    for (final Runnable notifier: notifiers) notifier.run();
                     rollback = false;
                 }
             }
             if (rollback) {
-                this.pendingWriteRxCharacteristic.addFirst(payload);
+                this.pendingWriteRxCharacteristic.addFirst(
+                        new AbstractMap.SimpleImmutableEntry<>(
+                                payload,
+                                p -> {
+                                    for (final Runnable notifier : notifiers) notifier.run();
+                                }
+                        )
+                );
                 this.isWritingCommand.set(false);
                 this.unstackWriteRxCharacteristic();
             }
