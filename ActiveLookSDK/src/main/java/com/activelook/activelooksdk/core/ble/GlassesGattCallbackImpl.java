@@ -143,7 +143,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
             final BluetoothGattService batteryService = this.gatt.getService(BleUUID.BatteryService);
             this.gatt.readCharacteristic(batteryService.getCharacteristic(BleUUID.BatteryLevelCharacteristic));
         } else if (characteristic.getUuid().equals(BleUUID.BatteryLevelCharacteristic)) {
-            this.deviceInfo.setBatteryLevel((int) characteristic.getValue()[0]);
+            this.deviceInfo.setBatteryLevel(characteristic.getValue()[0]);
             this.setOnConnectionFail(null);
             if (this.onConnected != null) {
                 this.pendingWriteRxCharacteristic.clear();
@@ -356,7 +356,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     }
 
     void disconnect() {
-        if (this.connectionLocked == true) {
+        if (this.connectionLocked) {
             throw new UnsupportedOperationException("Cannot disconnect now.");
         }
         this.gatt.disconnect();
