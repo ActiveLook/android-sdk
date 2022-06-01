@@ -61,8 +61,8 @@ class UpdateGlassesTask {
     private int suotaMtu = 23;
     private int suotaL2capPsm = 0;
 
-    private AtomicBoolean setSpotaGpioMapReady = new AtomicBoolean(false);
-    private AtomicBoolean sendEndSignalReady = new AtomicBoolean(true);
+    private final AtomicBoolean setSpotaGpioMapReady = new AtomicBoolean(false);
+    private final AtomicBoolean sendEndSignalReady = new AtomicBoolean(true);
 
     private Firmware firmware;
     private List<Pair<Integer, List<byte[]>>> blocks;
