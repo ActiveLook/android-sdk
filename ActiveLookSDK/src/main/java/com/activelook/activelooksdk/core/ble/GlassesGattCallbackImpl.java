@@ -14,6 +14,7 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.core.ble;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -37,6 +38,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@SuppressLint("MissingPermission")
 class GlassesGattCallbackImpl extends GlassesGatt {
 
     private final DeviceInformation deviceInfo;
