@@ -56,10 +56,10 @@ class UpdateGlassesTask {
     private final Consumer<GlassesUpdate> onUpdateSuccessCallback;
     private final Consumer<GlassesUpdate> onUpdateErrorCallback;
 
-    private int suotaVersion = 0;
+    // private int suotaVersion = 0;
     private int suotaPatchDataSize = 20;
     private int suotaMtu = 23;
-    private int suotaL2capPsm = 0;
+    // private int suotaL2capPsm = 0;
 
     private final AtomicBoolean setSpotaGpioMapReady = new AtomicBoolean(false);
     private final AtomicBoolean sendEndSignalReady = new AtomicBoolean(true);
@@ -309,7 +309,7 @@ class UpdateGlassesTask {
         gatt.readCharacteristic(
                 service.getCharacteristic(GlassesGatt.SUOTA_VERSION_UUID),
                 c -> {
-                    this.suotaVersion = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                    // this.suotaVersion = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                     this.suotaRead_SUOTA_PATCH_DATA_CHAR_SIZE_UUID(gatt, service);
                 },
                 this::onCharacteristicError);
@@ -339,7 +339,7 @@ class UpdateGlassesTask {
         gatt.readCharacteristic(
                 service.getCharacteristic(GlassesGatt.SUOTA_L2CAP_PSM_UUID),
                 c -> {
-                    this.suotaL2capPsm = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                    // this.suotaL2capPsm = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                     this.enableNotifications(gatt, service);
                 },
                 this::onCharacteristicError);
