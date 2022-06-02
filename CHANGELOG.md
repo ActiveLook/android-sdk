@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## Version 4.2.5
+
+### New features
+- Auto reconnect on BLE activation
+- Fine grained configuration update
+- Set default configuration on connection
+- Display update ongoing layout on configuration update
+
+### Fixes
+- Clear glasses screen before and after configuration update
+- Ensure glasses empty cmd stack on connection
+    - Workaround before FW patch
+    - Trigger a Flow Control CMD ERROR before first command
+    - Start configuration update on this Flow Control CMD ERROR
+- minor linter fixes
+
 ## Version 4.2.4.1
 
 ### Fixes
