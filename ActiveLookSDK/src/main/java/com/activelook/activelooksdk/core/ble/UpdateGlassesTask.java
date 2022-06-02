@@ -207,20 +207,26 @@ class UpdateGlassesTask {
                 }
             } else {
                 Log.d("FW_LATEST", "No firmware update available");
-                this.glasses.cfgRead("ALooK", info -> {
-                    final String gStrVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
+                this.glasses.subscribeToFlowControlNotifications(fc -> {
+                    this.glasses.unsubscribeToFlowControlNotifications();
+                    this.glasses.cfgRead("ALooK", info -> {
+                        final String gStrVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
-                    final String cfgHistoryURL = String.format("%s/configurations/%s/%s?compatibility=%d&max-version=%s",
-                            BASE_URL, this.glasses.getDeviceInformation().getHardwareVersion(), this.token, FW_COMPAT, gStrVersion);
+                        final String cfgHistoryURL = String.format("%s/configurations/%s/%s?compatibility=%d&max-version=%s",
+                                BASE_URL, this.glasses.getDeviceInformation().getHardwareVersion(), this.token, FW_COMPAT, gStrVersion);
 
-                    this.requestQueue.add(new JsonObjectRequest(
-                            Request.Method.GET,
-                            cfgHistoryURL,
-                            null,
-                            r -> this.onConfigurationHistoryResponse(r, info),
-                            this::onApiFail
-                    ));
+                        this.requestQueue.add(new JsonObjectRequest(
+                                Request.Method.GET,
+                                cfgHistoryURL,
+                                null,
+                                r -> this.onConfigurationHistoryResponse(r, info),
+                                this::onApiFail
+                        ));
+                    });
                 });
+                final byte [] fcError = new byte [532];
+                fcError[0] = (byte) 0xFF;
+                this.glasses.writeBytes(fcError);
             }
         } catch (final JSONException e) {
             this.onApiJSONException(e);
