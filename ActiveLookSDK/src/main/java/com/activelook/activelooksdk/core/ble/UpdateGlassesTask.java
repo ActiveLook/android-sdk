@@ -114,6 +114,10 @@ class UpdateGlassesTask {
         this.onUpdateSuccessCallback = onUpdateSuccess;
         this.onUpdateErrorCallback = onUpdateError;
 
+        this.glasses.unsubscribeToFlowControlNotifications();
+        this.glasses.unsubscribeToSensorInterfaceNotifications();
+        this.glasses.unsubscribeToBatteryLevelNotifications();
+
         final DeviceInformation gInfo = glasses.getDeviceInformation();
         this.gVersion = new GlassesVersion(gInfo.getFirmwareVersion());
 
