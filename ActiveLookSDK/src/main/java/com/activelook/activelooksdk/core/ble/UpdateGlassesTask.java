@@ -281,6 +281,7 @@ class UpdateGlassesTask {
         Log.d("CFG DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
         try {
             this.glasses.cfgSet("ALooK");
+            this.glasses.clear();
             this.glasses.layoutDisplay((byte) 0x09, "");
 
             final ArrayList<String> lines = new ArrayList<>();
@@ -298,6 +299,7 @@ class UpdateGlassesTask {
                 );
             }
 
+            this.glasses.clear();
             this.glasses.cfgRead("ALooK", info -> {
                 this.onUpdateSuccess(this.progress);
                 this.onConnected.accept(this.glasses);
