@@ -60,6 +60,11 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
                 onDisconnected);
     }
 
+    void reconnect(final BluetoothDevice device) {
+        this.device = device;
+        this.gattCallbacks.reconnect(device);
+    }
+
     public GlassesImpl(DiscoveredGlassesFromSerializedGlassesImpl discoveredGlassesFromSerializedGlasses, BluetoothDevice device, Consumer<GlassesImpl> onConnected, Consumer<DiscoveredGlasses> onConnectionFail, Consumer<Glasses> onDisconnected) {
         super();
         this.connectedFrom = discoveredGlassesFromSerializedGlasses;
