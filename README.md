@@ -65,7 +65,7 @@ You can add the dependency in your application by modifying the application `bui
 and add:
 ```
 dependencies {
-  implementation 'com.github.activelook:android-sdk:v4.0.0'
+  implementation 'com.github.activelook:android-sdk:v4.2.5'
 }
 ```
 
@@ -101,7 +101,18 @@ import com.activelook.activelooksdk.types.Rotation;
             Manifest.permission.BLUETOOTH_ADMIN
         }, 0);
         Log.e("SDK", "Init");
-        Sdk.init(MainActivity.this);
+        Sdk.init(
+            MainActivity.this,
+            "your-sdk-token-provided-by-microoled",
+            gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateStart               : %s", gu)),
+            gu -> {
+                  Log.d("GLASSES_UPDATE", String.format("onUpdateAvailableCallback   : %s", gu));
+                return true;
+            },
+            gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateProgress            : %s", gu)),
+            gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateSuccess             : %s", gu)),
+            gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateError               : %s", gu))
+        );
         Log.e("SDK", "Instance");
         Sdk sdk = Sdk.getInstance();
         Log.e("SDK", "Scan");
@@ -129,74 +140,7 @@ import com.activelook.activelooksdk.types.Rotation;
 
 ## Alternative getting started using demo app
 
-### Requirements
-
-You will need the following:
-- A pair of glasses
-- Android Studio up
-- An android device with BLE
-- a terminal with git
-
-### Step 1: Get the sources
-
-Open a terminal and run:
-
-```
-git clone https://github.com/ActiveLook/android-sdk.git
-cd android-sdk
-git checkout v4.0.0
-```
-
-### Step 2: Set up Android Studio
-
-Launch Android Studio and select 'Open an Existing Project' on the Welcome screen.
-Select the directory of the repository you just cloned and click 'Open'.
-
-### Step 3: Set up your android device
-
-On your android device, enable the [developer mode](https://developer.android.com/studio/debug/dev-options) and connect it to your computer via USB.
-Your device will prompt you to accept debugging from Android Studio.
-Accept it if you trust your computer and your device should appear in Android Studio menu bar, next to
-the 'Play' button.
-
-### Step 4: Test the demo application
-
-Simply click the 'Play' button or the 'Bug' button and the application will be installed on your device
-and started.
-
-Click 'SCAN' in the application and start the glasses (long press in the middle).
-Your glasses will pop in the application on your device and you can connect to it by clicking its name.
-Navigate in the different menu and see what you can do.
-
-### Step 5: Start your customization
-It is time to have a look at the code and try to display some text.
-
-Open the file: `app/src/main/java/com/activelook/demo/GraphicsCommands.java`
-
-In this file, you can see a method `getCommands()` which is populated with a list of items.
-This items are all automatically mapped to a button in the demo application.
-
-```java
-@Override
-protected Map.Entry<String, Consumer<Glasses>>[] getCommands() {
-...
-item("color(5)", glasses ->
-  glasses.color((byte) 0x05)
-),
-...
-item("txt(30, 30, 0, 1, 10, Bonjour)", glasses ->
-  glasses.txt(new Point(30, 30), Rotation.TOP_LR, (byte) 1, (byte) 0x0A, "Bonjour")
-),
-...
-```
-
-Add a new item in this list and you will create a new button accessible in the 'GRAPHICS' submenu.
-For example, let's add a command `MyText` that will display `MyText` at the coordinate (0, 0) in the glasses. Simply append a new item:
-```java
-item("MyText", glasses -> glasses.txt(new Point(0, 0), Rotation.TOP_LR, (byte) 1, (byte) 0x0F, "MyText")),
-```
-
-You will find all the information about the commands and their parameters in the javadoc and in the ActiveLook API.
+You can check our demo application on https://github.com/ActiveLook/demo-app
 
 ---
 
@@ -210,7 +154,7 @@ Note: BlueTooth will not work on the android simulator. A physical device should
 
 To start using the SDK, first import and initialize the sdk.
 You will need a token provided by Microoled to authenticate with the update server.
-Four callbacks `onUpdateStart`, `onUpdateProgress`, `onUpdateSuccess`, `onUpdateError`
+Five callbacks `onUpdateStart`, `onUpdateAvailableCallback`, `onUpdateProgress`, `onUpdateSuccess`, `onUpdateError`
 must be provided to handle glasses update events.
 Read the javadoc for more inforamtions.
 For example, in a main application class, you can initialize the SDK like this:
@@ -232,6 +176,7 @@ public class DemoApp extends Application {
       this.getApplicationContext(),
       "MyPrivateToken",
       (update) -> Log.i("GLASSES_UPDATE", "Starting glasses update."),
+      (update) -> { Log.i("GLASSES_UPDATE", "A glasses update is available."); return true; },
       (update) -> Log.i("GLASSES_UPDATE", "Progressing glasses update."),
       (update) -> Log.i("GLASSES_UPDATE", "Success glasses update."),
       (update) -> Log.i("GLASSES_UPDATE", "Error glasses update.")
