@@ -30,7 +30,7 @@ class GlassesGatt extends BluetoothGattCallback {
     public static final UUID SUOTA_MTU_UUID = UUID.fromString("B7DE1EEA-823D-43BB-A3AF-C4903DFCE23C");
     public static final UUID SUOTA_L2CAP_PSM_UUID = UUID.fromString("61C8849C-F639-4765-946E-5C3419BEBB2A");
 
-    protected final BluetoothGatt gattDelegate;
+    protected BluetoothGatt gattDelegate;
 
     private final HashMap<BluetoothGattDescriptor, Runnable> onDescriptorWritesSuccess;
     private final HashMap<BluetoothGattDescriptor, Runnable> onDescriptorWritesError;
@@ -56,6 +56,20 @@ class GlassesGatt extends BluetoothGattCallback {
         this.onCharacteristicWritesSuccess = new HashMap<>();
         this.onCharacteristicWritesError = new HashMap<>();
         this.onCharacteristicChanges = new HashMap<>();
+    }
+
+    void reconnect(
+            final Context context,
+            final BluetoothDevice device,
+            final boolean autoConnect) {
+        this.onDescriptorWritesSuccess.clear();
+        this.onDescriptorWritesError.clear();
+        this.onCharacteristicReadsSuccess.clear();
+        this.onCharacteristicReadsError.clear();
+        this.onCharacteristicWritesSuccess.clear();
+        this.onCharacteristicWritesError.clear();
+        this.onCharacteristicChanges.clear();
+        this.gattDelegate = device.connectGatt(context, autoConnect, this);
     }
 
     void close() {
