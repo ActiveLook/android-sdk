@@ -38,6 +38,7 @@ import com.activelook.activelooksdk.types.GlassesUpdate;
 
 import java.util.HashMap;
 
+@SuppressLint("MissingPermission")
 class SdkImpl implements Sdk {
 
     private final Context context;
@@ -111,14 +112,12 @@ class SdkImpl implements Sdk {
         Toast.makeText(this.context, text, Toast.LENGTH_SHORT).show();
     }
 
-    @SuppressLint("MissingPermission")
     @Override
     public void startScan(Consumer<DiscoveredGlasses> onDiscoverGlasses) {
         this.scanCallback = new ScanCallbackImpl(onDiscoverGlasses);
         this.scanner.startScan(this.scanCallback);
     }
 
-    @SuppressLint("MissingPermission")
     @Override
     public void stopScan() {
         this.scanner.stopScan(this.scanCallback);
@@ -138,7 +137,6 @@ class SdkImpl implements Sdk {
      * @param onConnectionFail  Callback to call on failure
      * @param onDisconnected    Callback to set for disconnected events.
      */
-    @SuppressLint("MissingPermission")
     @Override
     public void connect(
             final SerializedGlasses serializedGlasses,
