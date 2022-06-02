@@ -48,7 +48,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     private final ConcurrentLinkedDeque<Map.Entry<byte [], Consumer<Double>>> pendingWriteRxCharacteristic;
     private final AtomicBoolean flowControlCanSend;
     private final AtomicBoolean isWritingCommand;
-    private final BluetoothGatt gatt;
+    private BluetoothGatt gatt;
     private int mtu;
     private GlassesImpl glasses;
     private Consumer<GlassesImpl> onConnected;
@@ -81,6 +81,11 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         this.setOnDisconnected(onDisconnected);
         this.gatt = this.gattDelegate;
         this.connectionLocked = false;
+    }
+
+    void reconnect(final BluetoothDevice device) {
+        super.reconnect(BleSdkSingleton.getInstance().getContext(), device, true);
+        this.gatt = this.gattDelegate;
     }
 
     private void optimizeMtu(final int optimalMtu) {
