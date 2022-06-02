@@ -36,7 +36,6 @@ import com.activelook.activelooksdk.Sdk;
 import com.activelook.activelooksdk.exceptions.UnsupportedBleException;
 import com.activelook.activelooksdk.types.GlassesUpdate;
 
-import java.util.Collection;
 import java.util.HashMap;
 
 class SdkImpl implements Sdk {
@@ -48,7 +47,6 @@ class SdkImpl implements Sdk {
     private final BluetoothLeScanner scanner;
     private final HashMap<String, GlassesImpl> connectedGlasses = new HashMap<>();
     private final BroadcastReceiver broadcastReceiver;
-    private Collection<GlassesImpl> disconnectedGlasses;
     private ScanCallback scanCallback;
 
     SdkImpl(Context context,
@@ -82,15 +80,16 @@ class SdkImpl implements Sdk {
                         case BluetoothAdapter.STATE_OFF:
                             break;
                         case BluetoothAdapter.STATE_TURNING_OFF:
-                            SdkImpl.this.disconnectedGlasses = SdkImpl.this.connectedGlasses.values();
-                            for(final GlassesImpl g: SdkImpl.this.disconnectedGlasses) {
-                                g.disconnect();
+                            for(final GlassesImpl g: SdkImpl.this.connectedGlasses.values()) {
+                                g.unlockConnection();
+                                g.gattCallbacks.gattDelegate.disconnect();
                             }
                             break;
                         case BluetoothAdapter.STATE_ON:
-                            if (SdkImpl.this.disconnectedGlasses != null) {
-                                for(final GlassesImpl g: SdkImpl.this.disconnectedGlasses) {
-                                    g.gattCallbacks.connect();
+                            if (SdkImpl.this.connectedGlasses.values() != null) {
+                                for(final GlassesImpl g: SdkImpl.this.connectedGlasses.values()) {
+                                    final BluetoothDevice device = SdkImpl.this.adapter.getRemoteDevice(g.getAddress());
+                                    g.reconnect(device);
                                 }
                             }
                             break;
