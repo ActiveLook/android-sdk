@@ -1,5 +1,6 @@
 package com.activelook.activelooksdk.core.ble;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+@SuppressLint("MissingPermission")
 class GlassesGatt extends BluetoothGattCallback {
 
     private static final UUID NOTIFICATION_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
@@ -30,7 +32,7 @@ class GlassesGatt extends BluetoothGattCallback {
     public static final UUID SUOTA_MTU_UUID = UUID.fromString("B7DE1EEA-823D-43BB-A3AF-C4903DFCE23C");
     public static final UUID SUOTA_L2CAP_PSM_UUID = UUID.fromString("61C8849C-F639-4765-946E-5C3419BEBB2A");
 
-    protected final BluetoothGatt gattDelegate;
+    protected BluetoothGatt gattDelegate;
 
     private final HashMap<BluetoothGattDescriptor, Runnable> onDescriptorWritesSuccess;
     private final HashMap<BluetoothGattDescriptor, Runnable> onDescriptorWritesError;
@@ -56,6 +58,20 @@ class GlassesGatt extends BluetoothGattCallback {
         this.onCharacteristicWritesSuccess = new HashMap<>();
         this.onCharacteristicWritesError = new HashMap<>();
         this.onCharacteristicChanges = new HashMap<>();
+    }
+
+    void reconnect(
+            final Context context,
+            final BluetoothDevice device,
+            final boolean autoConnect) {
+        this.onDescriptorWritesSuccess.clear();
+        this.onDescriptorWritesError.clear();
+        this.onCharacteristicReadsSuccess.clear();
+        this.onCharacteristicReadsError.clear();
+        this.onCharacteristicWritesSuccess.clear();
+        this.onCharacteristicWritesError.clear();
+        this.onCharacteristicChanges.clear();
+        this.gattDelegate = device.connectGatt(context, autoConnect, this);
     }
 
     void close() {

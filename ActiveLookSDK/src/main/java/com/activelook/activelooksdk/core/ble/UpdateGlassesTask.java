@@ -15,6 +15,7 @@ import com.activelook.activelooksdk.types.ConfigurationElementsInfo;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.GlassesUpdate;
 import com.activelook.activelooksdk.types.GlassesVersion;
+import com.activelook.activelooksdk.types.Utils;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.VolleyError;
@@ -29,9 +30,12 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@SuppressLint("DefaultLocale")
 class UpdateGlassesTask {
 
     static final String BASE_URL = "http://vps468290.ovh.net/v1";
@@ -55,13 +59,13 @@ class UpdateGlassesTask {
     private final Consumer<GlassesUpdate> onUpdateSuccessCallback;
     private final Consumer<GlassesUpdate> onUpdateErrorCallback;
 
-    private int suotaVersion = 0;
+    // private int suotaVersion = 0;
     private int suotaPatchDataSize = 20;
     private int suotaMtu = 23;
-    private int suotaL2capPsm = 0;
+    // private int suotaL2capPsm = 0;
 
-    private AtomicBoolean setSpotaGpioMapReady = new AtomicBoolean(false);
-    private AtomicBoolean sendEndSignalReady = new AtomicBoolean(true);
+    private final AtomicBoolean setSpotaGpioMapReady = new AtomicBoolean(false);
+    private final AtomicBoolean sendEndSignalReady = new AtomicBoolean(true);
 
     private Firmware firmware;
     private List<Pair<Integer, List<byte[]>>> blocks;
@@ -110,10 +114,13 @@ class UpdateGlassesTask {
         this.onUpdateSuccessCallback = onUpdateSuccess;
         this.onUpdateErrorCallback = onUpdateError;
 
+        this.glasses.unsubscribeToFlowControlNotifications();
+        this.glasses.unsubscribeToSensorInterfaceNotifications();
+        this.glasses.unsubscribeToBatteryLevelNotifications();
+
         final DeviceInformation gInfo = glasses.getDeviceInformation();
         this.gVersion = new GlassesVersion(gInfo.getFirmwareVersion());
 
-        @SuppressLint("DefaultLocale")
         final String strVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
         this.progress = new UpdateProgress(discoveredGlasses, GlassesUpdate.State.DOWNLOADING_FIRMWARE, 0,
@@ -128,7 +135,6 @@ class UpdateGlassesTask {
 
         Log.d("UPDATE", String.format("Create update task for: %s", gInfo));
 
-        @SuppressLint("DefaultLocale")
         final String fwHistoryURL = String.format("%s/firmwares/%s/%s?compatibility=%d&min-version=%s",
                 BASE_URL, gInfo.getHardwareVersion(), this.token, FW_COMPAT, strVersion);
 
@@ -200,23 +206,27 @@ class UpdateGlassesTask {
                     this.resumeOnFirmwareHistoryResponse(latestApiPath);
                 }
             } else {
-                Log.d("FW_LATEST", String.format("No firmware update available"));
-                this.glasses.cfgRead("ALooK", info -> {
-                    @SuppressLint("DefaultLocale")
-                    final String gStrVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
+                Log.d("FW_LATEST", "No firmware update available");
+                this.glasses.subscribeToFlowControlNotifications(fc -> {
+                    this.glasses.unsubscribeToFlowControlNotifications();
+                    this.glasses.cfgRead("ALooK", info -> {
+                        final String gStrVersion = String.format("%d.%d.%d", this.gVersion.getMajor(), this.gVersion.getMinor(), this.gVersion.getPatch());
 
-                    @SuppressLint("DefaultLocale")
-                    final String cfgHistoryURL = String.format("%s/configurations/%s/%s?compatibility=%d&max-version=%s",
-                            BASE_URL, this.glasses.getDeviceInformation().getHardwareVersion(), this.token, FW_COMPAT, gStrVersion);
+                        final String cfgHistoryURL = String.format("%s/configurations/%s/%s?compatibility=%d&max-version=%s",
+                                BASE_URL, this.glasses.getDeviceInformation().getHardwareVersion(), this.token, FW_COMPAT, gStrVersion);
 
-                    this.requestQueue.add(new JsonObjectRequest(
-                            Request.Method.GET,
-                            cfgHistoryURL,
-                            null,
-                            r -> this.onConfigurationHistoryResponse(r, info),
-                            this::onApiFail
-                    ));
+                        this.requestQueue.add(new JsonObjectRequest(
+                                Request.Method.GET,
+                                cfgHistoryURL,
+                                null,
+                                r -> this.onConfigurationHistoryResponse(r, info),
+                                this::onApiFail
+                        ));
+                    });
                 });
+                final byte [] fcError = new byte [532];
+                fcError[0] = (byte) 0xFF;
+                this.glasses.writeBytes(fcError);
             }
         } catch (final JSONException e) {
             this.onApiJSONException(e);
@@ -227,9 +237,7 @@ class UpdateGlassesTask {
         if (batteryLevel < 10) {
             this.onUpdateError(this.progress.withBatteryLevel(batteryLevel).withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL_LOW_BATTERY));
         } else {
-            this.glasses.subscribeToBatteryLevelNotifications(bl -> {
-                this.onUpdateProgress(this.progress.withBatteryLevel(bl));
-            });
+            this.glasses.subscribeToBatteryLevelNotifications(bl -> this.onUpdateProgress(this.progress.withBatteryLevel(bl)));
             this.resumeOnFirmwareHistoryResponse(latestApiPath);
         }
     }
@@ -265,7 +273,7 @@ class UpdateGlassesTask {
                         this::onApiFail
                 ));
             } else {
-                Log.d("CFG_LATEST", String.format("No configuration update available"));
+                Log.d("CFG_LATEST", "No configuration update available");
                 this.onUpdateSuccess(this.progress);
                 this.onConnected.accept(this.glasses);
             }
@@ -276,10 +284,28 @@ class UpdateGlassesTask {
 
     private void onConfigurationDownloaded(final byte[] response) {
         this.onUpdateProgress(this.progress.withStatus(GlassesUpdate.State.UPDATING_CONFIGURATION).withProgress(0));
-        Log.d("CFG DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
+        Log.d("CFG DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
         try {
-            this.glasses.loadConfiguration(new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response))));
-            this.onUpdateProgress(this.progress.withProgress(50));
+            this.glasses.cfgSet("ALooK");
+            this.glasses.clear();
+            this.glasses.layoutDisplay((byte) 0x09, "");
+
+            final ArrayList<String> lines = new ArrayList<>();
+            final BufferedReader bReader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response)));
+            String line;
+            while ((line = bReader.readLine()) != null) {
+                lines.add(line);
+            }
+            final int nbLines = lines.size();
+            for (int i = 0; i < nbLines; i++) {
+                final int idxLine = i;
+                this.glasses.gattCallbacks.writeRxCharacteristic(
+                    Utils.hexStringToBytes(lines.get(idxLine)),
+                    p -> UpdateGlassesTask.this.onUpdateProgress(progress.withProgress((idxLine + p) * 100d / nbLines))
+                );
+            }
+
+            this.glasses.clear();
             this.glasses.cfgRead("ALooK", info -> {
                 this.onUpdateSuccess(this.progress);
                 this.onConnected.accept(this.glasses);
@@ -298,7 +324,7 @@ class UpdateGlassesTask {
             this.onConnectionFail.accept(this.discoveredGlasses);
             return;
         }
-        Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, response));
+        Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
         this.firmware = new Firmware(response);
         this.suotaUpdate(this.glasses.gattCallbacks);
     }
@@ -312,7 +338,7 @@ class UpdateGlassesTask {
         gatt.readCharacteristic(
                 service.getCharacteristic(GlassesGatt.SUOTA_VERSION_UUID),
                 c -> {
-                    this.suotaVersion = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
+                    // this.suotaVersion = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8, 0);
                     this.suotaRead_SUOTA_PATCH_DATA_CHAR_SIZE_UUID(gatt, service);
                 },
                 this::onCharacteristicError);
@@ -342,14 +368,14 @@ class UpdateGlassesTask {
         gatt.readCharacteristic(
                 service.getCharacteristic(GlassesGatt.SUOTA_L2CAP_PSM_UUID),
                 c -> {
-                    this.suotaL2capPsm = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
+                    // this.suotaL2capPsm = c.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT16, 0);
                     this.enableNotifications(gatt, service);
                 },
                 this::onCharacteristicError);
     }
 
     private void enableNotifications(final GlassesGatt gatt, final BluetoothGattService service) {
-        Log.d("SUOTA", String.format("Enabling notification"));
+        Log.d("SUOTA", "Enabling notification");
         gatt.setCharacteristicNotification(
                 service.getCharacteristic(GlassesGatt.SPOTA_SERV_STATUS_UUID),
                 true,
