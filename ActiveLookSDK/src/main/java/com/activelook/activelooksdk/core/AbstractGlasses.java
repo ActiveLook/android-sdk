@@ -106,6 +106,9 @@ public abstract class AbstractGlasses implements Glasses {
     static final byte ID_layoutPosition = (byte) 0x65;
     static final byte ID_layoutDisplayExtended = (byte) 0x66;
     static final byte ID_layoutGet = (byte) 0x67;
+    static final byte ID_layoutClearExtended = (byte) 0x68;
+    static final byte ID_layoutClearAndDisplay = (byte) 0x69;
+    static final byte ID_layoutClearAndDisplayExtended = (byte) 0x6A;
     /*
      * Gauge commands ids
      */
@@ -123,6 +126,7 @@ public abstract class AbstractGlasses implements Glasses {
     static final byte ID_pageDisplay = (byte) 0x83;
     static final byte ID_pageClear = (byte) 0x84;
     static final byte ID_pageList = (byte) 0x85;
+    static final byte ID_pageClearAndDisplay = (byte) 0x86;
     /*
      * Configuration for firmware 1.7 ids
      */
@@ -364,6 +368,13 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
+    public void polyline(final byte thickness, final short[] points) {
+        final byte reserved = 0;
+        final CommandData data = new CommandData().addUInt8(thickness).addUInt8(reserved).addUInt8(reserved).addInt16(points);
+        this.writeCommand(new Command(ID_polyline, data));
+    }
+
+    @Override
     public void imgList(final Consumer<List<ImageInfo>> onResult) {
         this.writeCommand(
                 new Command(ID_imgList),
@@ -544,6 +555,24 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
+    public void layoutClearExtended(final byte id, final short x, final byte y) {
+        final CommandData data = new CommandData().addUInt8(id).addUInt16(x).addUInt8(y);
+        this.writeCommand(new Command(ID_layoutClearExtended, data));
+    }
+
+    @Override
+    public void layoutClearAndDisplay(final byte id, final String text) {
+        final CommandData data = new CommandData().addUInt8(id).addNulTerminatedStrings(text);
+        this.writeCommand(new Command(ID_layoutClearAndDisplay, data));
+    }
+
+    @Override
+    public void layoutClearAndDisplayExtended(final byte id, final short x, final byte y, final String text) {
+        final CommandData data = new CommandData().addUInt8(id).addUInt16(x).addUInt8(y).addNulTerminatedStrings(text);
+        this.writeCommand(new Command(ID_layoutClearAndDisplayExtended, data));
+    }
+
+    @Override
     public void gaugeDisplay(final byte id, final byte value) {
         final CommandData data = new CommandData().addUInt8(id).addUInt8(value);
         this.writeCommand(new Command(ID_gaugeDisplay, data));
@@ -654,6 +683,15 @@ public abstract class AbstractGlasses implements Glasses {
                     onResult.accept(r);
                 }
         );
+    }
+
+    @Override
+    public void pageClearAndDisplay(byte id, String [] texts) {
+        final Command command = new Command(ID_pageClearAndDisplay).addDataByte(id);
+        for(String text: texts) {
+            command.addData(text, true);
+        }
+        this.writeCommand(command);
     }
 
     @Override
