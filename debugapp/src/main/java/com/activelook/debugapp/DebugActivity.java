@@ -1,9 +1,14 @@
 package com.activelook.debugapp;
 
+import static com.activelook.activelooksdk.types.ImgSaveFormat.MONO_1BPP;
+import static com.activelook.activelooksdk.types.ImgSaveFormat.MONO_4BPP;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,12 +24,14 @@ import com.activelook.activelooksdk.types.GaugeInfo;
 import com.activelook.activelooksdk.types.Image1bppData;
 import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
+import com.activelook.activelooksdk.types.ImgSaveFormat;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -44,11 +51,12 @@ public class DebugActivity extends AppCompatActivity {
                     Manifest.permission.BLUETOOTH,
                     Manifest.permission.BLUETOOTH_ADMIN,
                     Manifest.permission.BLUETOOTH_CONNECT,
+                    Manifest.permission.BLUETOOTH_SCAN
             }, 0);
             Log.d("SDK", "Init");
             Sdk.init(
                     DebugActivity.this,
-                    "bdjZ3ulWitvUzVtUHevbll1AiOANEfPYsv5u6RaGcxk",
+                    "",
                     gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateStart               : %s", gu)),
                     gu -> {
                           Log.d("GLASSES_UPDATE", String.format("onUpdateAvailableCallback   : %s", gu));
@@ -265,7 +273,7 @@ public class DebugActivity extends AppCompatActivity {
         });
     }
 
-    private void runTests01(final Glasses g) {
+    private void runTests01(final Glasses g) throws IOException {
         Log.i("GLASSES", String.format("Manufacturer %s", g.getManufacturer()));
         Log.i("GLASSES", String.format("Name %s", g.getName()));
         Log.i("GLASSES", String.format("Address %s", g.getAddress()));
@@ -366,31 +374,17 @@ public class DebugActivity extends AppCompatActivity {
             }
         });
 
-        final ImageData img1 = new ImageData((char) 15, new byte[]{
-                (byte) 0x11, (byte) 0x32, (byte) 0x43, (byte) 0x55, (byte) 0x76, (byte) 0x88, (byte) 0xA9,
-                (byte) 0x0A, (byte) 0x21, (byte) 0x32, (byte) 0x44, (byte) 0x65, (byte) 0x77, (byte) 0x98,
-                (byte) 0xA9, (byte) 0x0B, (byte) 0x21, (byte) 0x43, (byte) 0x54, (byte) 0x66, (byte) 0x87,
-                (byte) 0x98, (byte) 0xBA, (byte) 0x0B, (byte) 0x32, (byte) 0x43, (byte) 0x55, (byte) 0x76,
-                (byte) 0x88, (byte) 0xA9, (byte) 0xBA, (byte) 0x0C, (byte) 0x32, (byte) 0x44, (byte) 0x65,
-                (byte) 0x77, (byte) 0x98, (byte) 0xA9, (byte) 0xBB, (byte) 0x0C, (byte) 0x43, (byte) 0x54,
-                (byte) 0x66, (byte) 0x87, (byte) 0x98, (byte) 0xBA, (byte) 0xCB, (byte) 0x0D, (byte) 0x43,
-                (byte) 0x65, (byte) 0x76, (byte) 0x88, (byte) 0xA9, (byte) 0xBA, (byte) 0xCC, (byte) 0x0D,
-                (byte) 0x44, (byte) 0x65, (byte) 0x77, (byte) 0x98, (byte) 0xA9, (byte) 0xBB, (byte) 0xDC,
-                (byte) 0x0E, (byte) 0x54, (byte) 0x66, (byte) 0x87, (byte) 0x98, (byte) 0xBA, (byte) 0xCB,
-                (byte) 0xDD, (byte) 0x0E, (byte) 0x65, (byte) 0x76, (byte) 0x88, (byte) 0xA9, (byte) 0xBA,
-                (byte) 0xCC, (byte) 0xED, (byte) 0x0E,
-        });
-        final Image1bppData img2 = new Image1bppData((char) 15, new byte[]{
-                (byte) 0xC0, (byte) 0x01, (byte) 0x30, (byte) 0x06, (byte) 0x08, (byte) 0x08, (byte) 0x04,
-                (byte) 0x10, (byte) 0x02, (byte) 0x20, (byte) 0x01, (byte) 0x40, (byte) 0x01, (byte) 0x40,
-                (byte) 0x81, (byte) 0x40, (byte) 0x62, (byte) 0x21, (byte) 0x1C, (byte) 0x1E,
-        });
+        InputStream img1InputStream = getAssets().open("40_chrono_40x40.png");
+        Bitmap img1 = BitmapFactory.decodeStream(img1InputStream);  
+
+        InputStream img2InputStream = getAssets().open("66_congrats_80x79.PNG");
+        Bitmap img2 = BitmapFactory.decodeStream(img2InputStream);  
 
         g.cfgWrite("DebugApp", 1, 42);
 
-        g.imgSave((byte) 0x01, img1);
-        g.imgSave1bpp(img2);
-        g.imgStream(img2, (short) 20, (short) 30);
+        g.imgSave((byte) 0x01, img1, MONO_4BPP);
+        g.imgSave((byte) 0x02, img2, MONO_1BPP);
+        //g.imgStream(img2, (short) 20, (short) 30);
 
         g.imgList(l -> {
             Log.i("IMG LIST", String.format("NB %d", l.size()));
