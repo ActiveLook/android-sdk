@@ -14,6 +14,9 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.core;
 
+import android.graphics.Bitmap;
+import android.util.Log;
+
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.Glasses;
@@ -28,6 +31,7 @@ import com.activelook.activelooksdk.types.GaugeInfo;
 import com.activelook.activelooksdk.types.GlassesSettings;
 import com.activelook.activelooksdk.types.GlassesVersion;
 import com.activelook.activelooksdk.types.Image1bppData;
+import com.activelook.activelooksdk.types.ImageConverter;
 import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
 import com.activelook.activelooksdk.types.LayoutParameters;
@@ -35,6 +39,7 @@ import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
 import com.activelook.activelooksdk.types.Rotation;
 import com.activelook.activelooksdk.types.Utils;
+import com.activelook.activelooksdk.types.ImgSaveFormat;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -194,6 +199,7 @@ public abstract class AbstractGlasses implements Glasses {
     private void writeCommand(final Command command) {
         final QueryId qid = this.nextQueryId();
         command.setQueryId(qid);
+        Log.w("Commands", String.format("%s", Command.bytesToStr(command.toBytes())));
         this.writeBytes(command.toBytes());
     }
 
@@ -400,6 +406,93 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
+    public void imgSave(final byte id, final Bitmap image, final ImgSaveFormat format) {
+        switch(format){
+            case MONO_4BPP:
+                this.imgSave4bpp(id, image);
+            break;
+            case MONO_1BPP:
+                this.imgSave1bpp(id, image);
+            break;
+            case MONO_4BPP_HEATSHRINK:
+                this.imgSave4bppHeatShrink(id, image);
+            break;
+            case MONO_4BPP_HEATSHRINK_SAVE_COMP:
+                this.imgSave4bppHeatShrinkSaveComp(id, image);
+            break;
+        }
+    }
+
+    // TODO @Override
+    public void imgSave4bpp(final byte id, final int width, final byte[] bytes, final ImgSaveFormat format) {
+        final CommandData data = new CommandData()
+                .addUInt8(id)
+                .addUInt32(bytes.length)
+                .addUInt16(width)
+                .add(CommandData.fromImgSaveFormat(format));
+        this.writeCommand(new Command(ID_imgSave, data));
+        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
+            this.writeCommand(new Command(ID_imgSave, chunkData));
+        }
+    }
+
+    @Override
+    public void imgSave4bpp(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.MONO_4BPP;
+        final ImageData imgData = ImageConverter.getImageData(image, format);
+        this.imgSave4bpp(id, imgData.getWidth(), imgData.getBytes(), format);
+    }
+
+    @Override
+    public void imgSave4bppHeatShrink(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.MONO_4BPP_HEATSHRINK;
+        final ImageData imgData = ImageConverter.getImageData(image, format);
+        this.imgSave4bpp(id, imgData.getWidth(), imgData.getBytes(), format);
+    }
+
+    @Override
+    public void imgSave4bppHeatShrinkSaveComp(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.MONO_4BPP_HEATSHRINK_SAVE_COMP;
+        final ImageData imgData = ImageConverter.getImageData(image, format);
+        this.imgSave4bpp(id, imgData.getWidth(), imgData.getBytes(), format);
+    }
+
+    // TODO @Override
+    public void imgSave1bpp(final byte id, final int width, final int size, final byte[][] bytes, final ImgSaveFormat format) {
+        final CommandData data = new CommandData()
+        .addUInt8(id)
+        .addUInt32(size)
+        .addUInt16(width)
+        .add(CommandData.fromImgSaveFormat(format));
+        this.writeCommand(new Command(ID_imgSave, data));
+
+        byte[] chunkData = new byte[]{};
+        final int chunkSize  = 240;
+
+        for (final byte[] line : bytes) {
+            if (chunkData.length + line.length <= chunkSize) {
+                byte[] result = new byte[chunkData.length+line.length];
+                System.arraycopy(chunkData, 0, result, 0, chunkData.length);
+                System.arraycopy(line, 0, result, chunkData.length, line.length);
+                chunkData = result;
+            } else {
+                this.writeCommand(new Command(ID_imgSave, new CommandData(chunkData)));
+                chunkData = line;
+            }
+        }
+        if (chunkData.length > 0) {
+            this.writeCommand(new Command(ID_imgSave,  new CommandData(chunkData)));
+        }
+    }
+
+    @Override
+    public void imgSave1bpp(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.MONO_1BPP;
+        final Image1bppData imgData = ImageConverter.getImage1bppData(image, format);
+        this.imgSave1bpp(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
+    }
+
+    @Override
     public void imgDisplay(final byte id, final short x, final short y) {
         final CommandData data = new CommandData().addUInt8(id).addInt16(x, y);
         this.writeCommand(new Command(ID_imgDisplay, data));
@@ -417,38 +510,38 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     // TODO @Override
-    public void imgStream(final short x, final short y, final int width, final byte[] bytes) {
+    public void imgStream(final short x, final short y, final int width, final byte[][] bytes) {
         final CommandData data = new CommandData()
                 .addUInt32(bytes.length)
                 .addUInt16(width)
                 .addInt16(x, y);
         this.writeCommand(new Command(ID_imgStream, data));
-        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
+        /*for (final CommandData chunkData : new CommandData(bytes).split(240)) {
             this.writeCommand(new Command(ID_imgStream, chunkData));
-        }
+        }*/
     }
 
     @Override
     public void imgStream(final Image1bppData imgData, final short x, final short y) {
         this.imgStream(x, y, imgData.getWidth(), imgData.getBytes());
     }
-
-    // TODO @Override
-    public void imgSave1bpp(final int width, final byte[] bytes) {
-        final CommandData data = new CommandData()
-                .addUInt32(bytes.length)
-                .addUInt16(width);
-        this.writeCommand(new Command(ID_imgSave1bpp, data));
-        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
-            this.writeCommand(new Command(ID_imgSave1bpp, chunkData));
+    /*
+        // TODO @Override
+        public void imgSave1bpp(final int width, final byte[] bytes) {
+            final CommandData data = new CommandData()
+                    .addUInt32(bytes.length)
+                    .addUInt16(width);
+            this.writeCommand(new Command(ID_imgSave1bpp, data));
+            for (final CommandData chunkData : new CommandData(bytes).split(240)) {
+                this.writeCommand(new Command(ID_imgSave1bpp, chunkData));
+            }
         }
-    }
 
-    @Override
-    public void imgSave1bpp(final Image1bppData imgData) {
-        this.imgSave1bpp(imgData.getWidth(), imgData.getBytes());
-    }
-
+        @Override
+        public void imgSave1bpp(final Image1bppData imgData) {
+            this.imgSave1bpp(imgData.getWidth(), imgData.getBytes());
+        }
+    */
     @Override
     public void fontList(final Consumer<List<FontInfo>> onResult) {
         this.writeCommand(

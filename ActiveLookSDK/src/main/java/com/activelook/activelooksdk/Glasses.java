@@ -14,6 +14,7 @@ limitations under the License.
 */
 package com.activelook.activelooksdk;
 
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Parcelable;
 
@@ -39,6 +40,7 @@ import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
 import com.activelook.activelooksdk.types.Rotation;
 import com.activelook.activelooksdk.types.Utils;
+import com.activelook.activelooksdk.types.ImgSaveFormat;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -324,11 +326,43 @@ public interface Glasses extends Parcelable {
     void imgList(Consumer<List<ImageInfo>> onResult);
     /**
      * Save 4bpp bitmap of size bytes and width pixels.
-     *
+     * 
      * @param id   The image id in the configuration.
      * @param data 4bpp Image data configuration object.
+     * {@link Deprecated}
      */
     void imgSave(byte id, ImageData data);
+    /**
+     * Save bitmap in the chosen format
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration .
+     * @param format The image format 
+     */
+    void imgSave(byte id, Bitmap img, ImgSaveFormat format);
+    /**
+     * Save 4bpp bitmap.
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration .
+     */     
+    void imgSave4bpp(byte id, Bitmap img);
+    /**
+     * Save 1bpp bitmap.
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration .
+     */
+    void imgSave1bpp(byte id, Bitmap img);
+    /**
+     * Save 4bpp bitmap with Heatshrink compression, decompressed into 4bpp by the firmware before saving
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration .
+     */
+    void imgSave4bppHeatShrink(byte id, Bitmap img);
+    /**
+     * Save 4bpp bitmap with Heatshrink compression, stored compressed, decompressed into 4bpp before display
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration .
+     */
+    void imgSave4bppHeatShrinkSaveComp(byte id, Bitmap img);
     /**
      * Display image id to the corresponding coordinates.
      *
@@ -360,7 +394,7 @@ public interface Glasses extends Parcelable {
      *
      * @param data 1bpp Image data configuration object.
      */
-    void imgSave1bpp(Image1bppData data);
+    //void imgSave1bpp(Image1bppData data);
     /**
      * Give the list of font saved into the device with their size.
      *

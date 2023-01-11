@@ -26,6 +26,7 @@ import com.activelook.activelooksdk.types.ImageInfo;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
+import com.activelook.activelooksdk.types.ImgSaveFormat;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -271,6 +272,17 @@ public final class CommandData {
             case TOGGLE: return new CommandData((byte) 0x02);
             case BLINK:  return new CommandData((byte) 0x03);
             default:     return new CommandData((byte) 0x04);
+        }
+    }
+
+    public static CommandData fromImgSaveFormat(final ImgSaveFormat format) {
+        assert format != null : String.format(Locale.US, "Format cannot be null");
+        switch (format) {
+            case MONO_4BPP:                         return new CommandData((byte) 0x00);
+            case MONO_1BPP:                         return new CommandData((byte) 0x01);
+            case MONO_4BPP_HEATSHRINK:              return new CommandData((byte) 0x02);
+            case MONO_4BPP_HEATSHRINK_SAVE_COMP:    return new CommandData((byte) 0x03);
+            default:                                return new CommandData((byte) 0x04);
         }
     }
 

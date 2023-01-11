@@ -16,15 +16,23 @@ package com.activelook.activelooksdk.types;
 
 public class ImageData {
 
-    private final char width;
-    private final byte[] bytes;
+    private  int width;
+    private  byte[] bytes;
+    private  int size;
 
-    public ImageData(char width, byte[] bytes) {
+    public ImageData(int width, byte[] bytes) {
         this.width = width;
         this.bytes = bytes;
+        this.size = bytes.length;
     }
 
-    public char getWidth() {
+    public ImageData() {
+        this.width = 0;
+        this.bytes = new byte[]{};
+        this.size = 0;
+    }
+
+    public int getWidth() {
         return this.width;
     }
 
@@ -33,7 +41,7 @@ public class ImageData {
     }
 
     public int getSize() {
-        return this.bytes.length;
+        return this.size;
     }
 
     public byte[][] getChunks(int size) {
