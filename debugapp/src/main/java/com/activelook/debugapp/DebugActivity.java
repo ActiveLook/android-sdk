@@ -27,6 +27,7 @@ import com.activelook.activelooksdk.types.Image1bppData;
 import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
+import com.activelook.activelooksdk.types.ImgStreamFormat;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
@@ -118,23 +119,52 @@ public class DebugActivity extends AppCompatActivity {
 
         try {
             g.cfgWrite("ALooKK", 1, 0xDEADBEEF);
-            g.cfgSet("ALooKK");
+            g.cfgDelete("ALooKK");
+            // g.cfgWrite("ALooKK", 2, 0xDEADBEEF);
+            // g.cfgWrite("ALooK", 3, 0xDEADBEEF);
+            // FFD00013414C6F6F4B0000000000DEADBEEFAA
+            // FFD00013414C6F6F4B0000000006DEADBEEFAA
 
-            InputStream img1InputStream = getAssets().open("40_chrono_40x40.png");
-            Bitmap img1 = BitmapFactory.decodeStream(img1InputStream);
+            for (int i=0; i<1; i++) {
+                g.clear();
+            }
 
-            InputStream img2InputStream = getAssets().open("66_congrats_80x79.PNG");
-            Bitmap img2 = BitmapFactory.decodeStream(img2InputStream);
+            for (int i=0; i<0; i++) {
+                Log.i("LOAD CONFIG", String.format("NB %d", i));
+                g.loadConfiguration(new BufferedReader(new InputStreamReader(getAssets().open("cfg-4.2.1.7-ALooKK.txt"))));
+            }
 
-            g.imgSave((byte) 0x01, img1, MONO_4BPP_HEATSHRINK);
-            g.imgSave((byte) 0x02, img2, MONO_4BPP_HEATSHRINK_SAVE_COMP);
-
-            g.clear();
-            g.imgDisplay((byte) 0x01,(short)0, (short) 50);
-            g.imgDisplay((byte) 0x02,(short)100, (short) 50);
+            g.cfgList(l -> {
+                // try {
+                //     g.loadConfiguration(new BufferedReader(new InputStreamReader(getAssets().open("cfg-4.2.1.6-ALooK.txt"))));
+                // } catch (IOException e) {
+                //     e.printStackTrace();
+                // }
+                Log.i("CFG LIST", String.format("NB %d", l.size()));
+                for (final ConfigurationDescription cfg : l) {
+                    Log.i("CFG LIST", String.format("-> %s", cfg));
+                    g.cfgRead(cfg.getName(), cfgi -> {
+                        Log.i("CFG INFO", String.format("-> %s %s", cfg.getName(), cfgi));
+                        if (l.indexOf(cfg) == l.size() - 1) {
+                            Log.i("END", "...DEBUG DONE");
+                            g.disconnect();
+                        }
+                    });
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        // g.cfgWrite("DebugApp", 1, 42);
+        // g.cfgSet("DebugApp");
+
+        // this.runTests01(g);
+        // this.runTestsLayout(g);
+        // this.runTestsGauge(g);
+        // this.runTestsPage(g);
+        // this.runTestsStats(g);
+        // this.runTestsConfig(g);
     }
 
     private void runTestsConfig(final Glasses g) {
@@ -357,7 +387,10 @@ public class DebugActivity extends AppCompatActivity {
 
         g.imgSave((byte) 0x01, img1, MONO_4BPP);
         g.imgSave((byte) 0x02, img2, MONO_1BPP);
-        //g.imgStream(img2, (short) 20, (short) 30);
+        g.imgSave((byte) 0x03, img1, MONO_4BPP_HEATSHRINK);
+        g.imgSave((byte) 0x04, img2, MONO_4BPP_HEATSHRINK_SAVE_COMP);
+        g.imgStream(img1, ImgStreamFormat.MONO_1BPP, (short) 30, (short) 30);
+        g.imgStream(img2, ImgStreamFormat.MONO_4BPP_HEATSHRINK, (short) 50, (short) 30);
 
         g.imgList(l -> {
             Log.i("IMG LIST", String.format("NB %d", l.size()));
