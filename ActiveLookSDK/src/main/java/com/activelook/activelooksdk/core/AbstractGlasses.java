@@ -34,6 +34,7 @@ import com.activelook.activelooksdk.types.Image1bppData;
 import com.activelook.activelooksdk.types.ImageConverter;
 import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
+import com.activelook.activelooksdk.types.ImgStreamFormat;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
@@ -508,39 +509,74 @@ public abstract class AbstractGlasses implements Glasses {
         this.imgDelete((byte) 0xFF);
     }
 
-    // TODO @Override
-    public void imgStream(final short x, final short y, final int width, final byte[][] bytes) {
-        final CommandData data = new CommandData()
-                .addUInt32(bytes.length)
-                .addUInt16(width)
-                .addInt16(x, y);
-        this.writeCommand(new Command(ID_imgStream, data));
-        /*for (final CommandData chunkData : new CommandData(bytes).split(240)) {
-            this.writeCommand(new Command(ID_imgStream, chunkData));
-        }*/
+    @Override
+    public void imgStream(final Bitmap img, final ImgStreamFormat format, final short x, final short y) {
+        switch(format){
+            case MONO_1BPP:
+                this.imgStream1bpp(img, x, y);
+                break;
+            case MONO_4BPP_HEATSHRINK:
+                this.imgStream4bppHeatShrink(img, x, y);
+                break;
+        }
     }
 
     @Override
-    public void imgStream(final Image1bppData imgData, final short x, final short y) {
-        this.imgStream(x, y, imgData.getWidth(), imgData.getBytes());
+    public void imgStream1bpp(final Bitmap image, final short x, final short y){
+        final ImgStreamFormat format = ImgStreamFormat.MONO_1BPP;
+        final Image1bppData imgData = ImageConverter.getImageDataStream1bpp(image, format);
+        this.imgStream1bpp(x,y, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
     }
-    /*
-        // TODO @Override
-        public void imgSave1bpp(final int width, final byte[] bytes) {
-            final CommandData data = new CommandData()
-                    .addUInt32(bytes.length)
-                    .addUInt16(width);
-            this.writeCommand(new Command(ID_imgSave1bpp, data));
-            for (final CommandData chunkData : new CommandData(bytes).split(240)) {
-                this.writeCommand(new Command(ID_imgSave1bpp, chunkData));
+
+    // TODO @Override
+    public void imgStream1bpp(final short x, final short y, final int width, final int size, final byte[][] bytes, final ImgStreamFormat format) {
+        final CommandData data = new CommandData()
+                .addUInt32(size)
+                .addUInt16(width)
+                .addInt16(x, y)
+                .add(CommandData.fromImgStreamFormat(format));
+        this.writeCommand(new Command(ID_imgStream, data));
+
+        byte[] chunkData = new byte[]{};
+        final int chunkSize  = 240;
+
+        for (final byte[] line : bytes) {
+            if (chunkData.length + line.length <= chunkSize) {
+                byte[] result = new byte[chunkData.length+line.length];
+                System.arraycopy(chunkData, 0, result, 0, chunkData.length);
+                System.arraycopy(line, 0, result, chunkData.length, line.length);
+                chunkData = result;
+            } else {
+                this.writeCommand(new Command(ID_imgStream, new CommandData(chunkData)));
+                chunkData = line;
             }
         }
-
-        @Override
-        public void imgSave1bpp(final Image1bppData imgData) {
-            this.imgSave1bpp(imgData.getWidth(), imgData.getBytes());
+        if (chunkData.length > 0) {
+            this.writeCommand(new Command(ID_imgStream,  new CommandData(chunkData)));
         }
-    */
+    }
+
+    @Override
+    public void imgStream4bppHeatShrink(final Bitmap image, final short x, final short y){
+        final ImgStreamFormat format = ImgStreamFormat.MONO_4BPP_HEATSHRINK;
+        final ImageData imgData = ImageConverter.getImageDataStream4bpp(image, format);
+        this.imgStream4bppHeatShrink(x,y, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
+    }
+
+    // TODO @Override
+    public void imgStream4bppHeatShrink(final short x, final short y, final int width, final int size, final byte[] bytes, final ImgStreamFormat format) {
+        final CommandData data = new CommandData()
+                .addUInt32(size)
+                .addUInt16(width)
+                .addInt16(x, y)
+                .add(CommandData.fromImgStreamFormat(format));
+        this.writeCommand(new Command(ID_imgStream, data));
+
+        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
+            this.writeCommand(new Command(ID_imgStream, chunkData));
+        }
+    }
+
     @Override
     public void fontList(final Consumer<List<FontInfo>> onResult) {
         this.writeCommand(

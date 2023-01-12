@@ -41,7 +41,7 @@ public class ImageConverter {
         return new Image1bppData();
     }
 
-    public static Image1bppData getImageDataStream1bpp(Bitmap img, ImgSaveFormat fmt) {
+    public static Image1bppData getImageDataStream1bpp(Bitmap img, ImgStreamFormat fmt) {
         int[][] matrix = convertStream(img, fmt);
         int width = matrix[0].length;
 
@@ -54,7 +54,7 @@ public class ImageConverter {
         return new Image1bppData();
     }
 
-    public static ImageData getImageDataStream4bpp(Bitmap img, ImgSaveFormat fmt) {
+    public static ImageData getImageDataStream4bpp(Bitmap img, ImgStreamFormat fmt) {
         int[][] matrix = convertStream(img, fmt);
         int width = matrix[0].length;
 
@@ -81,7 +81,7 @@ public class ImageConverter {
         return new int[][]{};
     }
 
-    private static int[][] convertStream(Bitmap img, ImgSaveFormat fmt) {
+    private static int[][] convertStream(Bitmap img, ImgStreamFormat fmt) {
         switch(fmt) {
             case MONO_1BPP:
                 return ImageMDP05.convert1Bpp(img);

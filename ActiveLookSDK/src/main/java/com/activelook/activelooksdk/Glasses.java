@@ -35,6 +35,7 @@ import com.activelook.activelooksdk.types.GlassesVersion;
 import com.activelook.activelooksdk.types.Image1bppData;
 import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
+import com.activelook.activelooksdk.types.ImgStreamFormat;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
@@ -382,19 +383,30 @@ public interface Glasses extends Parcelable {
      */
     void imgDeleteAll();
     /**
-     * Stream 1bpp bitmap image on display without saving it in memory.
+     * Stream bitmap image on display without saving it in memory.
      *
-     * @param data 1bpp Image data configuration object.
+     * @param img  The image to store in the configuration.
+     * @param format The image format
      * @param x    The x coordinate for the image.
      * @param y    The y coordinate for the image.
      */
-    void imgStream(Image1bppData data, short x, short y);
+    void imgStream(Bitmap img, ImgStreamFormat format, final short x, final short y);
     /**
-     * Save 1bpp bitmap of size bytes and width pixels.
+     * Stream 1bpp bitmap image on display without saving it in memory.
      *
-     * @param data 1bpp Image data configuration object.
+     * @param img  The image to store in the configuration.
+     * @param x    The x coordinate for the image.
+     * @param y    The y coordinate for the image.
      */
-    //void imgSave1bpp(Image1bppData data);
+    void imgStream1bpp(Bitmap img, final short x, final short y);
+    /**
+     * Save 4bpp bitmap with Heatshrink compression, decompressed into 4bpp by the firmware before saving
+     *
+     * @param img  The image to store in the configuration.
+     * @param x    The x coordinate for the image.
+     * @param y    The y coordinate for the image.
+     */
+    void imgStream4bppHeatShrink(Bitmap img, final short x, final short y);
     /**
      * Give the list of font saved into the device with their size.
      *

@@ -23,6 +23,7 @@ import com.activelook.activelooksdk.types.GaugeInfo;
 import com.activelook.activelooksdk.types.GlassesSettings;
 import com.activelook.activelooksdk.types.GlassesVersion;
 import com.activelook.activelooksdk.types.ImageInfo;
+import com.activelook.activelooksdk.types.ImgStreamFormat;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
@@ -282,6 +283,15 @@ public final class CommandData {
             case MONO_1BPP:                         return new CommandData((byte) 0x01);
             case MONO_4BPP_HEATSHRINK:              return new CommandData((byte) 0x02);
             case MONO_4BPP_HEATSHRINK_SAVE_COMP:    return new CommandData((byte) 0x03);
+            default:                                return new CommandData((byte) 0x04);
+        }
+    }
+
+    public static CommandData fromImgStreamFormat(final ImgStreamFormat format) {
+        assert format != null : String.format(Locale.US, "Format cannot be null");
+        switch (format) {
+            case MONO_1BPP:                         return new CommandData((byte) 0x01);
+            case MONO_4BPP_HEATSHRINK:              return new CommandData((byte) 0x02);
             default:                                return new CommandData((byte) 0x04);
         }
     }
