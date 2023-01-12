@@ -20,16 +20,22 @@ public class ImageData {
     private  byte[] bytes;
     private  int size;
 
+    public ImageData() {
+        this.width = 0;
+        this.bytes = new byte[]{};
+        this.size = 0;
+    }
+
     public ImageData(int width, byte[] bytes) {
         this.width = width;
         this.bytes = bytes;
         this.size = bytes.length;
     }
 
-    public ImageData() {
-        this.width = 0;
-        this.bytes = new byte[]{};
-        this.size = 0;
+    public ImageData(int width, byte[] bytes, int size) {
+        this.width = width;
+        this.bytes = bytes;
+        this.size = size;
     }
 
     public int getWidth() {

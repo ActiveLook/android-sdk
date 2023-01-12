@@ -199,7 +199,6 @@ public abstract class AbstractGlasses implements Glasses {
     private void writeCommand(final Command command) {
         final QueryId qid = this.nextQueryId();
         command.setQueryId(qid);
-        Log.w("Commands", String.format("%s", Command.bytesToStr(command.toBytes())));
         this.writeBytes(command.toBytes());
     }
 
@@ -424,10 +423,10 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     // TODO @Override
-    public void imgSave4bpp(final byte id, final int width, final byte[] bytes, final ImgSaveFormat format) {
+    public void imgSave4bpp(final byte id, final int width, final int size, final byte[] bytes, final ImgSaveFormat format) {
         final CommandData data = new CommandData()
                 .addUInt8(id)
-                .addUInt32(bytes.length)
+                .addUInt32(size)
                 .addUInt16(width)
                 .add(CommandData.fromImgSaveFormat(format));
         this.writeCommand(new Command(ID_imgSave, data));
@@ -440,21 +439,21 @@ public abstract class AbstractGlasses implements Glasses {
     public void imgSave4bpp(final byte id, final Bitmap image){
         final ImgSaveFormat format = ImgSaveFormat.MONO_4BPP;
         final ImageData imgData = ImageConverter.getImageData(image, format);
-        this.imgSave4bpp(id, imgData.getWidth(), imgData.getBytes(), format);
+        this.imgSave4bpp(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
     }
 
     @Override
     public void imgSave4bppHeatShrink(final byte id, final Bitmap image){
         final ImgSaveFormat format = ImgSaveFormat.MONO_4BPP_HEATSHRINK;
         final ImageData imgData = ImageConverter.getImageData(image, format);
-        this.imgSave4bpp(id, imgData.getWidth(), imgData.getBytes(), format);
+        this.imgSave4bpp(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
     }
 
     @Override
     public void imgSave4bppHeatShrinkSaveComp(final byte id, final Bitmap image){
         final ImgSaveFormat format = ImgSaveFormat.MONO_4BPP_HEATSHRINK_SAVE_COMP;
         final ImageData imgData = ImageConverter.getImageData(image, format);
-        this.imgSave4bpp(id, imgData.getWidth(), imgData.getBytes(), format);
+        this.imgSave4bpp(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
     }
 
     // TODO @Override

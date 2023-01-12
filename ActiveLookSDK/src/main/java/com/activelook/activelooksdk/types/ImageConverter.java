@@ -1,11 +1,12 @@
 package com.activelook.activelooksdk.types;
 
-import static com.activelook.activelooksdk.types.ImageMDP05.rgbTo8bitGrayWeightedConvertion;
-import static com.activelook.activelooksdk.types.ImageMDP05.rotateBMP_180;
-
 import android.graphics.Bitmap;
-import android.graphics.ImageFormat;
 import android.util.Log;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+
+import heatshrink.HsOutputStream;
 
 public class ImageConverter {
 
@@ -16,12 +17,10 @@ public class ImageConverter {
         switch (fmt){
             case MONO_4BPP:
                 return new ImageData(width, getCmd4Bpp(matrix));
-            case MONO_4BPP_HEATSHRINK:
-                /*let encodedImg = getCmd4Bpp(matrix: matrix)
-                let matrixData = Data(bytes: encodedImg, count: encodedImg.count)
-                cmds = getCmdCompress4BppHeatshrink(encodedImg: matrixData)
-                return ImageData(width: UInt16(width), data: cmds, size: UInt32(encodedImg.count))*/
-            case MONO_4BPP_HEATSHRINK_SAVE_COMP:
+            case MONO_4BPP_HEATSHRINK: case MONO_4BPP_HEATSHRINK_SAVE_COMP:
+                byte[] encodedImg = getCmd4Bpp(matrix);
+                byte[] cmds = getCmdCompress4BppHeatshrink(encodedImg);
+                return new ImageData(width,cmds, encodedImg.length);
             default:
                 Log.d("imageFormat", "Unknown format");
         }
@@ -61,10 +60,9 @@ public class ImageConverter {
 
         switch (fmt){
             case MONO_4BPP_HEATSHRINK:
-                /*let encodedImg = getCmd4Bpp(matrix: matrix)
-                let matrixData = Data(bytes: encodedImg, count: encodedImg.count)
-                cmds = getCmdCompress4BppHeatshrink(encodedImg: matrixData)
-                return ImageData(width: UInt16(width), data: cmds, size: UInt32(encodedImg.count))*/
+                byte[] encodedImg = getCmd4Bpp(matrix);
+                byte[] cmds = getCmdCompress4BppHeatshrink(encodedImg);
+                return new ImageData(width,cmds, encodedImg.length);
             default:
                 Log.d("image4bppStreamFormat", "Unknown format");
         }
@@ -186,8 +184,16 @@ public class ImageConverter {
         return  arraySize;
     }
 
-    /*private func getCmdCompress4BppHeatshrink(encodedImg: Data) -> [UInt8]{
-        let encoder = RNHeatshrinkEncoder(windowSize: 8, andLookaheadSize: 4)
-        return [UInt8](encoder.encode(encodedImg))
-    }*/
+    private static byte[] getCmdCompress4BppHeatshrink(byte[] encodedImg){
+        int windowSize = 8;
+        int lookaheadSize = 4;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        try(HsOutputStream out = new HsOutputStream(baos, windowSize, lookaheadSize)) {
+             out.write(encodedImg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return baos.toByteArray();
+    }
 }
