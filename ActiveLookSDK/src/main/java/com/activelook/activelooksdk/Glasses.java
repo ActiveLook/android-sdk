@@ -14,6 +14,7 @@ limitations under the License.
 */
 package com.activelook.activelooksdk;
 
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.os.Parcelable;
 
@@ -34,11 +35,13 @@ import com.activelook.activelooksdk.types.GlassesVersion;
 import com.activelook.activelooksdk.types.Image1bppData;
 import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
+import com.activelook.activelooksdk.types.ImgStreamFormat;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
 import com.activelook.activelooksdk.types.Rotation;
 import com.activelook.activelooksdk.types.Utils;
+import com.activelook.activelooksdk.types.ImgSaveFormat;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -310,6 +313,13 @@ public interface Glasses extends Parcelable {
      */
     void polyline(short[] xys);
     /**
+     * Draw multiple connected lines at the corresponding coordinates. Thickness is set for all lines.
+     *
+     * @param thickness Polyline thickness
+     * @param xys Array of [x0, y1, x1, y1, ..., xn, yn]
+     */
+    void polyline(byte thickness, short[] xys);
+    /**
      * Give the list of bitmap saved into the device.
      *
      * @param onResult Callback on to call on returned value.
@@ -317,11 +327,43 @@ public interface Glasses extends Parcelable {
     void imgList(Consumer<List<ImageInfo>> onResult);
     /**
      * Save 4bpp bitmap of size bytes and width pixels.
-     *
+     * 
      * @param id   The image id in the configuration.
      * @param data 4bpp Image data configuration object.
+     * {@link Deprecated}
      */
     void imgSave(byte id, ImageData data);
+    /**
+     * Save bitmap in the chosen format
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration .
+     * @param format The image format 
+     */
+    void imgSave(byte id, Bitmap img, ImgSaveFormat format);
+    /**
+     * Save 4bpp bitmap.
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration .
+     */     
+    void imgSave4bpp(byte id, Bitmap img);
+    /**
+     * Save 1bpp bitmap.
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration .
+     */
+    void imgSave1bpp(byte id, Bitmap img);
+    /**
+     * Save 4bpp bitmap with Heatshrink compression, decompressed into 4bpp by the firmware before saving
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration .
+     */
+    void imgSave4bppHeatShrink(byte id, Bitmap img);
+    /**
+     * Save 4bpp bitmap with Heatshrink compression, stored compressed, decompressed into 4bpp before display
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration .
+     */
+    void imgSave4bppHeatShrinkSaveComp(byte id, Bitmap img);
     /**
      * Display image id to the corresponding coordinates.
      *
@@ -341,19 +383,30 @@ public interface Glasses extends Parcelable {
      */
     void imgDeleteAll();
     /**
-     * Stream 1bpp bitmap image on display without saving it in memory.
+     * Stream bitmap image on display without saving it in memory.
      *
-     * @param data 1bpp Image data configuration object.
+     * @param img  The image to store in the configuration.
+     * @param format The image format
      * @param x    The x coordinate for the image.
      * @param y    The y coordinate for the image.
      */
-    void imgStream(Image1bppData data, short x, short y);
+    void imgStream(Bitmap img, ImgStreamFormat format, final short x, final short y);
     /**
-     * Save 1bpp bitmap of size bytes and width pixels.
+     * Stream 1bpp bitmap image on display without saving it in memory.
      *
-     * @param data 1bpp Image data configuration object.
+     * @param img  The image to store in the configuration.
+     * @param x    The x coordinate for the image.
+     * @param y    The y coordinate for the image.
      */
-    void imgSave1bpp(Image1bppData data);
+    void imgStream1bpp(Bitmap img, final short x, final short y);
+    /**
+     * Save 4bpp bitmap with Heatshrink compression, decompressed into 4bpp by the firmware before saving
+     *
+     * @param img  The image to store in the configuration.
+     * @param x    The x coordinate for the image.
+     * @param y    The y coordinate for the image.
+     */
+    void imgStream4bppHeatShrink(Bitmap img, final short x, final short y);
     /**
      * Give the list of font saved into the device with their size.
      *
@@ -443,6 +496,30 @@ public interface Glasses extends Parcelable {
      */
     void layoutGet(byte id, Consumer<LayoutParameters> onResult);
     /**
+     * Clears screen of the corresponding layout area
+     *
+     * @param id   The id of the layout.
+     * @param x    The x coordinate for the layout.
+     * @param y    The y coordinate for the layout.
+     */
+    void layoutClearExtended(byte id, short x, byte y);
+    /**
+     * Clear area and display text with layout # Id parameters
+     *
+     * @param id   The id of the layout.
+     * @param text The text to display for this layout.
+     */
+    void layoutClearAndDisplay(byte id, String text);
+    /**
+     * Clear area and display # Text with layout # Id at position # X # Y The position is not saved
+     *
+     * @param id   The id of the layout.
+     * @param x    The x coordinate for the layout.
+     * @param y    The y coordinate for the layout.
+     * @param text The text to display for this layout.
+     */
+    void layoutClearAndDisplayExtended(byte id, short x, byte y, String text);
+    /**
      * Display value (in percentage) of the gauge ([1…4]).
      *
      * @param id    Id of the gauge to display.
@@ -493,7 +570,8 @@ public interface Glasses extends Parcelable {
     void pageDeleteAll();
     void pageDisplay(byte id, String[] texts);
     void pageClear(byte id);
-    void pageList(Consumer<List<Integer>> onResult);
+    void pageList(Consumer<List<Integer>> onResult);    
+    void pageClearAndDisplay(byte id, String[] texts);
     /**
      * Get number of pixel activated on display.
      *
@@ -653,6 +731,21 @@ public interface Glasses extends Parcelable {
             xys[i++] = (short) p.y;
         }
         this.polyline(xys);
+    }
+    /**
+     * Draw multiple connected lines at the corresponding coordinates. Thickness is set for all lines.
+     *
+     * @param thickness Polyline thickness
+     * @param points List of points.
+     */
+    default void polyline(byte thickness, List<Point> points) {
+        short[] xys = new short[points.size() * 2];
+        int i = 0;
+        for (Point p : points) {
+            xys[i++] = (short) p.x;
+            xys[i++] = (short) p.y;
+        }
+        this.polyline(thickness, xys);
     }
 
 }

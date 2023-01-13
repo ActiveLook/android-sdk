@@ -65,7 +65,7 @@ You can add the dependency in your application by modifying the application `bui
 and add:
 ```
 dependencies {
-  implementation 'com.github.activelook:android-sdk:v4.2.5'
+  implementation 'com.github.activelook:android-sdk:v4.4.0'
 }
 ```
 
@@ -105,9 +105,9 @@ import com.activelook.activelooksdk.types.Rotation;
             MainActivity.this,
             "your-sdk-token-provided-by-microoled",
             gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateStart               : %s", gu)),
-            gu -> {
-                  Log.d("GLASSES_UPDATE", String.format("onUpdateAvailableCallback   : %s", gu));
-                return true;
+            gu_f -> {
+                  Log.d("GLASSES_UPDATE", String.format("onUpdateAvailableCallback   : %s", gu_f.first));
+                  gu_f.second.run();
             },
             gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateProgress            : %s", gu)),
             gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateSuccess             : %s", gu)),

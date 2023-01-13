@@ -14,6 +14,9 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.core;
 
+import android.graphics.Bitmap;
+import android.util.Log;
+
 import androidx.core.util.Consumer;
 
 import com.activelook.activelooksdk.Glasses;
@@ -28,13 +31,16 @@ import com.activelook.activelooksdk.types.GaugeInfo;
 import com.activelook.activelooksdk.types.GlassesSettings;
 import com.activelook.activelooksdk.types.GlassesVersion;
 import com.activelook.activelooksdk.types.Image1bppData;
+import com.activelook.activelooksdk.types.ImageConverter;
 import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
+import com.activelook.activelooksdk.types.ImgStreamFormat;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
 import com.activelook.activelooksdk.types.Rotation;
 import com.activelook.activelooksdk.types.Utils;
+import com.activelook.activelooksdk.types.ImgSaveFormat;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -106,6 +112,9 @@ public abstract class AbstractGlasses implements Glasses {
     static final byte ID_layoutPosition = (byte) 0x65;
     static final byte ID_layoutDisplayExtended = (byte) 0x66;
     static final byte ID_layoutGet = (byte) 0x67;
+    static final byte ID_layoutClearExtended = (byte) 0x68;
+    static final byte ID_layoutClearAndDisplay = (byte) 0x69;
+    static final byte ID_layoutClearAndDisplayExtended = (byte) 0x6A;
     /*
      * Gauge commands ids
      */
@@ -123,6 +132,7 @@ public abstract class AbstractGlasses implements Glasses {
     static final byte ID_pageDisplay = (byte) 0x83;
     static final byte ID_pageClear = (byte) 0x84;
     static final byte ID_pageList = (byte) 0x85;
+    static final byte ID_pageClearAndDisplay = (byte) 0x86;
     /*
      * Configuration for firmware 1.7 ids
      */
@@ -364,6 +374,13 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
+    public void polyline(final byte thickness, final short[] points) {
+        final byte reserved = 0;
+        final CommandData data = new CommandData().addUInt8(thickness).addUInt8(reserved).addUInt8(reserved).addInt16(points);
+        this.writeCommand(new Command(ID_polyline, data));
+    }
+
+    @Override
     public void imgList(final Consumer<List<ImageInfo>> onResult) {
         this.writeCommand(
                 new Command(ID_imgList),
@@ -389,6 +406,93 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
+    public void imgSave(final byte id, final Bitmap image, final ImgSaveFormat format) {
+        switch(format){
+            case MONO_4BPP:
+                this.imgSave4bpp(id, image);
+            break;
+            case MONO_1BPP:
+                this.imgSave1bpp(id, image);
+            break;
+            case MONO_4BPP_HEATSHRINK:
+                this.imgSave4bppHeatShrink(id, image);
+            break;
+            case MONO_4BPP_HEATSHRINK_SAVE_COMP:
+                this.imgSave4bppHeatShrinkSaveComp(id, image);
+            break;
+        }
+    }
+
+    // TODO @Override
+    public void imgSave4bpp(final byte id, final int width, final int size, final byte[] bytes, final ImgSaveFormat format) {
+        final CommandData data = new CommandData()
+                .addUInt8(id)
+                .addUInt32(size)
+                .addUInt16(width)
+                .add(CommandData.fromImgSaveFormat(format));
+        this.writeCommand(new Command(ID_imgSave, data));
+        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
+            this.writeCommand(new Command(ID_imgSave, chunkData));
+        }
+    }
+
+    @Override
+    public void imgSave4bpp(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.MONO_4BPP;
+        final ImageData imgData = ImageConverter.getImageData(image, format);
+        this.imgSave4bpp(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
+    }
+
+    @Override
+    public void imgSave4bppHeatShrink(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.MONO_4BPP_HEATSHRINK;
+        final ImageData imgData = ImageConverter.getImageData(image, format);
+        this.imgSave4bpp(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
+    }
+
+    @Override
+    public void imgSave4bppHeatShrinkSaveComp(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.MONO_4BPP_HEATSHRINK_SAVE_COMP;
+        final ImageData imgData = ImageConverter.getImageData(image, format);
+        this.imgSave4bpp(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
+    }
+
+    // TODO @Override
+    public void imgSave1bpp(final byte id, final int width, final int size, final byte[][] bytes, final ImgSaveFormat format) {
+        final CommandData data = new CommandData()
+        .addUInt8(id)
+        .addUInt32(size)
+        .addUInt16(width)
+        .add(CommandData.fromImgSaveFormat(format));
+        this.writeCommand(new Command(ID_imgSave, data));
+
+        byte[] chunkData = new byte[]{};
+        final int chunkSize  = 240;
+
+        for (final byte[] line : bytes) {
+            if (chunkData.length + line.length <= chunkSize) {
+                byte[] result = new byte[chunkData.length+line.length];
+                System.arraycopy(chunkData, 0, result, 0, chunkData.length);
+                System.arraycopy(line, 0, result, chunkData.length, line.length);
+                chunkData = result;
+            } else {
+                this.writeCommand(new Command(ID_imgSave, new CommandData(chunkData)));
+                chunkData = line;
+            }
+        }
+        if (chunkData.length > 0) {
+            this.writeCommand(new Command(ID_imgSave,  new CommandData(chunkData)));
+        }
+    }
+
+    @Override
+    public void imgSave1bpp(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.MONO_1BPP;
+        final Image1bppData imgData = ImageConverter.getImage1bppData(image, format);
+        this.imgSave1bpp(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
+    }
+
+    @Override
     public void imgDisplay(final byte id, final short x, final short y) {
         final CommandData data = new CommandData().addUInt8(id).addInt16(x, y);
         this.writeCommand(new Command(ID_imgDisplay, data));
@@ -405,37 +509,72 @@ public abstract class AbstractGlasses implements Glasses {
         this.imgDelete((byte) 0xFF);
     }
 
+    @Override
+    public void imgStream(final Bitmap img, final ImgStreamFormat format, final short x, final short y) {
+        switch(format){
+            case MONO_1BPP:
+                this.imgStream1bpp(img, x, y);
+                break;
+            case MONO_4BPP_HEATSHRINK:
+                this.imgStream4bppHeatShrink(img, x, y);
+                break;
+        }
+    }
+
+    @Override
+    public void imgStream1bpp(final Bitmap image, final short x, final short y){
+        final ImgStreamFormat format = ImgStreamFormat.MONO_1BPP;
+        final Image1bppData imgData = ImageConverter.getImageDataStream1bpp(image, format);
+        this.imgStream1bpp(x,y, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
+    }
+
     // TODO @Override
-    public void imgStream(final short x, final short y, final int width, final byte[] bytes) {
+    public void imgStream1bpp(final short x, final short y, final int width, final int size, final byte[][] bytes, final ImgStreamFormat format) {
         final CommandData data = new CommandData()
-                .addUInt32(bytes.length)
+                .addUInt32(size)
                 .addUInt16(width)
-                .addInt16(x, y);
+                .addInt16(x, y)
+                .add(CommandData.fromImgStreamFormat(format));
         this.writeCommand(new Command(ID_imgStream, data));
+
+        byte[] chunkData = new byte[]{};
+        final int chunkSize  = 240;
+
+        for (final byte[] line : bytes) {
+            if (chunkData.length + line.length <= chunkSize) {
+                byte[] result = new byte[chunkData.length+line.length];
+                System.arraycopy(chunkData, 0, result, 0, chunkData.length);
+                System.arraycopy(line, 0, result, chunkData.length, line.length);
+                chunkData = result;
+            } else {
+                this.writeCommand(new Command(ID_imgStream, new CommandData(chunkData)));
+                chunkData = line;
+            }
+        }
+        if (chunkData.length > 0) {
+            this.writeCommand(new Command(ID_imgStream,  new CommandData(chunkData)));
+        }
+    }
+
+    @Override
+    public void imgStream4bppHeatShrink(final Bitmap image, final short x, final short y){
+        final ImgStreamFormat format = ImgStreamFormat.MONO_4BPP_HEATSHRINK;
+        final ImageData imgData = ImageConverter.getImageDataStream4bpp(image, format);
+        this.imgStream4bppHeatShrink(x,y, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
+    }
+
+    // TODO @Override
+    public void imgStream4bppHeatShrink(final short x, final short y, final int width, final int size, final byte[] bytes, final ImgStreamFormat format) {
+        final CommandData data = new CommandData()
+                .addUInt32(size)
+                .addUInt16(width)
+                .addInt16(x, y)
+                .add(CommandData.fromImgStreamFormat(format));
+        this.writeCommand(new Command(ID_imgStream, data));
+
         for (final CommandData chunkData : new CommandData(bytes).split(240)) {
             this.writeCommand(new Command(ID_imgStream, chunkData));
         }
-    }
-
-    @Override
-    public void imgStream(final Image1bppData imgData, final short x, final short y) {
-        this.imgStream(x, y, imgData.getWidth(), imgData.getBytes());
-    }
-
-    // TODO @Override
-    public void imgSave1bpp(final int width, final byte[] bytes) {
-        final CommandData data = new CommandData()
-                .addUInt32(bytes.length)
-                .addUInt16(width);
-        this.writeCommand(new Command(ID_imgSave1bpp, data));
-        for (final CommandData chunkData : new CommandData(bytes).split(240)) {
-            this.writeCommand(new Command(ID_imgSave1bpp, chunkData));
-        }
-    }
-
-    @Override
-    public void imgSave1bpp(final Image1bppData imgData) {
-        this.imgSave1bpp(imgData.getWidth(), imgData.getBytes());
     }
 
     @Override
@@ -541,6 +680,24 @@ public abstract class AbstractGlasses implements Glasses {
                 new Command(ID_layoutGet, data),
                 bytes -> onResult.accept(CommandData.toLayoutParameters(id, bytes))
         );
+    }
+
+    @Override
+    public void layoutClearExtended(final byte id, final short x, final byte y) {
+        final CommandData data = new CommandData().addUInt8(id).addUInt16(x).addUInt8(y);
+        this.writeCommand(new Command(ID_layoutClearExtended, data));
+    }
+
+    @Override
+    public void layoutClearAndDisplay(final byte id, final String text) {
+        final CommandData data = new CommandData().addUInt8(id).addNulTerminatedStrings(text);
+        this.writeCommand(new Command(ID_layoutClearAndDisplay, data));
+    }
+
+    @Override
+    public void layoutClearAndDisplayExtended(final byte id, final short x, final byte y, final String text) {
+        final CommandData data = new CommandData().addUInt8(id).addUInt16(x).addUInt8(y).addNulTerminatedStrings(text);
+        this.writeCommand(new Command(ID_layoutClearAndDisplayExtended, data));
     }
 
     @Override
@@ -654,6 +811,15 @@ public abstract class AbstractGlasses implements Glasses {
                     onResult.accept(r);
                 }
         );
+    }
+
+    @Override
+    public void pageClearAndDisplay(byte id, String [] texts) {
+        final Command command = new Command(ID_pageClearAndDisplay).addDataByte(id);
+        for(String text: texts) {
+            command.addData(text, true);
+        }
+        this.writeCommand(command);
     }
 
     @Override

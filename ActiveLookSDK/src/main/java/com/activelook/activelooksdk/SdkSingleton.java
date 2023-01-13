@@ -15,6 +15,7 @@ limitations under the License.
 package com.activelook.activelooksdk;
 
 import android.content.Context;
+import android.util.Pair;
 
 import androidx.core.util.Consumer;
 import androidx.core.util.Predicate;
@@ -30,7 +31,7 @@ final class SdkSingleton {
     static final synchronized Sdk init(Context applicationContext,
                                        String token,
                                        Consumer<GlassesUpdate> onUpdateStart,
-                                       Predicate<GlassesUpdate> onUpdateAvailableCallback,
+                                       Consumer<Pair<GlassesUpdate, Runnable>> onUpdateAvailableCallback,
                                        Consumer<GlassesUpdate> onUpdateProgress,
                                        Consumer<GlassesUpdate> onUpdateSuccess,
                                        Consumer<GlassesUpdate> onUpdateError) {
