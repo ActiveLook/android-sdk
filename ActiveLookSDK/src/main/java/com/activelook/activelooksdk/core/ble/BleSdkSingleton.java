@@ -15,6 +15,7 @@ limitations under the License.
 package com.activelook.activelooksdk.core.ble;
 
 import android.content.Context;
+import android.util.Pair;
 
 import androidx.core.util.Consumer;
 import androidx.core.util.Predicate;
@@ -28,7 +29,7 @@ public final class BleSdkSingleton {
     public static final synchronized SdkImpl init(Context applicationContext,
                                                   String token,
                                                   Consumer<GlassesUpdate> onUpdateStart,
-                                                  Predicate<GlassesUpdate> onUpdateAvailableCallback,
+                                                  Consumer<Pair<GlassesUpdate, Runnable>> onUpdateAvailableCallback,
                                                   Consumer<GlassesUpdate> onUpdateProgress,
                                                   Consumer<GlassesUpdate> onUpdateSuccess,
                                                   Consumer<GlassesUpdate> onUpdateError) {

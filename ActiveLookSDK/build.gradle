@@ -68,4 +68,5 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:3.4.0"
 
     implementation "com.android.volley:volley:1.2.1"
+    implementation 'io.github.markrileybot:heatshrink-java:1.0.1'
 }

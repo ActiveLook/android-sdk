@@ -16,29 +16,35 @@ package com.activelook.activelooksdk.types;
 
 public class Image1bppData {
 
-    private final char width;
-    private final byte[] bytes;
+    private final int width;
+    private final byte[][] bytes;
+    private int size;
 
-    public Image1bppData(char width, byte[] bytes) {
-        this.width = width;
-        this.bytes = bytes;
+    public Image1bppData() {
+        this.width = 0;
+        this.bytes = new byte[][]{};
+        this.size = 0;
     }
 
-    public char getWidth() {
+    public Image1bppData(int width, byte[][] bytes) {
+        this.width = width;
+        this.bytes = bytes;
+        this.size = bytes.length * bytes[0].length;
+    }
+
+    public int getWidth() {
         return this.width;
     }
 
-    public byte[] getBytes() {
+    public byte[][] getBytes() {
         return this.bytes;
     }
 
     public int getSize() {
-        return this.bytes.length;
+        return this.size;
     }
 
-    public byte[][] getChunks(int size) {
-        return Utils.split(this.bytes, size);
-    }
+    public void setSize(int size){this.size = size;}
 
 }
 

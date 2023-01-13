@@ -15,6 +15,7 @@ limitations under the License.
 package com.activelook.activelooksdk;
 
 import android.content.Context;
+import android.util.Pair;
 
 import com.activelook.activelooksdk.types.GlassesUpdate;
 
@@ -43,7 +44,7 @@ public interface Sdk {
             Context applicationContext,
             String token,
             Consumer<GlassesUpdate> onUpdateStart,
-            Predicate<GlassesUpdate> onUpdateAvailableCallback,
+            Consumer<Pair<GlassesUpdate, Runnable>> onUpdateAvailableCallback,
             Consumer<GlassesUpdate> onUpdateProgress,
             Consumer<GlassesUpdate> onUpdateSuccess,
             Consumer<GlassesUpdate> onUpdateError
