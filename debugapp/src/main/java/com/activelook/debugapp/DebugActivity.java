@@ -61,9 +61,9 @@ public class DebugActivity extends AppCompatActivity {
                     DebugActivity.this,
                     "",
                     gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateStart               : %s", gu)),
-                    gu -> {
-                          Log.d("GLASSES_UPDATE", String.format("onUpdateAvailableCallback   : %s", gu));
-                        return true;
+                    gu_f -> {
+                          Log.d("GLASSES_UPDATE", String.format("onUpdateAvailableCallback   : %s", gu_f.first));
+                          gu_f.second.run();
                     },
                     gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateProgress            : %s", gu)),
                     gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateSuccess             : %s", gu)),

@@ -24,6 +24,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.util.Pair;
 import android.widget.Toast;
 
 import androidx.core.util.Consumer;
@@ -53,7 +54,7 @@ class SdkImpl implements Sdk {
     SdkImpl(Context context,
             String token,
             Consumer<GlassesUpdate> onUpdateStart,
-            Predicate<GlassesUpdate> onUpdateAvailableCallback,
+            Consumer<Pair<GlassesUpdate, Runnable>> onUpdateAvailableCallback,
             Consumer<GlassesUpdate> onUpdateProgress,
             Consumer<GlassesUpdate> onUpdateSuccess,
             Consumer<GlassesUpdate> onUpdateError) throws UnsupportedBleException {

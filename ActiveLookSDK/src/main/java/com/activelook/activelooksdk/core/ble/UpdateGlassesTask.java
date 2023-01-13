@@ -50,7 +50,7 @@ class UpdateGlassesTask {
     private final GlassesVersion gVersion;
     private UpdateProgress progress;
 
-    private final Predicate<GlassesUpdate> onUpdateAvailableCallback;
+    private final Consumer<android.util.Pair<GlassesUpdate, Runnable>> onUpdateAvailableCallback;
     private final Consumer<Glasses> onConnected;
     private final Consumer<DiscoveredGlasses> onConnectionFail;
 
@@ -95,7 +95,7 @@ class UpdateGlassesTask {
             final String token,
             final DiscoveredGlasses discoveredGlasses,
             final GlassesImpl glasses,
-            final Predicate<GlassesUpdate> onUpdateAvailableCallback,
+            final Consumer<android.util.Pair<GlassesUpdate, Runnable>> onUpdateAvailableCallback,
             final Consumer<Glasses> onConnected,
             final Consumer<DiscoveredGlasses> onConnectionFail,
             final Consumer<GlassesUpdate> onUpdateStart,
@@ -318,15 +318,17 @@ class UpdateGlassesTask {
 
     private void onFirmwareDownloaded(final byte[] response) {
         this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
-        if(!this.onUpdateAvailableCallback.test(this.progress)) {
+        this.onUpdateAvailableCallback.accept(new android.util.Pair<>(this.progress, ()->{
+            Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
+            this.firmware = new Firmware(response);
+            this.suotaUpdate(this.glasses.gattCallbacks);
+        }));
+        /*if(!this.onUpdateAvailableCallback.test(this.progress)) {
             this.glasses.unsubscribeToBatteryLevelNotifications();
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
             this.onConnectionFail.accept(this.discoveredGlasses);
             return;
-        }
-        Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
-        this.firmware = new Firmware(response);
-        this.suotaUpdate(this.glasses.gattCallbacks);
+        }*/
     }
 
     private void suotaUpdate(final GlassesGatt gatt) {
