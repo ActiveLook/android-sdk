@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Version 4.4.1
+
+### Fixes
+- Remove recursive call to avoid stackoverflow
+
 ## Version 4.4.0
 
 ### Breaking changes
