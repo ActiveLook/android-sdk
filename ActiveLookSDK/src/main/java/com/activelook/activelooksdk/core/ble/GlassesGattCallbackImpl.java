@@ -88,13 +88,21 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         this.gatt = this.gattDelegate;
     }
 
-    private void optimizeMtu(final int optimalMtu) {
-        if (optimalMtu > this.mtu) {
-            if (!this.gatt.requestMtu(optimalMtu)) {
-                this.optimizeMtu(optimalMtu - 1);
+    private void optimizeMtu(int optimalMtu) {
+        while (optimalMtu > this.mtu) {
+            if (this.gatt.requestMtu(optimalMtu)) {
+                return;
             }
-        } else if (!this.gatt.discoverServices()) {
-            this.optimizeMtu(optimalMtu);
+            optimalMtu = optimalMtu - 1;
+        }
+        int errorCount = 0;
+        while (!this.gatt.discoverServices()) {
+            errorCount = errorCount + 1;
+            if (errorCount > 10) {
+                this.unlockConnection();
+                this.disconnect();
+                return;
+            }
         }
     }
 
