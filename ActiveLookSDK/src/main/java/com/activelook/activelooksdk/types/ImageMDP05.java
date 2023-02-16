@@ -20,7 +20,7 @@ public class ImageMDP05 {
             for (int x=0; x < width; x++){
                 int pxl =  rgbTo8bitGrayWeightedConvertion(img.getPixel(x,y));
                 //convert gray8bit to gray4bit
-                encodedImg[y][x] =  Math.round((pxl/17));
+                encodedImg[y][x] =  Math.round(pxl/16);
             }
         }
         return encodedImg;
