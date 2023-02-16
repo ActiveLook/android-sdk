@@ -42,6 +42,7 @@ import com.activelook.activelooksdk.types.PageInfo;
 import com.activelook.activelooksdk.types.Rotation;
 import com.activelook.activelooksdk.types.Utils;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
+import com.activelook.activelooksdk.types.holdFlushAction;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -319,6 +320,15 @@ public interface Glasses extends Parcelable {
      * @param xys Array of [x0, y1, x1, y1, ..., xn, yn]
      */
     void polyline(byte thickness, short[] xys);
+    /**
+     * Hold or flush the graphic engine.
+     * When held, new display commands are stored in memory and are displayed when the graphic engine is flushed.
+     * This allows stacking multiple graphic operations and displaying them simultaneously without screen flickering.
+     * Warning: Clear is not held by the graphic engine, a white rectangle can be used instead.
+     *
+     * @param action hold or flush display
+     */
+    void holdFlush(holdFlushAction action);
     /**
      * Give the list of bitmap saved into the device.
      *
