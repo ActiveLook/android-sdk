@@ -41,6 +41,7 @@ import com.activelook.activelooksdk.types.PageInfo;
 import com.activelook.activelooksdk.types.Rotation;
 import com.activelook.activelooksdk.types.Utils;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
+import com.activelook.activelooksdk.types.holdFlushAction;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -85,6 +86,7 @@ public abstract class AbstractGlasses implements Glasses {
     static final byte ID_circf = (byte) 0x36;
     static final byte ID_txt = (byte) 0x37;
     static final byte ID_polyline = (byte) 0x38;
+    static final byte ID_holdFlush = (byte) 0x39;
     /*
      * Images commands ids
      */
@@ -378,6 +380,12 @@ public abstract class AbstractGlasses implements Glasses {
         final byte reserved = 0;
         final CommandData data = new CommandData().addUInt8(thickness).addUInt8(reserved).addUInt8(reserved).addInt16(points);
         this.writeCommand(new Command(ID_polyline, data));
+    }
+
+    @Override
+    public void holdFlush(final holdFlushAction action) {
+        final CommandData data = CommandData.fromHoldFLushAction(action);
+        this.writeCommand(new Command(ID_holdFlush, data));
     }
 
     @Override

@@ -28,6 +28,7 @@ import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
+import com.activelook.activelooksdk.types.holdFlushAction;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -284,6 +285,15 @@ public final class CommandData {
             case MONO_4BPP_HEATSHRINK:              return new CommandData((byte) 0x02);
             case MONO_4BPP_HEATSHRINK_SAVE_COMP:    return new CommandData((byte) 0x03);
             default:                                return new CommandData((byte) 0x04);
+        }
+    }
+
+    public static CommandData fromHoldFLushAction(final holdFlushAction action) {
+        assert action != null : String.format(Locale.US, "State cannot be null");
+        switch (action) {
+            case HOLD:    return new CommandData((byte) 0x00);
+            case FLUSH:     return new CommandData((byte) 0x01);
+            default:     return new CommandData((byte) 0x03);
         }
     }
 
