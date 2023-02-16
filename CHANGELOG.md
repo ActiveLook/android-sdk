@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## Version 4.4.2
+
+### New features
+- `holdFlush` : allows stacking multiple graphic operations and displaying them simultaneously without screen flickering.
+  
+### Fixes
+- image conversion to gray level
+  
 ## Version 4.4.1
 
 ### Fixes
