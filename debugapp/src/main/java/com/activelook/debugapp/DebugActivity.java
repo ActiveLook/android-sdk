@@ -31,6 +31,7 @@ import com.activelook.activelooksdk.types.ImgStreamFormat;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
+import com.activelook.activelooksdk.types.holdFlushAction;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -353,6 +354,8 @@ public class DebugActivity extends AppCompatActivity {
         g.line(new Point(0, 100), new Point(100, 0));
 
         g.clear();
+
+        g.holdFlush(holdFlushAction.HOLD);
         g.color((byte) 8);
         g.rect(new Point(0, 0), new Point(100, 100));
         g.rectf(new Point(10, 10), new Point(90, 90));
@@ -365,6 +368,7 @@ public class DebugActivity extends AppCompatActivity {
         g.polyline(new short [] {
                 150, 200, 200, 250, 200, 200, 250, 250, 150, 200
         });
+        g.holdFlush(holdFlushAction.FLUSH);
 
         g.imgList(l -> {
             Log.i("IMG LIST", String.format("NB %d", l.size()));
