@@ -28,6 +28,7 @@ import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
 import com.activelook.activelooksdk.types.ImgStreamFormat;
+import com.activelook.activelooksdk.types.LayoutExtraCmd;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
@@ -261,6 +262,13 @@ public class DebugActivity extends AppCompatActivity {
         g.layoutPosition((byte) 0x30, (short) 100, (byte) 64);
         g.layoutDisplay((byte) 0x30, "0000000000");
         g.layoutClear((byte) 0x30);
+
+        g.cfgSet("ALooK");
+        LayoutExtraCmd layoutExtraCmd = new LayoutExtraCmd();
+        layoutExtraCmd.addSubCommandBitmap((byte) 8, (short) 216, (short) 8);
+        layoutExtraCmd.addSubCommandColor((byte) 6);
+        layoutExtraCmd.addSubCommandText((short) 65, (short) 24, "meter");
+        g.layoutDisplayExtended((byte) 12, (short) 30, (byte) 153,"200", layoutExtraCmd);
 
         // g.layoutDisplay((byte) 0x31, "1111111111");
 
