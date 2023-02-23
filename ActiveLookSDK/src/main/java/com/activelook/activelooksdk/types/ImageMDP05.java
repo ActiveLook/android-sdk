@@ -49,6 +49,42 @@ public class ImageMDP05 {
 
         return encodedImg;
     }
+    //convert image to mdp05 8bpp format
+    public static int[][] convert8Bpp(Bitmap img) {
+        img = rotateBMP_180(img);
+
+        int height = img.getHeight();
+        int width = img.getWidth();
+
+        int[][] encodedImg = new int[height][width];
+
+        // Convert image to grayscale
+        Bitmap grayImg = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(grayImg);
+        ColorMatrix grayMatrix = new ColorMatrix();
+        grayMatrix.setSaturation(0);
+        Paint paint = new Paint();
+        ColorFilter filter = new ColorMatrixColorFilter(grayMatrix);
+        paint.setColorFilter(filter);
+        canvas.drawBitmap(img, 0, 0, paint);
+
+        // Encode image as 8bpp
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int grayVal = Color.red(grayImg.getPixel(x, y));
+                int alphaVal = 15;
+                if (img.hasAlpha()) {
+                    alphaVal = Color.alpha(img.getPixel(x, y));
+                }
+                int encodedVal = (grayVal / 16) << 4 + alphaVal / 16;
+                encodedImg[y][x] = encodedVal;
+            }
+        }
+
+        return encodedImg;
+    }
+
+
 
 
     public static  int rgbTo8bitGrayDirectConvertion(int pxl){
