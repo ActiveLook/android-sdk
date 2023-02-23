@@ -17,6 +17,8 @@ public class ImageConverter {
         switch (fmt){
             case MONO_4BPP:
                 return new ImageData(width, getCmd4Bpp(matrix));
+            case MONOALPHA_8BPP:
+                return new ImageData(width, getCmd8Bpp(matrix));
             case MONO_4BPP_HEATSHRINK: case MONO_4BPP_HEATSHRINK_SAVE_COMP:
                 byte[] encodedImg = getCmd4Bpp(matrix);
                 byte[] cmds = getCmdCompress4BppHeatshrink(encodedImg);
@@ -75,6 +77,8 @@ public class ImageConverter {
                 return ImageMDP05.convert1Bpp(img);
             case MONO_4BPP:case MONO_4BPP_HEATSHRINK:case MONO_4BPP_HEATSHRINK_SAVE_COMP:
                 return ImageMDP05.convertDefault(img);
+            case MONOALPHA_8BPP:
+                return ImageMDP05.convert8Bpp(img);
             default:
                 Log.d("imageConvert", "Unknown format");
         }
@@ -127,6 +131,21 @@ public class ImageConverter {
         return  encodedImg;
     }
 
+    private static byte[] getCmd8Bpp(int[][] img) {
+        int width = img[0].length;
+        byte[] encodedImg = new byte[img.length * width];
+
+        // Flatten the 2D array into a 1D array
+        for (int i = 0; i < img.length; i++) {
+            for (int j = 0; j < img[i].length; j++) {
+                encodedImg[i * width + j] = (byte) img[i][j];
+            }
+        }
+        return encodedImg;
+
+    }
+
+
     private static byte[][] getCmd1Bpp(int[][] matrix){
         int height = matrix.length;
         int width = matrix[0].length;
@@ -160,6 +179,8 @@ public class ImageConverter {
         }
         return  encodedImg;
     }
+
+
 
     private static int getArraySize(int[][] matrix){
         int height = matrix.length;
