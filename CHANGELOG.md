@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Version 4.4.3
+
+### Fixes
+- Command Stacking
+
 ## Version 4.4.2
 
 ### New features
