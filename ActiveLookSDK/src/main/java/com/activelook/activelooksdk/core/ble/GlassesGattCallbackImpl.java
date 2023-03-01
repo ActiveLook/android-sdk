@@ -319,7 +319,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
             final ConcurrentLinkedDeque<Map.Entry<byte[], Consumer<Double>>> stack = new ConcurrentLinkedDeque<>();
             final int writeMTU = this.mtu - 3;
             int stackSize = 0;
-            while (stackSize < writeMTU && this.pendingWriteRxCharacteristic.size() > 0 && stack.size() < 1) {
+            while (stackSize < writeMTU && this.pendingWriteRxCharacteristic.size() > 0) {
                 final Map.Entry<byte[], Consumer<Double>> entry = this.pendingWriteRxCharacteristic.poll();
                 assert entry != null;
                 final byte [] buffer = entry.getKey();
