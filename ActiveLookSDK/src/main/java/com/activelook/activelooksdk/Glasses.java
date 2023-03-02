@@ -375,6 +375,13 @@ public interface Glasses extends Parcelable {
      * @param img  The image to store in the configuration .
      */
     void imgSave4bppHeatShrinkSaveComp(byte id, Bitmap img);
+
+    /**
+     * Save 8bpp bitmap with 4bits color and 4bits transparency
+     * @param id    The image id in the configuration.
+     * @param img   The image to store in the configuration.
+     */
+    void imgSave8bpp(byte id, Bitmap img);
     /**
      * Display image id to the corresponding coordinates.
      *
