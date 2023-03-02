@@ -58,26 +58,12 @@ public class ImageMDP05 {
 
         int[][] encodedImg = new int[height][width];
 
-        // Convert image to grayscale
-        Bitmap grayImg = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(grayImg);
-        ColorMatrix grayMatrix = new ColorMatrix();
-        grayMatrix.setSaturation(0);
-        Paint paint = new Paint();
-        ColorFilter filter = new ColorMatrixColorFilter(grayMatrix);
-        paint.setColorFilter(filter);
-        canvas.drawBitmap(img, 0, 0, paint);
-
         // Encode image as 8bpp
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                int grayVal = Color.red(grayImg.getPixel(x, y));
-                int alphaVal = 15;
-                if (img.hasAlpha()) {
-                    alphaVal = Color.alpha(img.getPixel(x, y));
-                }
-                int encodedVal = (grayVal / 16) << 4 + alphaVal / 16;
-                encodedImg[y][x] = encodedVal;
+                int grayValue =  rgbTo8bitGrayWeightedConvertion(img.getPixel(x,y));
+                int alphaValue = Color.alpha(img.getPixel(x,y));
+                encodedImg[y][x] = (grayValue / 16) << 4 + alphaValue / 16;
             }
         }
 

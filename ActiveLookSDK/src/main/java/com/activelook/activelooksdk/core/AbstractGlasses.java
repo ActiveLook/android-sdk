@@ -439,6 +439,9 @@ public abstract class AbstractGlasses implements Glasses {
             case MONO_4BPP_HEATSHRINK_SAVE_COMP:
                 this.imgSave4bppHeatShrinkSaveComp(id, image);
             break;
+            case MONOALPHA_8BPP:
+                this.imgSave8bpp(id, image);
+            break;
         }
     }
 
@@ -509,6 +512,13 @@ public abstract class AbstractGlasses implements Glasses {
         final ImgSaveFormat format = ImgSaveFormat.MONO_1BPP;
         final Image1bppData imgData = ImageConverter.getImage1bppData(image, format);
         this.imgSave1bpp(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
+    }
+
+    @Override
+    public void imgSave8bpp(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.MONOALPHA_8BPP;
+        final ImageData imgData = ImageConverter.getImageData(image, format);
+        this.imgSave4bpp(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
     }
 
     @Override
