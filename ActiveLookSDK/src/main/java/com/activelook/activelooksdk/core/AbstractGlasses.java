@@ -126,6 +126,8 @@ public abstract class AbstractGlasses implements Glasses {
     static final byte ID_gaugeDelete = (byte) 0x72;
     static final byte ID_gaugeList = (byte) 0x73;
     static final byte ID_gaugeGet = (byte) 0x74;
+
+    static final byte ID_widget = (byte) 0x3A;
     /*
      * Page commands ids
      */
@@ -363,7 +365,21 @@ public abstract class AbstractGlasses implements Glasses {
         final CommandData data = new CommandData().addInt16(x, y).addUInt8(r);
         this.writeCommand(new Command(ID_circ, data));
     }
+    @Override
+    public void widget(byte widgetType,short x,short y,byte value,byte imgID,byte valueType,String unit,String shownValue,String  min,String  max,byte chosenZone,byte zoneNb,String goal="") {
+        if (widgetType == 1) {
+            final CommandData data = new CommandData().addInt16(widgetType, x, y).addUInt8(value, imgID, valueType)
+                    .addNulTerminatedStrings(unit,shownValue,min != null ? min : "0",max != null ? max : "0");
+        } else if (widgetType == 2) {
+            final CommandData data = new CommandData().addInt16(widgetType, x, y).addUInt8(value, imgID, valueType)
+                    .addNulTerminatedStrings(unit,shownValue).addUInt8(chosenZone != 0 ? chosenZone : 0,zoneNb != 0 ? zoneNb : 0);
+        } else if (widgetType == 3) {
+            final CommandData data = new CommandData().addInt16(widgetType, x, y).addUInt8(value, imgID, valueType)
+                    .addNulTerminatedStrings(unit,shownValue,goal != null ? goal : "");
+        }
 
+        this.writeCommand(new Command(ID_widget, data));
+    }
     @Override
     public void circf(final short x, final short y, final byte r) {
         final CommandData data = new CommandData().addInt16(x, y).addUInt8(r);
