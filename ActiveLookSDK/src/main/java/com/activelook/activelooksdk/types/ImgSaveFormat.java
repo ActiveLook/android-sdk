@@ -42,7 +42,7 @@ package com.activelook.activelooksdk.types;
     MONOALPHA_8BPP {
         @Override
         public byte[] toBytes() {
-            return new byte[]{(byte) 0x04};
+            return new byte[]{(byte) 0x08};
         }
     }
 
