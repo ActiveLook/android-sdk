@@ -43,6 +43,7 @@ import com.activelook.activelooksdk.types.PageInfo;
 import com.activelook.activelooksdk.types.Rotation;
 import com.activelook.activelooksdk.types.Utils;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
+import com.activelook.activelooksdk.types.WidgetValueType;
 import com.activelook.activelooksdk.types.holdFlushAction;
 
 import java.io.BufferedReader;
@@ -330,6 +331,22 @@ public interface Glasses extends Parcelable {
      * @param action hold or flush display
      */
     void holdFlush(holdFlushAction action);
+    /**
+     * Draw an "Open Gauge" Widget
+     */
+    void widgetOpenGauge(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue);
+    /**
+     * Draw a "Range Gauge" widget
+     */
+    void widgetRangeGauge(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, String min, String max);
+    /**
+     * Draw a "Zone Gauge" widget
+     */
+    void widgetZoneGauge(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, byte chosenZone, byte zoneNumber);
+    /**
+     * Draw a "Progress Bar" widget
+     */
+    void widgetProgressBar(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, String goal);
     /**
      * Give the list of bitmap saved into the device.
      *
