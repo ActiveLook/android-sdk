@@ -29,6 +29,7 @@ import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
+import com.activelook.activelooksdk.types.WidgetValueType;
 import com.activelook.activelooksdk.types.holdFlushAction;
 
 import java.nio.charset.StandardCharsets;
@@ -277,7 +278,16 @@ public final class CommandData {
             default:     return new CommandData((byte) 0x04);
         }
     }
-
+    public static CommandData fromWidgetValueType(final WidgetValueType valueType) {
+        assert valueType != null : String.format(Locale.US, "valueType cannot be null");
+        switch (valueType) {
+            case WIDGET_VAL_TYPE_NUMBER:                return new CommandData((byte) 0x01);
+            case WIDGET_VAL_TYPE_DUR_HM:                return new CommandData((byte) 0x02);
+            case WIDGET_VAL_TYPE_DUR_HMS:               return new CommandData((byte) 0x03);
+            case WIDGET_VAL_TYPE_DUR_MS:                return new CommandData((byte) 0x04);
+            default:                                    return new CommandData((byte) 0x00);
+        }
+    }
     public static CommandData fromImgSaveFormat(final ImgSaveFormat format) {
         assert format != null : String.format(Locale.US, "Format cannot be null");
         switch (format) {
