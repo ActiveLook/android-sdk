@@ -29,6 +29,8 @@ import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
+import com.activelook.activelooksdk.types.TextHorizontalAlignment;
+import com.activelook.activelooksdk.types.TextVerticalAlignment;
 import com.activelook.activelooksdk.types.WidgetValueType;
 import com.activelook.activelooksdk.types.holdFlushAction;
 
@@ -336,6 +338,26 @@ public final class CommandData {
             case RIGHT_TB:  return new CommandData((byte) 0x06);
             case RIGHT_BT:  return new CommandData((byte) 0x07);
             default:        return new CommandData((byte) 0x08);
+        }
+    }
+
+    public static CommandData fromHorizontalAlignment(final TextHorizontalAlignment alignment) {
+        assert alignment != null : String.format(Locale.US, "Alignment cannot be null");
+        switch (alignment) {
+            case TXT_ALIGN_LEFT:        return new CommandData((byte) 0x00);
+            case TXT_ALIGN_CENTER:      return new CommandData((byte) 0x01);
+            case TXT_ALIGN_RIGHT:       return new CommandData((byte) 0x02);
+            default:                    return new CommandData((byte) 0x03);
+        }
+    }
+
+    public static CommandData fromVerticalAlignment(final TextVerticalAlignment alignment) {
+        assert alignment != null : String.format(Locale.US, "Alignment cannot be null");
+        switch (alignment) {
+            case TXT_ALIGN_TOP:         return new CommandData((byte) 0x00);
+            case TXT_ALIGN_BASELINE:    return new CommandData((byte) 0x01);
+            case TXT_ALIGN_BOTTOM:      return new CommandData((byte) 0x02);
+            default:                    return new CommandData((byte) 0x03);
         }
     }
 
