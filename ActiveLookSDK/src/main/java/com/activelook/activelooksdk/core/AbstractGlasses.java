@@ -40,6 +40,9 @@ import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
 import com.activelook.activelooksdk.types.Rotation;
+import com.activelook.activelooksdk.types.TextHorizontalAlignment;
+import com.activelook.activelooksdk.types.TextSegment;
+import com.activelook.activelooksdk.types.TextVerticalAlignment;
 import com.activelook.activelooksdk.types.Utils;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
 import com.activelook.activelooksdk.types.WidgetValueType;
@@ -93,6 +96,7 @@ public abstract class AbstractGlasses implements Glasses {
      * Advanced components ids
      */
     static final byte ID_widget = (byte) 0x3A;
+    static final byte ID_txtAdvanced = (byte) 0x40;
     /*
      * Images commands ids
      */
@@ -383,6 +387,21 @@ public abstract class AbstractGlasses implements Glasses {
                 .addUInt8(f, c)
                 .addNulTerminatedStrings(s);
         this.writeCommand(new Command(ID_txt, data));
+    }
+
+    @Override
+    public void txtAdvanced(final short x, final short y, final Rotation r, final TextHorizontalAlignment horizontalAlignment, final TextVerticalAlignment verticalAlignment, final byte nbSegment, final TextSegment[] segments) {
+        final CommandData data = new CommandData()
+                .addInt16(x, y)
+                .add(CommandData.fromRotation(r))
+                .add(CommandData.fromHorizontalAlignment(horizontalAlignment))
+                .add(CommandData.fromVerticalAlignment(verticalAlignment))
+                .addUInt8(nbSegment);
+        for (final TextSegment segment : segments) {
+            data.addUInt8(segment.getFont(),segment.getColor())
+                    .addNulTerminatedStrings(segment.getString());
+        }
+        this.writeCommand(new Command(ID_txtAdvanced, data));
     }
 
     @Override

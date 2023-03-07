@@ -41,6 +41,9 @@ import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
 import com.activelook.activelooksdk.types.Rotation;
+import com.activelook.activelooksdk.types.TextHorizontalAlignment;
+import com.activelook.activelooksdk.types.TextSegment;
+import com.activelook.activelooksdk.types.TextVerticalAlignment;
 import com.activelook.activelooksdk.types.Utils;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
 import com.activelook.activelooksdk.types.WidgetValueType;
@@ -309,6 +312,10 @@ public interface Glasses extends Parcelable {
      * @param s The text.
      */
     void txt(short x, short y, Rotation r, byte f, byte c, String s);
+    /**
+     * Display a text composed of multiple segments having their own font and color. Vertical and horizontal alignment can be controlled.
+     */
+    void txtAdvanced(short x, short y, Rotation r, TextHorizontalAlignment horizontalAlignment, TextVerticalAlignment verticalAlignment, byte nbSegment, TextSegment[] segments);
     /**
      * Draw multiple connected lines at the corresponding coordinates.
      *
