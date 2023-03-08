@@ -314,6 +314,13 @@ public interface Glasses extends Parcelable {
     void txt(short x, short y, Rotation r, byte f, byte c, String s);
     /**
      * Display a text composed of multiple segments having their own font and color. Vertical and horizontal alignment can be controlled.
+     *
+     * @param x The x coordinate of the reference point for the text
+     * @param y The y coordinate of the reference point for the text
+     * @param horizontalAlignment The horizontal alignment of the whole text according to the reference point
+     * @param verticalAlignment The vertical alignment of the segments according to the first segment
+     * @param nbSegment The number of segments
+     * @param segments The segments of text with string, font and color
      */
     void txtAdvanced(short x, short y, Rotation r, TextHorizontalAlignment horizontalAlignment, TextVerticalAlignment verticalAlignment, byte nbSegment, TextSegment[] segments);
     /**
@@ -340,18 +347,55 @@ public interface Glasses extends Parcelable {
     void holdFlush(holdFlushAction action);
     /**
      * Draw an "Open Gauge" Widget
+     *
+     * @param x The x coordinate of the bottom right corner of the widget
+     * @param y The y coordinate of the bottom right corner of the widget
+     * @param value The cursor (icon) position on the gauge
+     * @param imgId The image id for the icon
+     * @param valueType The type of formatting to be applied to the shown value
+     * @param unit The unit string to be displayed
+     * @param  shownValue The shown value displayed and formatted according to valueType
      */
     void widgetOpenGauge(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue);
     /**
      * Draw a "Range Gauge" widget
+     *
+     * @param x The x coordinate of the bottom right corner of the widget
+     * @param y The y coordinate of the bottom right corner of the widget
+     * @param value The cursor (icon) position on the gauge
+     * @param imgId The image id for the icon
+     * @param valueType The type of formatting to be applied to the shown value
+     * @param unit The unit string to be displayed
+     * @param shownValue The shown value displayed and formatted according to valueType
+     * @param min The string displayed at the beginning of the gauge
+     * @param max The string displayed at the end of the gauge
      */
     void widgetRangeGauge(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, String min, String max);
     /**
      * Draw a "Zone Gauge" widget
+     *
+     * @param x The x coordinate of the bottom right corner of the widget
+     * @param y The y coordinate of the bottom right corner of the widget
+     * @param value The cursor (icon) position on the gauge
+     * @param imgId The image id for the icon
+     * @param valueType The type of formatting to be applied to the shown value
+     * @param unit The unit string to be displayed
+     * @param shownValue The shown value displayed and formatted according to valueType
+     * @param chosenZone The selected zone which is widened
+     * @param zoneNumber The number of zones
      */
     void widgetZoneGauge(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, byte chosenZone, byte zoneNumber);
     /**
      * Draw a "Progress Bar" widget
+     *
+     * @param x The x coordinate of the bottom right corner of the widget
+     * @param y The y coordinate of the bottom right corner of the widget
+     * @param value The cursor (icon) position on the progress bar
+     * @param imgId The image id for the icon
+     * @param valueType The type of formatting to be applied to the shown value
+     * @param unit The unit string to be displayed
+     * @param shownValue The shown value displayed and formatted according to valueType
+     * @param goal The goal string displayed at the end of the progress bar
      */
     void widgetProgressBar(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, String goal);
     /**
