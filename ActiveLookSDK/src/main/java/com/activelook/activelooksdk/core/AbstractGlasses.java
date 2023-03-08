@@ -96,7 +96,7 @@ public abstract class AbstractGlasses implements Glasses {
      * Advanced components ids
      */
     static final byte ID_widget = (byte) 0x3A;
-    static final byte ID_txtAdvanced = (byte) 0x40;
+    static final byte ID_txtAdvanced = (byte) 0x3B;
     /*
      * Images commands ids
      */
