@@ -46,6 +46,7 @@ import com.activelook.activelooksdk.types.TextSegment;
 import com.activelook.activelooksdk.types.TextVerticalAlignment;
 import com.activelook.activelooksdk.types.Utils;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
+import com.activelook.activelooksdk.types.WidgetSize;
 import com.activelook.activelooksdk.types.WidgetValueType;
 import com.activelook.activelooksdk.types.holdFlushAction;
 
@@ -348,6 +349,7 @@ public interface Glasses extends Parcelable {
     /**
      * Draw an "Open Gauge" Widget
      *
+     * @param size The widget's size
      * @param x The x coordinate of the bottom right corner of the widget
      * @param y The y coordinate of the bottom right corner of the widget
      * @param value The cursor (icon) position on the gauge
@@ -356,10 +358,11 @@ public interface Glasses extends Parcelable {
      * @param unit The unit string to be displayed
      * @param  shownValue The shown value displayed and formatted according to valueType
      */
-    void widgetOpenGauge(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue);
+    void widgetOpenGauge(WidgetSize size, short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue);
     /**
      * Draw a "Range Gauge" widget
      *
+     * @param size The widget's size
      * @param x The x coordinate of the bottom right corner of the widget
      * @param y The y coordinate of the bottom right corner of the widget
      * @param value The cursor (icon) position on the gauge
@@ -370,10 +373,11 @@ public interface Glasses extends Parcelable {
      * @param min The string displayed at the beginning of the gauge
      * @param max The string displayed at the end of the gauge
      */
-    void widgetRangeGauge(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, String min, String max);
+    void widgetRangeGauge(WidgetSize size, short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, String min, String max);
     /**
      * Draw a "Zone Gauge" widget
      *
+     * @param size The widget's size
      * @param x The x coordinate of the bottom right corner of the widget
      * @param y The y coordinate of the bottom right corner of the widget
      * @param value The cursor (icon) position on the gauge
@@ -384,10 +388,11 @@ public interface Glasses extends Parcelable {
      * @param chosenZone The selected zone which is widened
      * @param zoneNumber The number of zones
      */
-    void widgetZoneGauge(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, byte chosenZone, byte zoneNumber);
+    void widgetZoneGauge(WidgetSize size, short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, byte chosenZone, byte zoneNumber);
     /**
      * Draw a "Progress Bar" widget
      *
+     * @param size The widget's size
      * @param x The x coordinate of the bottom right corner of the widget
      * @param y The y coordinate of the bottom right corner of the widget
      * @param value The cursor (icon) position on the progress bar
@@ -396,8 +401,36 @@ public interface Glasses extends Parcelable {
      * @param unit The unit string to be displayed
      * @param shownValue The shown value displayed and formatted according to valueType
      * @param goal The goal string displayed at the end of the progress bar
+     * @param left If left, the bright zone is right
      */
-    void widgetProgressBar(short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, String goal);
+    void widgetProgressBar(WidgetSize size, short x, short y, byte value, byte imgId, WidgetValueType valueType, String unit, String shownValue, String goal, boolean left);
+    /**
+     * Draw a "Bar Chart" widget
+     *
+     * @param size The widget's size
+     * @param x The x coordinate of the bottom right corner of the widget
+     * @param y The y coordinate of the bottom right corner of the widget
+     * @param imgId The image id for the icon
+     * @param valueType The type of formatting to be applied to the shown value
+     * @param unit The unit string to be displayed
+     * @param shownValue The shown value displayed and formatted according to valueType
+     * @param chosenZone The selected zone which is brighten
+     * @param zoneNb The number of zones
+     * @param values Array of values for each zone
+     */
+    void widgetBarChart(WidgetSize size, short x, short y, byte imgId, WidgetValueType valueType, String unit, String shownValue, byte chosenZone, byte zoneNb, byte[] values);
+    /**
+     * Draw a "Data" widget
+     *
+     * @param size The widget's size
+     * @param x The x coordinate of the bottom right corner of the widget
+     * @param y The y coordinate of the bottom right corner of the widget
+     * @param imgId The image id for the icon
+     * @param valueType The type of formatting to be applied to the shown value
+     * @param unit The unit string to be displayed
+     * @param shownValue The shown value displayed and formatted according to valueType
+     */
+    void widgetData(WidgetSize size, short x, short y, byte imgId, WidgetValueType valueType, String unit, String shownValue);
     /**
      * Give the list of bitmap saved into the device.
      *

@@ -32,6 +32,7 @@ import com.activelook.activelooksdk.types.ImgSaveFormat;
 import com.activelook.activelooksdk.types.TextHorizontalAlignment;
 import com.activelook.activelooksdk.types.TextVerticalAlignment;
 import com.activelook.activelooksdk.types.WidgetValueType;
+import com.activelook.activelooksdk.types.WidgetSize;
 import com.activelook.activelooksdk.types.holdFlushAction;
 
 import java.nio.charset.StandardCharsets;
@@ -290,6 +291,16 @@ public final class CommandData {
             default:                                    return new CommandData((byte) 0x00);
         }
     }
+
+    public static CommandData fromWidgetSize(final WidgetSize size) {
+        assert size != null : String.format(Locale.US, "size cannot be null");
+        switch (size) {
+            case WIDGET_SIZE_THIN:                  return new CommandData((byte) 0x01);
+            case WIDGET_SIZE_HALF:                  return new CommandData((byte) 0x02);
+            default:                                return new CommandData((byte) 0x00);
+        }
+    }
+
     public static CommandData fromImgSaveFormat(final ImgSaveFormat format) {
         assert format != null : String.format(Locale.US, "Format cannot be null");
         switch (format) {
