@@ -45,6 +45,7 @@ import com.activelook.activelooksdk.types.TextSegment;
 import com.activelook.activelooksdk.types.TextVerticalAlignment;
 import com.activelook.activelooksdk.types.Utils;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
+import com.activelook.activelooksdk.types.WidgetSize;
 import com.activelook.activelooksdk.types.WidgetValueType;
 import com.activelook.activelooksdk.types.holdFlushAction;
 
@@ -424,8 +425,8 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void widgetOpenGauge(final short x, final short y, final byte value, final byte imgId, final WidgetValueType valueType, final String unit, final String shownValue) {
-        final CommandData data = new CommandData().addUInt8((byte) 0)
+    public void widgetOpenGauge(final WidgetSize size, final short x, final short y, final byte value, final byte imgId, final WidgetValueType valueType, final String unit, final String shownValue) {
+        final CommandData data = new CommandData().addUInt8((byte) 0).add(CommandData.fromWidgetSize(size))
                 .addInt16(x,y)
                 .addUInt8(value, imgId)
                 .add(CommandData.fromWidgetValueType(valueType))
@@ -434,8 +435,8 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void widgetRangeGauge(final short x, final short y, final byte value, final byte imgId, final WidgetValueType valueType, final String unit, final String shownValue, final String min, final String max) {
-        final CommandData data = new CommandData().addUInt8((byte) 1)
+    public void widgetRangeGauge(final WidgetSize size, final short x, final short y, final byte value, final byte imgId, final WidgetValueType valueType, final String unit, final String shownValue, final String min, final String max) {
+        final CommandData data = new CommandData().addUInt8((byte) 1).add(CommandData.fromWidgetSize(size))
                 .addInt16(x,y)
                 .addUInt8(value, imgId)
                 .add(CommandData.fromWidgetValueType(valueType))
@@ -444,8 +445,8 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void widgetZoneGauge(final short x, final short y, final byte value, final byte imgId, final WidgetValueType valueType, final String unit, final String shownValue, final byte chosenZone, final byte zoneNb) {
-        final CommandData data = new CommandData().addUInt8((byte) 2)
+    public void widgetZoneGauge(final WidgetSize size, final short x, final short y, final byte value, final byte imgId, final WidgetValueType valueType, final String unit, final String shownValue, final byte chosenZone, final byte zoneNb) {
+        final CommandData data = new CommandData().addUInt8((byte) 2).add(CommandData.fromWidgetSize(size))
                 .addInt16(x,y)
                 .addUInt8(value, imgId)
                 .add(CommandData.fromWidgetValueType(valueType))
@@ -455,12 +456,40 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
-    public void widgetProgressBar(final short x, final short y, final byte value, final byte imgId, final WidgetValueType valueType, final String unit, final String shownValue, final String goal) {
-        final CommandData data = new CommandData().addUInt8((byte) 3)
+    public void widgetProgressBar(final WidgetSize size, final short x, final short y, final byte value, final byte imgId, final WidgetValueType valueType, final String unit, final String shownValue, final String goal, final boolean left) {
+        byte widgetId = (byte) 3;
+        if (left) widgetId = (byte) 4;
+        final CommandData data = new CommandData().addUInt8(widgetId).add(CommandData.fromWidgetSize(size))
                 .addInt16(x,y)
                 .addUInt8(value, imgId)
                 .add(CommandData.fromWidgetValueType(valueType))
                 .addNulTerminatedStrings(unit, shownValue, goal);
+        this.writeCommand(new Command(ID_widget,data));
+    }
+
+    @Override
+    public void widgetBarChart(final WidgetSize size, final short x, final short y, final byte imgId, final WidgetValueType valueType, final String unit, final String shownValue, final byte chosenZone, final byte zoneNb, final byte[] values) {
+        final CommandData data = new CommandData().addUInt8((byte) 5).add(CommandData.fromWidgetSize(size))
+                .addInt16(x,y)
+                .addUInt8((byte) 0, imgId)
+                .add(CommandData.fromWidgetValueType(valueType))
+                .addNulTerminatedStrings(unit, shownValue)
+                .addUInt8(chosenZone, zoneNb);
+
+        this.writeCommand(new Command(ID_widget,data));
+
+        for (final CommandData chunkData : new CommandData(values).split(240)) {
+            this.writeCommand(new Command(ID_widget, chunkData));
+        }
+    }
+
+    @Override
+    public void widgetData(final WidgetSize size, final short x, final short y, final byte imgId, final WidgetValueType valueType, final String unit, final String shownValue) {
+        final CommandData data = new CommandData().addUInt8((byte) 6).add(CommandData.fromWidgetSize(size))
+                .addInt16(x,y)
+                .addUInt8((byte) 0, imgId)
+                .add(CommandData.fromWidgetValueType(valueType))
+                .addNulTerminatedStrings(unit, shownValue);
         this.writeCommand(new Command(ID_widget,data));
     }
 
