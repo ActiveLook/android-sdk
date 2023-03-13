@@ -476,11 +476,11 @@ public abstract class AbstractGlasses implements Glasses {
                 .addNulTerminatedStrings(unit, shownValue)
                 .addUInt8(chosenZone, zoneNb);
 
-        this.writeCommand(new Command(ID_widget,data));
-
-        for (final CommandData chunkData : new CommandData(values).split(240)) {
-            this.writeCommand(new Command(ID_widget, chunkData));
+        for (final byte value : values){
+            data.addUInt8(value);
         }
+        
+        this.writeCommand(new Command(ID_widget,data));
     }
 
     @Override
