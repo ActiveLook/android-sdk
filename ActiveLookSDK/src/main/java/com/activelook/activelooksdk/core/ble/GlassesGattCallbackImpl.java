@@ -29,6 +29,7 @@ import com.activelook.activelooksdk.Glasses;
 import com.activelook.activelooksdk.core.Command;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.FlowControlStatus;
+import com.activelook.activelooksdk.types.Utils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.AbstractMap;
@@ -365,27 +366,60 @@ class GlassesGattCallbackImpl extends GlassesGatt {
             if (lastNotifier != null) {
                 notifiers.add(lastNotifier);
             }
-            boolean rollback = true;
-            if (this.flowControlCanSend.get() && this.getRxCharacteristic().setValue(payload)) {
-                this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-                if (this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
-                    for (final Runnable notifier: notifiers) notifier.run();
-                    rollback = false;
-                }
-            }
-            if (rollback) {
+            sendPayload(payload, notifiers);
+        }
+    }
+
+    private void sendPayload(byte[] payload, ArrayList<Runnable> notifiers) {
+        boolean valueSet = false;
+        for (int i = 0; i < 5; i++) {
+            if (!this.flowControlCanSend.get()) {
+                // Postpone for the next run
                 this.pendingWriteRxCharacteristic.addFirst(
-                        new AbstractMap.SimpleImmutableEntry<>(
-                                payload,
-                                p -> {
-                                    for (final Runnable notifier : notifiers) notifier.run();
-                                }
-                        )
+                    new AbstractMap.SimpleImmutableEntry<>(
+                            payload,
+                            p -> { for (final Runnable notifier : notifiers) notifier.run(); }
+                    )
                 );
-                this.isWritingCommand.set(false);
-                this.unstackWriteRxCharacteristic();
+                return;
+            }
+            if (this.getRxCharacteristic().setValue(payload)) {
+                valueSet = true;
+                break;
+            }
+            Log.e("unstackWriteCommand", String.format("Could not update rx: %s", Utils.bytesToHexString(payload)));
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return;
             }
         }
+        if (!valueSet) {
+            Log.e("unstackWriteCommand", String.format("Could not update rx, giving up", Utils.bytesToHexString(payload)));
+            return;
+        }
+
+        this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+        for (int i = 0; i < 5; i++) {
+            if (this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
+                // SUCCESS!
+                for (final Runnable notifier: notifiers)
+                    notifier.run();
+                return;
+            }
+            Log.e("unstackWriteCommand", String.format("Could not write rx: %s", Utils.bytesToHexString(payload)));
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+        Log.e("unstackWriteCommand", "Could not write rx, giving up");
+        // But we DO run notifiers????
+        for (final Runnable notifier: notifiers)
+            notifier.run();
     }
 
     void lockConnection() {
