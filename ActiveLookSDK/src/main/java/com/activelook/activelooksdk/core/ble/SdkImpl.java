@@ -105,8 +105,13 @@ class SdkImpl implements Sdk {
         this.scanner = this.adapter.getBluetoothLeScanner();
     }
 
-    Context getContext() {
+    public Context getContext() {
         return this.context;
+    }
+
+    @Override
+    public BroadcastReceiver getBroadcastReceiver() {
+        return this.broadcastReceiver;
     }
 
     private void toast(String text) {
