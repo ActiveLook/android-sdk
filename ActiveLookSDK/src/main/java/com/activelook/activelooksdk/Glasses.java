@@ -36,6 +36,7 @@ import com.activelook.activelooksdk.types.Image1bppData;
 import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
 import com.activelook.activelooksdk.types.ImgStreamFormat;
+import com.activelook.activelooksdk.types.LayoutExtraCmd;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
@@ -499,6 +500,16 @@ public interface Glasses extends Parcelable {
      */
     void layoutDisplayExtended(byte id, short x, byte y, String text);
     /**
+     * Clear area and display # Text with layout # Id at position # X # Y The position is not saved
+     *
+     * @param id   The id of the layout.
+     * @param x    The x coordinate for the layout.
+     * @param y    The y coordinate for the layout.
+     * @param text The text to display for this layout.
+     * @param ExtraCmd extra commands with the same format as used to save addtional command to a layout.
+     */
+    void layoutDisplayExtended(byte id, short x, byte y, String text, LayoutExtraCmd  ExtraCmd);
+    /**
      * Get a layout parameter.
      *
      * @param id   The id of the layout.
@@ -529,6 +540,16 @@ public interface Glasses extends Parcelable {
      * @param text The text to display for this layout.
      */
     void layoutClearAndDisplayExtended(byte id, short x, byte y, String text);
+    /**
+     * Clear area and display # Text with layout # Id at position # X # Y The position is not saved
+     *
+     * @param id   The id of the layout.
+     * @param x    The x coordinate for the layout.
+     * @param y    The y coordinate for the layout.
+     * @param text The text to display for this layout.
+     * @param ExtraCmd extra commands with the same format as used to save addtional command to a layout.
+     */
+    void layoutClearAndDisplayExtended(byte id, short x, byte y, String text, LayoutExtraCmd  ExtraCmd);
     /**
      * Display value (in percentage) of the gauge ([1…4]).
      *

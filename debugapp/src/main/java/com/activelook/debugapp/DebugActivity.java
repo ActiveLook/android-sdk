@@ -28,6 +28,7 @@ import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
 import com.activelook.activelooksdk.types.ImgSaveFormat;
 import com.activelook.activelooksdk.types.ImgStreamFormat;
+import com.activelook.activelooksdk.types.LayoutExtraCmd;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
@@ -37,6 +38,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DebugActivity extends AppCompatActivity {
@@ -262,6 +265,13 @@ public class DebugActivity extends AppCompatActivity {
         g.layoutDisplay((byte) 0x30, "0000000000");
         g.layoutClear((byte) 0x30);
 
+        g.cfgSet("ALooK");
+        LayoutExtraCmd layoutExtraCmd = new LayoutExtraCmd();
+        layoutExtraCmd.addSubCommandBitmap((byte) 8, (short) 216, (short) 8);
+        layoutExtraCmd.addSubCommandColor((byte) 6);
+        layoutExtraCmd.addSubCommandText((short) 65, (short) 24, "meter");
+        g.layoutDisplayExtended((byte) 12, (short) 30, (byte) 153,"200", layoutExtraCmd);
+
         // g.layoutDisplay((byte) 0x31, "1111111111");
 
         g.layoutList(l -> {
@@ -450,6 +460,18 @@ public class DebugActivity extends AppCompatActivity {
                 g.point(x, y);
             }
         }
+
+        g.clear();
+        g.cfgSet("ALooK");
+        LayoutExtraCmd layoutExtraCmd = new LayoutExtraCmd();
+        layoutExtraCmd.addSubCommandAnim((byte) 1, (byte) 9, (short) 100, (byte) 2, (short) 68, (short) 40);
+        List<Point> points = new ArrayList<>();
+        points.add(new Point(0, 0));
+        points.add(new Point(50, 50));
+        points.add(new Point(100, 40));
+        points.add(new Point(200, 100));
+        layoutExtraCmd.addSubCommandPolyline((byte) 8, points);
+        g.layoutDisplayExtended((byte) 6, (short) 30, (byte) 25,"", layoutExtraCmd);
 
         // g.unsubscribeToBatteryLevelNotifications();
         // g.unsubscribeToSensorInterfaceNotifications();
