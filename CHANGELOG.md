@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## Version 4.5.0
+
+### New features
+- `layoutClearAndDisplayExtended` & `layoutClearAndDisplay` : now accept `ExtraCmd` to modify existing layout without saving the modification
+- `layoutParameters` : add subCommandAnim & subCommandPolyline
+  
+### Fixes
+- `layoutParameters` : fix subCommandText
+  
 ## Version 4.4.3
 
 ### Fixes
