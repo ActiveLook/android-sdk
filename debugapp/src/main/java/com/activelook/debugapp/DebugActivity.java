@@ -38,6 +38,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DebugActivity extends AppCompatActivity {
@@ -458,6 +460,18 @@ public class DebugActivity extends AppCompatActivity {
                 g.point(x, y);
             }
         }
+
+        g.clear();
+        g.cfgSet("ALooK");
+        LayoutExtraCmd layoutExtraCmd = new LayoutExtraCmd();
+        layoutExtraCmd.addSubCommandAnim((byte) 1, (byte) 9, (short) 100, (byte) 2, (short) 68, (short) 40);
+        List<Point> points = new ArrayList<>();
+        points.add(new Point(0, 0));
+        points.add(new Point(50, 50));
+        points.add(new Point(100, 40));
+        points.add(new Point(200, 100));
+        layoutExtraCmd.addSubCommandPolyline((byte) 8, points);
+        g.layoutDisplayExtended((byte) 6, (short) 30, (byte) 25,"", layoutExtraCmd);
 
         // g.unsubscribeToBatteryLevelNotifications();
         // g.unsubscribeToSensorInterfaceNotifications();
