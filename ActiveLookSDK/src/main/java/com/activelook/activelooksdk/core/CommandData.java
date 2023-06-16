@@ -24,6 +24,7 @@ import com.activelook.activelooksdk.types.GlassesSettings;
 import com.activelook.activelooksdk.types.GlassesVersion;
 import com.activelook.activelooksdk.types.ImageInfo;
 import com.activelook.activelooksdk.types.ImgStreamFormat;
+import com.activelook.activelooksdk.types.LayoutExtraCmd;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.Rotation;
@@ -331,6 +332,9 @@ public final class CommandData {
         return new CommandData(layoutParameters.toBytes());
     }
 
+    public static CommandData fromLayoutExtraCmd(final LayoutExtraCmd extraCmd) {
+        return new CommandData(extraCmd.toBytes());
+    }
     // To
     public static int toBatteryLevel(final byte [] bytes) {
         return UInt8.asShort(bytes[0]);

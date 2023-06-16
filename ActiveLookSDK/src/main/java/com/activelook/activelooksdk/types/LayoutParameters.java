@@ -16,6 +16,8 @@ package com.activelook.activelooksdk.types;
 
 import com.activelook.activelooksdk.core.CommandData;
 import com.activelook.activelooksdk.core.Payload;
+import android.graphics.Point;
+import java.util.List;
 
 public class LayoutParameters {
 
@@ -127,12 +129,28 @@ public class LayoutParameters {
     }
 
     public LayoutParameters addSubCommandText(short x, short y, String txt) {
-        this.subCommands.add((byte) 0x09).addInt16(x).addInt16(y).addUInt8((short) txt.length()).addNulTerminatedStrings(txt);
+        this.subCommands.add((byte) 0x09).addInt16(x).addInt16(y).addUInt8((short) (txt.length()+1)).addNulTerminatedStrings(txt);
         return this;
     }
 
     public LayoutParameters addSubCommandGauge(byte gaugeId) {
         this.subCommands.add((byte) 0x0A).addUInt8(gaugeId);
+        return this;
+    }
+
+    public LayoutParameters addSubCommandAnim(byte handlerId, byte id, short delay, byte repeat, short x, short y) {
+        this.subCommands.add((byte) 0x0B).addUInt8(handlerId).addUInt8(id).addInt16(delay).addUInt8(repeat).addInt16(x).addInt16(y);
+        return this;
+    }
+
+    public LayoutParameters addSubCommandPolyline(byte thickness, List<Point> points) {
+        final byte reserved = 0;
+
+        this.subCommands.add((byte) 0x0C).addUInt8((short) points.size()).addUInt8(thickness).addUInt8(reserved).addUInt8(reserved);
+
+        for (Point p : points) {
+            this.subCommands.addInt16((short) p.x).addInt16((short) p.y);
+        }
         return this;
     }
 

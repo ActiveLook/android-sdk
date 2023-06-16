@@ -35,6 +35,7 @@ import com.activelook.activelooksdk.types.ImageConverter;
 import com.activelook.activelooksdk.types.ImageData;
 import com.activelook.activelooksdk.types.ImageInfo;
 import com.activelook.activelooksdk.types.ImgStreamFormat;
+import com.activelook.activelooksdk.types.LayoutExtraCmd;
 import com.activelook.activelooksdk.types.LayoutParameters;
 import com.activelook.activelooksdk.types.LedState;
 import com.activelook.activelooksdk.types.PageInfo;
@@ -682,6 +683,12 @@ public abstract class AbstractGlasses implements Glasses {
     }
 
     @Override
+    public void layoutDisplayExtended(final byte id, final short x, final byte y, final String text, LayoutExtraCmd extraCmd) {
+        final CommandData data = new CommandData().addUInt8(id).addUInt16(x).addUInt8(y).addNulTerminatedStrings(text).add(CommandData.fromLayoutExtraCmd(extraCmd));;
+        this.writeCommand(new Command(ID_layoutDisplayExtended, data));
+    }
+
+    @Override
     public void layoutGet(final byte id, final Consumer<LayoutParameters> onResult) {
         final CommandData data = new CommandData().addUInt8(id);
         this.writeCommand(
@@ -705,6 +712,12 @@ public abstract class AbstractGlasses implements Glasses {
     @Override
     public void layoutClearAndDisplayExtended(final byte id, final short x, final byte y, final String text) {
         final CommandData data = new CommandData().addUInt8(id).addUInt16(x).addUInt8(y).addNulTerminatedStrings(text);
+        this.writeCommand(new Command(ID_layoutClearAndDisplayExtended, data));
+    }
+
+    @Override
+    public void layoutClearAndDisplayExtended(final byte id, final short x, final byte y, final String text, LayoutExtraCmd extraCmd) {
+        final CommandData data = new CommandData().addUInt8(id).addUInt16(x).addUInt8(y).addNulTerminatedStrings(text).add(CommandData.fromLayoutExtraCmd(extraCmd));
         this.writeCommand(new Command(ID_layoutClearAndDisplayExtended, data));
     }
 
