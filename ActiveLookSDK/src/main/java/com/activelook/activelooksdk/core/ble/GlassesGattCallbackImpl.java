@@ -367,6 +367,28 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                 notifiers.add(lastNotifier);
             }
             sendPayload(payload, notifiers);
+            /*
+            boolean rollback = true;
+            if (this.flowControlCanSend.get() && this.getRxCharacteristic().setValue(payload)) {
+                this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+                if (this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
+                    for (final Runnable notifier: notifiers) notifier.run();
+                    rollback = false;
+                }
+            }
+            if (rollback) {
+                this.pendingWriteRxCharacteristic.addFirst(
+                        new AbstractMap.SimpleImmutableEntry<>(
+                                payload,
+                                p -> {
+                                    for (final Runnable notifier : notifiers) notifier.run();
+                                }
+                        )
+                );
+                this.isWritingCommand.set(false);
+                this.unstackWriteRxCharacteristic();
+            }
+            */
         }
     }
 
