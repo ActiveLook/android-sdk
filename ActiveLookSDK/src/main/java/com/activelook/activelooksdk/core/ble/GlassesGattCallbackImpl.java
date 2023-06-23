@@ -316,6 +316,12 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     }
 
     synchronized void unstackWriteRxCharacteristic() {
+        while (!this.unstackWriteRxCharacteristicLoop()) {
+            Log.e("unstackWriteRxCharacteristic", "Error, retry");
+        }
+    }
+
+    private boolean unstackWriteRxCharacteristicLoop() {
         if (this.flowControlCanSend.get() && this.pendingWriteRxCharacteristic.size() > 0 && this.isWritingCommand.compareAndSet(false, true)) {
             final ConcurrentLinkedDeque<Map.Entry<byte[], Consumer<Double>>> stack = new ConcurrentLinkedDeque<>();
             final int writeMTU = this.mtu - 3;
@@ -366,14 +372,23 @@ class GlassesGattCallbackImpl extends GlassesGatt {
             if (lastNotifier != null) {
                 notifiers.add(lastNotifier);
             }
+            /* No need to replace the previous mechanism.
             sendPayload(payload, notifiers);
-            /*
-            boolean rollback = true;
-            if (this.flowControlCanSend.get() && this.getRxCharacteristic().setValue(payload)) {
+            */
+            boolean rollback = false;
+            if (!this.flowControlCanSend.get()) {
+                rollback = true;
+                Log.e("unstackWriteRxCharacteristicLoop", String.format("Flow control not ready: %s", Utils.bytesToHexString(payload)));
+            } else if (!this.getRxCharacteristic().setValue(payload)) {
+                rollback = true;
+                Log.e("unstackWriteRxCharacteristicLoop", String.format("Could not update rx: %s", Utils.bytesToHexString(payload)));
+            } else {
                 this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-                if (this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
+                if (!this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
+                    rollback = true;
+                    Log.e("unstackWriteRxCharacteristicLoop", String.format("Could not write rx: %s", Utils.bytesToHexString(payload)));
+                } else {
                     for (final Runnable notifier: notifiers) notifier.run();
-                    rollback = false;
                 }
             }
             if (rollback) {
@@ -386,12 +401,13 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                         )
                 );
                 this.isWritingCommand.set(false);
-                this.unstackWriteRxCharacteristic();
+                return false;
             }
-            */
         }
+        return true;
     }
 
+    /* No need to do this for removing recursivity
     private void sendPayload(byte[] payload, ArrayList<Runnable> notifiers) {
         boolean valueSet = false;
         for (int i = 0; i < 5; i++) {
@@ -443,6 +459,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
         for (final Runnable notifier: notifiers)
             notifier.run();
     }
+    */
 
     void lockConnection() {
         this.connectionLocked = true;
