@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 4.5.1
+
+### Fixes
+- Recursivity issue
+- Fix api url
+  
 ## Version 4.5.0
 
 ### New features
