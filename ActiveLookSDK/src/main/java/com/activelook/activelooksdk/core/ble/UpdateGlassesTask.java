@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @SuppressLint("DefaultLocale")
 class UpdateGlassesTask {
 
-    static final String BASE_URL = "http://vps468290.ovh.net/v1";
+    static final String BASE_URL = "https://fw.activelook.net/v1";
     static final int FW_COMPAT = 4;
 
     static final int BLOCK_SIZE = 240;
