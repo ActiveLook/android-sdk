@@ -383,7 +383,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                 rollback = true;
                 Log.e("unstackWriteRxCharacteristicLoop", String.format("Could not update rx: %s", Utils.bytesToHexString(payload)));
             } else {
-                this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+                this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
                 if (!this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
                     rollback = true;
                     Log.e("unstackWriteRxCharacteristicLoop", String.format("Could not write rx: %s", Utils.bytesToHexString(payload)));
