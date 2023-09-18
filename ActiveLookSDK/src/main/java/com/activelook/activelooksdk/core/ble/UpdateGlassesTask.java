@@ -267,11 +267,17 @@ class UpdateGlassesTask {
                 this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_CONFIGURATION));
                 final String strVersion = String.format("%d.%d.%d.%d", major, minor, patch, version);
                 final String latestApiPath = String.format("/configurations/%s/%s/%s", this.glasses.getDeviceInformation().getHardwareVersion(), this.token, strVersion);
-                this.requestQueue.add(new FileRequest(
-                        String.format("%s%s", BASE_URL, latestApiPath),
-                        this::onConfigurationDownloaded,
-                        this::onApiFail
-                ));
+                final int bl0 = this.glasses.getDeviceInformation().getBatteryLevel();
+                if (bl0 < 10) {
+                    this.onBatteryLevelNotification(latestApiPath, bl0);
+                    this.glasses.subscribeToBatteryLevelNotifications(bl -> this.onBatteryLevelNotification(latestApiPath, bl));
+                } else {
+                    this.requestQueue.add(new FileRequest(
+                            String.format("%s%s", BASE_URL, latestApiPath),
+                            this::onConfigurationDownloaded,
+                            this::onApiFail
+                    ));
+                }
             } else {
                 Log.d("CFG_LATEST", "No configuration update available");
                 this.onUpdateSuccess(this.progress);
