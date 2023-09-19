@@ -39,6 +39,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import kotlinx.serialization.json.Json;
+
 @SuppressLint("DefaultLocale")
 class UpdateGlassesTask {
 
@@ -287,7 +289,25 @@ class UpdateGlassesTask {
             this.progress = this.progress
                     .withSourceConfigurationVersion(String.format("%d", info.getVersion()))
                     .withTargetConfigurationVersion(String.format("%d", version));
-            if (version > info.getVersion()) {
+            final JSONArray older = jsonObject.getJSONArray("older");
+            final JSONArray olderVersion = returnSearchVersion(older, info.getVersion());
+            Log.d("CFG_OLDEST", String.format("%s", olderVersion));
+            if(olderVersion.length() > 0 ){
+                this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_CONFIGURATION));
+                final String strDestinationVersion = String.format("%d.%d.%d.%d", major, minor, patch, version);
+                final int oMajor = olderVersion.getInt(0);
+                final int oMinor = olderVersion.getInt(1);
+                final int oPatch = olderVersion.getInt(2);
+                final int oVersion = olderVersion.getInt(3);
+                final String strOriginVersion = String.format("%d.%d.%d.%d", oMajor, oMinor, oPatch, oVersion);
+                final String latestApiPath = String.format("/diff_configurations/%s/%s/%s/%s", this.glasses.getDeviceInformation().getHardwareVersion(), this.token, strDestinationVersion, strOriginVersion);
+                this.requestQueue.add(new FileRequest(
+                        String.format("%s%s", BASE_URL, latestApiPath),
+                        this::onConfigurationDownloaded,
+                        this::onApiFail
+                ));
+            }
+            else if (version > info.getVersion()) {
                 this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_CONFIGURATION));
                 final String strVersion = String.format("%d.%d.%d.%d", major, minor, patch, version);
                 final String latestApiPath = String.format("/configurations/%s/%s/%s", this.glasses.getDeviceInformation().getHardwareVersion(), this.token, strVersion);
@@ -657,4 +677,18 @@ class UpdateGlassesTask {
         }
     }
 
+    private JSONArray returnSearchVersion(JSONArray jsonArray, long version){
+        JSONArray result = new JSONArray();
+        try {
+            for(int i = 0; i < jsonArray.length(); i++) {
+                JSONObject json = new JSONObject(String.valueOf(jsonArray.get(i)));
+                if(json.getJSONArray("version").getInt(3) == version) {
+                    return json.getJSONArray("version");
+                }
+            }
+        }catch (final JSONException e) {
+            return result;
+        }
+        return result;
+    }
 }
