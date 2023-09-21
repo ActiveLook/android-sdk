@@ -200,8 +200,9 @@ class UpdateGlassesTask {
                 final String latestApiPath = String.format("/firmwares/%s/%s/%s", this.glasses.getDeviceInformation().getHardwareVersion(), this.token, strVersion);
                 final int bl0 = this.glasses.getDeviceInformation().getBatteryLevel();
                 if (bl0 < 10) {
-                    this.onBatteryLevelNotification(latestApiPath, bl0);
-                    this.glasses.subscribeToBatteryLevelNotifications(bl -> this.onBatteryLevelNotification(latestApiPath, bl));
+                    this.onUpdateError(this.progress.withBatteryLevel(bl0).withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL_LOW_BATTERY));
+                    final Runnable resume = () -> this.resumeOnFirmwareHistoryResponse(latestApiPath);
+                    this.glasses.subscribeToBatteryLevelNotifications(bl -> this.onBatteryLevelNotification(resume, bl));
                 } else {
                     this.resumeOnFirmwareHistoryResponse(latestApiPath);
                 }
@@ -233,12 +234,12 @@ class UpdateGlassesTask {
         }
     }
 
-    private void onBatteryLevelNotification(final String latestApiPath, final int batteryLevel) {
+    private void onBatteryLevelNotification(final Runnable resume, final int batteryLevel) {
         if (batteryLevel < 10) {
             this.onUpdateError(this.progress.withBatteryLevel(batteryLevel).withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL_LOW_BATTERY));
         } else {
             this.glasses.subscribeToBatteryLevelNotifications(bl -> this.onUpdateProgress(this.progress.withBatteryLevel(bl)));
-            this.resumeOnFirmwareHistoryResponse(latestApiPath);
+            resume.run();
         }
     }
 
@@ -247,6 +248,15 @@ class UpdateGlassesTask {
         this.requestQueue.add(new FileRequest(
                 String.format("%s%s", BASE_URL, latestApiPath),
                 this::onFirmwareDownloaded,
+                this::onApiFail
+        ));
+    }
+
+    private void resumeOnConfigurationHistoryResponse(final String latestApiPath) {
+        this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_CONFIGURATION));
+        this.requestQueue.add(new FileRequest(
+                String.format("%s%s", BASE_URL, latestApiPath),
+                this::onConfigurationDownloaded,
                 this::onApiFail
         ));
     }
@@ -269,14 +279,11 @@ class UpdateGlassesTask {
                 final String latestApiPath = String.format("/configurations/%s/%s/%s", this.glasses.getDeviceInformation().getHardwareVersion(), this.token, strVersion);
                 final int bl0 = this.glasses.getDeviceInformation().getBatteryLevel();
                 if (bl0 < 10) {
-                    this.onBatteryLevelNotification(latestApiPath, bl0);
-                    this.glasses.subscribeToBatteryLevelNotifications(bl -> this.onBatteryLevelNotification(latestApiPath, bl));
+                    this.onUpdateError(this.progress.withBatteryLevel(bl0).withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL_LOW_BATTERY));
+                    final Runnable resume = () -> this.resumeOnConfigurationHistoryResponse(latestApiPath);
+                    this.glasses.subscribeToBatteryLevelNotifications(bl -> this.onBatteryLevelNotification(resume, bl));
                 } else {
-                    this.requestQueue.add(new FileRequest(
-                            String.format("%s%s", BASE_URL, latestApiPath),
-                            this::onConfigurationDownloaded,
-                            this::onApiFail
-                    ));
+                    this.resumeOnConfigurationHistoryResponse(latestApiPath);
                 }
             } else {
                 Log.d("CFG_LATEST", "No configuration update available");
