@@ -14,6 +14,7 @@ limitations under the License.
 */
 package com.activelook.activelooksdk;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.util.Pair;
 
@@ -106,4 +107,7 @@ public interface Sdk {
      */
     void cancelConnection(SerializedGlasses serializedGlasses);
 
+    Context getContext();
+
+    BroadcastReceiver getBroadcastReceiver();
 }

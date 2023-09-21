@@ -14,6 +14,8 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.core.debug;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -92,6 +94,16 @@ class SdkImpl implements Sdk {
     @Override
     public void cancelConnection(SerializedGlasses serializedGlasses) {
 
+    }
+
+    @Override
+    public Context getContext() {
+        return null;
+    }
+
+    @Override
+    public BroadcastReceiver getBroadcastReceiver() {
+        return null;
     }
 
 }
