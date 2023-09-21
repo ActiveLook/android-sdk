@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 4.5.2
+
+### Fixes
+- Block cfg update if battery level < 10%
+- Add getter for context & broadcasterceiver
+  
 ## Version 4.5.1
 
 ### Fixes
