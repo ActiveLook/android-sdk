@@ -7,7 +7,6 @@ import android.util.Log;
 
 import androidx.core.util.Consumer;
 import androidx.core.util.Pair;
-import androidx.core.util.Predicate;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
@@ -38,8 +37,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import kotlinx.serialization.json.Json;
 
 @SuppressLint("DefaultLocale")
 class UpdateGlassesTask {
@@ -286,31 +283,26 @@ class UpdateGlassesTask {
             final int minor = lVersion.getInt(1);
             final int patch = lVersion.getInt(2);
             final int version = lVersion.getInt(3);
-            this.progress = this.progress
-                    .withSourceConfigurationVersion(String.format("%d", info.getVersion()))
-                    .withTargetConfigurationVersion(String.format("%d", version));
-            final JSONArray older = jsonObject.getJSONArray("older");
-            final JSONArray olderVersion = returnSearchVersion(older, info.getVersion());
-            Log.d("CFG_OLDEST", String.format("%s", olderVersion));
-            if(olderVersion.length() > 0 ){
-                this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_CONFIGURATION));
-                final String strDestinationVersion = String.format("%d.%d.%d.%d", major, minor, patch, version);
+
+            final JSONArray olderVersion = returnSearchVersion(jsonObject.getJSONArray("older"), info.getVersion());
+            Log.d("CFG_OLDER", String.format("%s", olderVersion));
+            String strOriginVersion = String.format("%d", info.getVersion());
+            if (!olderVersion.isNull(0)){
                 final int oMajor = olderVersion.getInt(0);
                 final int oMinor = olderVersion.getInt(1);
                 final int oPatch = olderVersion.getInt(2);
                 final int oVersion = olderVersion.getInt(3);
-                final String strOriginVersion = String.format("%d.%d.%d.%d", oMajor, oMinor, oPatch, oVersion);
-                final String latestApiPath = String.format("/diff_configurations/%s/%s/%s/%s", this.glasses.getDeviceInformation().getHardwareVersion(), this.token, strDestinationVersion, strOriginVersion);
-                this.requestQueue.add(new FileRequest(
-                        String.format("%s%s", BASE_URL, latestApiPath),
-                        this::onConfigurationDownloaded,
-                        this::onApiFail
-                ));
+                strOriginVersion = String.format("%d.%d.%d.%d", oMajor, oMinor, oPatch, oVersion);
             }
-            else if (version > info.getVersion()) {
+
+            this.progress = this.progress
+                    .withSourceConfigurationVersion(String.format("%d", info.getVersion()))
+                    .withTargetConfigurationVersion(String.format("%d", version));
+
+            if (version > info.getVersion()) {
                 this.onUpdateStart(this.progress.withStatus(GlassesUpdate.State.DOWNLOADING_CONFIGURATION));
                 final String strVersion = String.format("%d.%d.%d.%d", major, minor, patch, version);
-                final String latestApiPath = String.format("/configurations/%s/%s/%s", this.glasses.getDeviceInformation().getHardwareVersion(), this.token, strVersion);
+                final String latestApiPath = String.format("/diff_configurations/%s/%s/%s/%s", this.glasses.getDeviceInformation().getHardwareVersion(), this.token, strVersion, strOriginVersion);
                 final int bl0 = this.glasses.getDeviceInformation().getBatteryLevel();
                 if (bl0 < 10) {
                     this.onUpdateError(this.progress.withBatteryLevel(bl0).withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL_LOW_BATTERY));
