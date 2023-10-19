@@ -603,6 +603,35 @@ public interface Glasses extends Parcelable {
     void pageClear(byte id);
     void pageList(Consumer<List<Integer>> onResult);    
     void pageClearAndDisplay(byte id, String[] texts);
+
+    /**
+     * Delete an animation
+     * if id = 0xFF, delete all animations
+     * 
+     * @param id        The id of the anim to delete.
+     */
+    void animDelete(byte id);
+
+    /**
+     * Display an animation
+     * 
+     * @param handlerId     The value is specified by the user and used to stop the animation
+     * @param id            The id of the anim to display.
+     * @param delay         The inter-frame duration in ms.
+     * @param repeat        is for the repeat count or 0xFF for infinite repetition.
+     * @param x             The horizontal offset
+     * @param y             The vertical offset
+     */
+    void animDisplay(byte handlerId, byte id, short delay, byte repeat, short x, short y);
+
+
+    /**
+     * Clear an animation
+     * 
+     * @param handlerId     The value is specified by the user and used to stop the animation
+     */
+    void animClear(byte handlerId);
+    
     /**
      * Get number of pixel activated on display.
      *

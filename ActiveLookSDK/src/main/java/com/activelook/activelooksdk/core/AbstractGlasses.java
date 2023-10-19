@@ -136,6 +136,16 @@ public abstract class AbstractGlasses implements Glasses {
     static final byte ID_pageClear = (byte) 0x84;
     static final byte ID_pageList = (byte) 0x85;
     static final byte ID_pageClearAndDisplay = (byte) 0x86;
+
+    /*
+     * Anim commands ids
+     */
+    static final byte ID_animSave = (byte) 0x95;
+    static final byte ID_animDelete = (byte) 0x96;
+    static final byte ID_animDisplay = (byte) 0x97;
+    static final byte ID_animClear = (byte) 0x98;
+    static final byte ID_animList = (byte) 0x99;
+
     /*
      * Configuration for firmware 1.7 ids
      */
@@ -842,6 +852,25 @@ public abstract class AbstractGlasses implements Glasses {
         }
         this.writeCommand(command);
     }
+
+    @Override
+    public void animDelete(final byte id) {
+        final CommandData data = new CommandData().addUInt8(id);
+        this.writeCommand(new Command(ID_animDelete, data));
+    }
+
+    @Override
+    public void animDisplay(byte handlerId, byte id, short delay, byte repeat, short x, short y){
+        final CommandData data = new CommandData().addUInt8(handlerId).addUInt8(id).addUInt16(delay).addUInt8(repeat).addUInt16(x).addUInt16(y);
+        this.writeCommand(new Command(ID_animDisplay, data));
+    }
+
+    @Override
+    public void animClear(final byte handlerId){
+        final CommandData data = new CommandData().addUInt8(handlerId);
+        this.writeCommand(new Command(ID_animClear, data));
+    }
+
 
     @Override
     public void pixelCount(final Consumer<Long> onResult) {
