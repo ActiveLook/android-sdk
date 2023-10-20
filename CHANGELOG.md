@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Version 4.5.3
+
+### Fixes
+- Add incremental configuration support
+
 ## Version 4.5.2
 
 ### Fixes
