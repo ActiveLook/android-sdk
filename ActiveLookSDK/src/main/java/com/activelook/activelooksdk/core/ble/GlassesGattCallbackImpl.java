@@ -231,13 +231,14 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                 if (this.repairFlowControl != null) {
                     this.repairFlowControl.cancel(true);
                 }
+                //TODO Increase timer in case of overflow issue and to avoid memory leak flush payload after X seconds or disconnect Glasses
                 final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
                 this.repairFlowControl = executorService.schedule(() -> {
                     GlassesGattCallbackImpl.this.repairFlowControl = null;
                     if (GlassesGattCallbackImpl.this.flowControlCanSend.compareAndSet(false, true)) {
                         GlassesGattCallbackImpl.this.unstackWriteRxCharacteristic();
                     }
-                }, 1000, TimeUnit.MILLISECONDS);
+                }, 10000, TimeUnit.MILLISECONDS);
             } else if (this.onFlowControlEvent != null) {
                 if (state == (byte) 0x03) {
                     this.onFlowControlEvent.accept(FlowControlStatus.CMD_ERROR);
