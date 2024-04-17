@@ -15,6 +15,8 @@ limitations under the License.
 package com.activelook.activelooksdk.core.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Parcel;
 import android.util.Log;
 
@@ -45,6 +47,7 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     final GlassesGattCallbackImpl gattCallbacks;
     private DiscoveredGlasses connectedFrom;
     private BluetoothDevice device;
+
 
     GlassesImpl(DiscoveredGlassesImpl discoveredGlasses, Consumer<GlassesImpl> onConnected,
                 Consumer<DiscoveredGlasses> onConnectionFail,
@@ -149,6 +152,14 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
         this.gattCallbacks.setOnDisconnected(onDisconnected);
     }
 
+    @Override
+    public void isWriteWithResponse(boolean on) {
+        if(on){
+            this.gattCallbacks.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+        }else {
+            this.gattCallbacks.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+        }
+    }
     @Override
     public DeviceInformation getDeviceInformation() {
         return this.gattCallbacks.getDeviceInformation();

@@ -142,6 +142,12 @@ public interface Glasses extends Parcelable {
     default void unsubscribeToSensorInterfaceNotifications() {
         this.subscribeToSensorInterfaceNotifications(null);
     }
+    /**
+     * Turn writeWithResponse on or off.
+     *
+     * @param on Turn on or off
+     */
+    void isWriteWithResponse(boolean on);
 
     /**
      * Load a configuration into the glasses.

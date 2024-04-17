@@ -63,6 +63,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     private boolean connectionLocked;
 
     private int writeFailCount = 0;
+    private int writeType =  BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
 
     GlassesGattCallbackImpl(BluetoothDevice device, GlassesImpl bleGlasses,
                             Consumer<GlassesImpl> onConnected,
@@ -387,7 +388,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                 rollback = true;
                 Log.e("unstackWriteRxCharacteristicLoop", String.format("Could not update rx: %s", Utils.bytesToHexString(payload)));
             } else {
-                this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+                this.getRxCharacteristic().setWriteType(writeType);
                 if (!this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
                     rollback = true;
                     this.writeFailCount += 1;
@@ -542,6 +543,10 @@ class GlassesGattCallbackImpl extends GlassesGatt {
 
     public DeviceInformation getDeviceInformation() {
         return this.deviceInfo;
+    }
+
+    public void setWriteType(int writeType) {
+        this.writeType = writeType;
     }
 
     public void subscribeToBatteryLevelNotifications(Consumer<Integer> onEvent) {

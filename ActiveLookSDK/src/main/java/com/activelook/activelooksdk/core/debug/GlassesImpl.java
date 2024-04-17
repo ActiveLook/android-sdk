@@ -124,6 +124,10 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     }
 
     @Override
+    public void isWriteWithResponse(boolean on) {
+    }
+
+    @Override
     public void writeBytes(byte[] bytes) {
         StringBuilder result = new StringBuilder();
         String prefix = "[ ";
