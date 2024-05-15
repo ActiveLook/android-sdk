@@ -62,6 +62,8 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     private ScheduledFuture<?> repairFlowControl;
     private boolean connectionLocked;
 
+    private int writeFailCount = 0;
+
     GlassesGattCallbackImpl(BluetoothDevice device, GlassesImpl bleGlasses,
                             Consumer<GlassesImpl> onConnected,
                             Runnable onConnectionFail,
@@ -178,6 +180,7 @@ class GlassesGattCallbackImpl extends GlassesGatt {
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
+        if (this.writeFailCount > 0) this.writeFailCount = 0;
         if (characteristic.equals(this.getRxCharacteristic())) {
             this.isWritingCommand.set(false);
             this.unstackWriteRxCharacteristic();
@@ -386,22 +389,31 @@ class GlassesGattCallbackImpl extends GlassesGatt {
                 this.getRxCharacteristic().setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
                 if (!this.gatt.writeCharacteristic(this.getRxCharacteristic())) {
                     rollback = true;
+                    this.writeFailCount += 1;
                     Log.e("unstackWriteRxCharacteristicLoop", String.format("Could not write rx: %s", Utils.bytesToHexString(payload)));
                 } else {
                     for (final Runnable notifier: notifiers) notifier.run();
                 }
             }
             if (rollback) {
-                this.pendingWriteRxCharacteristic.addFirst(
-                        new AbstractMap.SimpleImmutableEntry<>(
-                                payload,
-                                p -> {
-                                    for (final Runnable notifier : notifiers) notifier.run();
-                                }
-                        )
-                );
-                this.isWritingCommand.set(false);
-                return false;
+                // If it fails to write a command n times,
+                // then we cancel rollback
+                // NB: 50 is arbitrary, this value may change
+                if (this.writeFailCount <= 50) {
+                    this.pendingWriteRxCharacteristic.addFirst(
+                            new AbstractMap.SimpleImmutableEntry<>(
+                                    payload,
+                                    p -> {
+                                        for (final Runnable notifier : notifiers) notifier.run();
+                                    }
+                            )
+                    );
+                    this.isWritingCommand.set(false);
+                    return false;
+                } else {
+                    this.writeFailCount = 0;
+                    this.isWritingCommand.set(false);
+                }
             }
         }
         return true;
