@@ -19,6 +19,10 @@ final class Firmware {
         }
     }
 
+    byte[] getBytes() {
+        return this.bytes;
+    }
+
     List<Pair<Integer, List<byte []>>> getSuotaBlocks(int blockSize, int chunkSize) {
         assert chunkSize > 0;
         blockSize = Math.min(bytes.length, Math.max(blockSize, chunkSize));

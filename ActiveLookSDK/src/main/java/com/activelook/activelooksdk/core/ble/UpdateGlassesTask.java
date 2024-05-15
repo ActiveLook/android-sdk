@@ -11,6 +11,8 @@ import androidx.core.util.Predicate;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
+import com.activelook.activelooksdk.core.Command;
+import com.activelook.activelooksdk.core.CommandData;
 import com.activelook.activelooksdk.types.ConfigurationElementsInfo;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.GlassesUpdate;
@@ -30,6 +32,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -334,7 +338,11 @@ class UpdateGlassesTask {
         this.onUpdateAvailableCallback.accept(new android.util.Pair<>(this.progress, ()->{
             Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
             this.firmware = new Firmware(response);
-            this.suotaUpdate(this.glasses.gattCallbacks);
+            if (this.progress.getSourceFirmwareVersion().equals("4.12.0")) {
+                this.updateFirmwareThroughHiddenCommands();
+            } else {
+                this.suotaUpdate(this.glasses.gattCallbacks);
+            }
         }));
         /*if(!this.onUpdateAvailableCallback.test(this.progress)) {
             this.glasses.unsubscribeToBatteryLevelNotifications();
@@ -342,6 +350,141 @@ class UpdateGlassesTask {
             this.onConnectionFail.accept(this.discoveredGlasses);
             return;
         }*/
+    }
+
+    private void updateFirmwareThroughHiddenCommands() {
+        final byte[] newFwBytes = this.firmware.getBytes();
+
+        final int CMD_MAX_DATA_SIZE = 512;
+        final int FLASH_SECTOR_SIZE =  1024 * 4;
+        final byte PART = 7; // QSPI_PART_FW_UPDATE
+
+        final int size = newFwBytes.length;
+        int eraseSize = size;
+        int writeSize = size;
+        int addr = 0;
+
+        Log.i("updateFWThroughHideCmd", "Start erasing FW");
+
+        while(eraseSize > 0) {
+            int blockSize = eraseSize;
+            if (blockSize > FLASH_SECTOR_SIZE) {
+                blockSize = FLASH_SECTOR_SIZE;
+            }
+
+            this.eraseFw(PART, addr, blockSize);
+
+            eraseSize -= blockSize;
+            addr += blockSize;
+
+            this.onUpdateProgress(progress.withProgress((1 - (double) eraseSize / size) * 48));
+
+            Log.i("updateFWThroughHideCmd", String.format("erasing old FW...\nremaining size to erase: {%d}", eraseSize));
+        }
+
+        Log.i("updateFWThroughHideCmd", "Start writing new FW");
+
+        addr = 0;
+        int cmdOverhead = 5;
+        while(writeSize > 0) {
+            int subLen = Math.min(writeSize, (CMD_MAX_DATA_SIZE - cmdOverhead));
+
+            this.writeFw(PART, addr, Arrays.copyOfRange(newFwBytes, addr,addr + subLen));
+
+            writeSize -= subLen;
+            addr += subLen;
+
+            this.onUpdateProgress(progress.withProgress((1 - ((double) writeSize) / size) * 48 + 48));
+
+            Log.i("updateFWThroughHideCmd", String.format("writing new FW... Remaining size to write: {%d}", writeSize));
+        }
+
+        resetDevice();
+        this.onUpdateProgress(progress.withProgress(100));
+        this.onUpdateSuccess(this.progress);
+    }
+
+    private void eraseFw(byte part, int addr, int length) {
+        byte[] dataToErase = ByteBuffer.allocate(9)
+                .order(ByteOrder.BIG_ENDIAN)
+                .put(part)
+                .putInt(addr)
+                .putInt(length)
+                .array();
+
+        AtomicBoolean done = new AtomicBoolean(false);
+        boolean didCall = false;
+        while(!done.get()) {
+            if (!didCall) {
+                this.glasses.gattCallbacks.writeRxCharacteristic(
+                        new Command((byte) 0x0D, new CommandData(dataToErase)).toBytes(),
+                        c -> {
+                            if (c == 1d) {
+                                if (!done.compareAndSet(false, true)) {
+                                    Log.i("eraseFw", String.format("issue while changing boolean, expected false, got: %s", done.get()));
+                                }
+                            }
+                        }
+                );
+                didCall = true;
+            }
+        }
+    }
+
+    private void writeFw(byte part, int addr, byte[] data) {
+        try {
+            // sizeof(part + addr + data) => in bytes
+            int length = 1 + 4 + data.length;
+
+            byte[] dataToWrite = ByteBuffer.allocate(length)
+                    .order(ByteOrder.BIG_ENDIAN)
+                    .put(part)
+                    .putInt(addr)
+                    .put(data)
+                    .array();
+
+            AtomicBoolean done = new AtomicBoolean(false);
+            boolean didCall = false;
+            while(!done.get()) {
+              if (!didCall) {
+                  this.glasses.gattCallbacks.writeRxCharacteristic(
+                          new Command((byte) 0x0E, new CommandData(dataToWrite)).toBytes(),
+                          c -> {
+                              if (c == 1d) {
+                                  if (!done.compareAndSet(false, true)) {
+                                      Log.i("writeFw", String.format("issue while changing boolean, expected false, got: %s", done.get()));
+                                  }
+                              }
+                          }
+                  );
+                  didCall = true;
+              }
+            }
+        } catch (Error e) {
+            Log.e("writeFw", String.format("Error while writing: %s", e));
+        }
+    }
+
+    private void resetDevice() {
+        byte[] data = new byte[] { (byte) 0x6F,(byte) 0x7F, (byte)0xC4, (byte) 0xEE };
+
+        AtomicBoolean done = new AtomicBoolean(false);
+        boolean didCall = false;
+        while(!done.get()) {
+            if (!didCall) {
+                this.glasses.gattCallbacks.writeRxCharacteristic(
+                        new Command((byte) 0xE1, new CommandData(data)).toBytes(),
+                        c -> {
+                            if (c == 1d) {
+                                if (!done.compareAndSet(false, true)) {
+                                    Log.i("resetDevice", String.format("issue while changing boolean, expected false, got: %s", done.get()));
+                                }
+                            }
+                        }
+                );
+                didCall = true;
+            }
+        }
     }
 
     private void suotaUpdate(final GlassesGatt gatt) {
