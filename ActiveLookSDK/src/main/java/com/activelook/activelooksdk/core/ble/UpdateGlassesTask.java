@@ -466,7 +466,7 @@ class UpdateGlassesTask {
     }
 
     private void resetDevice() {
-        byte[] data = new byte[] { (byte) 0x6F,(byte) 0x7F, (byte)0xC4, (byte) 0xEE };
+        byte[] data = new byte[] { (byte) 0x5C,(byte) 0x1E, (byte)0x2D, (byte) 0xE9 };
 
         AtomicBoolean done = new AtomicBoolean(false);
         boolean didCall = false;
