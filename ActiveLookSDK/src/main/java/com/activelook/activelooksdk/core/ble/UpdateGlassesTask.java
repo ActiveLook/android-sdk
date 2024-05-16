@@ -333,12 +333,24 @@ class UpdateGlassesTask {
         }
     }
 
+    private void clearGlassesScreen() {
+        byte[] payload = new byte[] { (byte) 0xFF,(byte) 0x01, (byte)0x00, (byte)0x05, (byte) 0xAA };
+        this.glasses.gattCallbacks.writeRxCharacteristic(payload);
+    }
+
+    private void updateOnGoingGlassesLayout() {
+        byte[] payload = new byte[] { (byte) 0xFF,(byte) 0x62, (byte)0x00, (byte)0x07, (byte) 0x09, (byte) 0x00, (byte) 0xAA };
+        this.glasses.gattCallbacks.writeRxCharacteristic(payload);
+    }
+
     private void onFirmwareDownloaded(final byte[] response) {
         this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
         this.onUpdateAvailableCallback.accept(new android.util.Pair<>(this.progress, ()->{
             Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
             this.firmware = new Firmware(response);
             if (this.progress.getSourceFirmwareVersion().equals("4.12.0")) {
+                this.clearGlassesScreen();
+                this.updateOnGoingGlassesLayout();
                 this.updateFirmwareThroughHiddenCommands();
             } else {
                 this.suotaUpdate(this.glasses.gattCallbacks);
