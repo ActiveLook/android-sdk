@@ -63,6 +63,7 @@ class UpdateGlassesTask {
     private final Consumer<GlassesUpdate> onUpdateSuccessCallback;
     private final Consumer<GlassesUpdate> onUpdateErrorCallback;
 
+    // SUOTA Update variables
     // private int suotaVersion = 0;
     private int suotaPatchDataSize = 20;
     private int suotaMtu = 23;
@@ -76,6 +77,15 @@ class UpdateGlassesTask {
     private int blockId;
     private int chunkId;
     private int patchLength;
+
+    // QSPI Update variables
+    private final byte PART = 7; // QSPI_PART_FW_UPDATE
+    private int addr = 0;
+
+    private byte[] newFwBytes = {};
+    private int size = -1;
+    private int eraseSize = -1;
+    private int writeSize = -1;
 
     private void onUpdateStart(final UpdateProgress progress) {
         this.progress = progress.withProgress(0);
@@ -332,26 +342,21 @@ class UpdateGlassesTask {
             this.onConnectionFail.accept(this.discoveredGlasses);
         }
     }
-
-    private void clearGlassesScreen() {
-        byte[] payload = new byte[] { (byte) 0xFF,(byte) 0x01, (byte)0x00, (byte)0x05, (byte) 0xAA };
-        this.glasses.gattCallbacks.writeRxCharacteristic(payload);
-    }
-
-    private void updateOnGoingGlassesLayout() {
-        byte[] payload = new byte[] { (byte) 0xFF,(byte) 0x62, (byte)0x00, (byte)0x07, (byte) 0x09, (byte) 0x00, (byte) 0xAA };
-        this.glasses.gattCallbacks.writeRxCharacteristic(payload);
-    }
-
     private void onFirmwareDownloaded(final byte[] response) {
         this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
         this.onUpdateAvailableCallback.accept(new android.util.Pair<>(this.progress, ()->{
             Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
             this.firmware = new Firmware(response);
             if (this.progress.getSourceFirmwareVersion().equals("4.12.0")) {
-                this.clearGlassesScreen();
-                this.updateOnGoingGlassesLayout();
-                this.updateFirmwareThroughHiddenCommands();
+                this.glasses.clear();
+                this.glasses.layoutDisplay((byte) 0x09, "");
+
+                this.newFwBytes = this.firmware.getBytes();
+                this.size = this.newFwBytes.length;
+                this.eraseSize = size;
+                this.writeSize = size;
+
+                this.eraseFWRecursive();
             } else {
                 this.suotaUpdate(this.glasses.gattCallbacks);
             }
@@ -364,22 +369,11 @@ class UpdateGlassesTask {
         }*/
     }
 
-    private void updateFirmwareThroughHiddenCommands() {
-        final byte[] newFwBytes = this.firmware.getBytes();
 
-        final int CMD_MAX_DATA_SIZE = 512;
-        final int FLASH_SECTOR_SIZE =  1024 * 4;
-        final byte PART = 7; // QSPI_PART_FW_UPDATE
-
-        final int size = newFwBytes.length;
-        int eraseSize = size;
-        int writeSize = size;
-        int addr = 0;
-
-        Log.i("updateFWThroughHideCmd", "Start erasing FW");
-
-        while(eraseSize > 0) {
+    private void eraseFWRecursive(){
+        if (eraseSize > 0) {
             int blockSize = eraseSize;
+            int FLASH_SECTOR_SIZE = 1024 * 4;
             if (blockSize > FLASH_SECTOR_SIZE) {
                 blockSize = FLASH_SECTOR_SIZE;
             }
@@ -392,14 +386,18 @@ class UpdateGlassesTask {
             this.onUpdateProgress(progress.withProgress((1 - (double) eraseSize / size) * 48));
 
             Log.i("updateFWThroughHideCmd", String.format("erasing old FW...\nremaining size to erase: {%d}", eraseSize));
+        } else {
+            Log.i("eraseFw", "Start writing new FW...");
+            addr = 0;
+            this.writeFWRecursive();
         }
+    }
 
-        Log.i("updateFWThroughHideCmd", "Start writing new FW");
-
-        addr = 0;
-        int cmdOverhead = 5;
-        while(writeSize > 0) {
-            int subLen = Math.min(writeSize, (CMD_MAX_DATA_SIZE - cmdOverhead));
+    private void writeFWRecursive(){
+        if(writeSize > 0) {
+            int CMD_MAX_DATA_SIZE = 512;
+            int CMD_OVERHEAD = 5;
+            int subLen = Math.min(writeSize, (CMD_MAX_DATA_SIZE - CMD_OVERHEAD));
 
             this.writeFw(PART, addr, Arrays.copyOfRange(newFwBytes, addr,addr + subLen));
 
@@ -409,11 +407,10 @@ class UpdateGlassesTask {
             this.onUpdateProgress(progress.withProgress((1 - ((double) writeSize) / size) * 48 + 48));
 
             Log.i("updateFWThroughHideCmd", String.format("writing new FW... Remaining size to write: {%d}", writeSize));
+        } else{
+            Log.i("eraseFw", "Reseting & rebooting glasses...");
+            this.resetDevice();
         }
-
-        resetDevice();
-        this.onUpdateProgress(progress.withProgress(100));
-        this.onUpdateSuccess(this.progress);
     }
 
     private void eraseFw(byte part, int addr, int length) {
@@ -424,27 +421,18 @@ class UpdateGlassesTask {
                 .putInt(length)
                 .array();
 
-        AtomicBoolean done = new AtomicBoolean(false);
-        boolean didCall = false;
-        while(!done.get()) {
-            if (!didCall) {
-                this.glasses.gattCallbacks.writeRxCharacteristic(
-                        new Command((byte) 0x0D, new CommandData(dataToErase)).toBytes(),
-                        c -> {
-                            if (c == 1d) {
-                                if (!done.compareAndSet(false, true)) {
-                                    Log.i("eraseFw", String.format("issue while changing boolean, expected false, got: %s", done.get()));
-                                }
-                            }
-                        }
-                );
-                didCall = true;
+        this.glasses.gattCallbacks.writeRxCharacteristic(
+            new Command((byte) 0x0D, new CommandData(dataToErase)).toBytes(),
+            c -> {
+                if (c == 1d) {
+                    Log.i("eraseFw", "re-calling eraseFWRecursive");
+                    this.eraseFWRecursive();
+                }
             }
-        }
+        );
     }
 
     private void writeFw(byte part, int addr, byte[] data) {
-        try {
             // sizeof(part + addr + data) => in bytes
             int length = 1 + 4 + data.length;
 
@@ -455,48 +443,29 @@ class UpdateGlassesTask {
                     .put(data)
                     .array();
 
-            AtomicBoolean done = new AtomicBoolean(false);
-            boolean didCall = false;
-            while(!done.get()) {
-              if (!didCall) {
-                  this.glasses.gattCallbacks.writeRxCharacteristic(
-                          new Command((byte) 0x0E, new CommandData(dataToWrite)).toBytes(),
-                          c -> {
-                              if (c == 1d) {
-                                  if (!done.compareAndSet(false, true)) {
-                                      Log.i("writeFw", String.format("issue while changing boolean, expected false, got: %s", done.get()));
-                                  }
-                              }
-                          }
-                  );
-                  didCall = true;
+          this.glasses.gattCallbacks.writeRxCharacteristic(
+              new Command((byte) 0x0E, new CommandData(dataToWrite)).toBytes(),
+              c -> {
+                  if (c == 1d) {
+                      Log.i("writeFw", "re-calling writeFWRecursive");
+                      this.writeFWRecursive();
+                  }
               }
-            }
-        } catch (Error e) {
-            Log.e("writeFw", String.format("Error while writing: %s", e));
-        }
+          );
     }
 
     private void resetDevice() {
         byte[] data = new byte[] { (byte) 0x5C,(byte) 0x1E, (byte)0x2D, (byte) 0xE9 };
 
-        AtomicBoolean done = new AtomicBoolean(false);
-        boolean didCall = false;
-        while(!done.get()) {
-            if (!didCall) {
-                this.glasses.gattCallbacks.writeRxCharacteristic(
-                        new Command((byte) 0xE1, new CommandData(data)).toBytes(),
-                        c -> {
-                            if (c == 1d) {
-                                if (!done.compareAndSet(false, true)) {
-                                    Log.i("resetDevice", String.format("issue while changing boolean, expected false, got: %s", done.get()));
-                                }
-                            }
-                        }
-                );
-                didCall = true;
-            }
-        }
+        this.glasses.gattCallbacks.writeRxCharacteristic(
+                new Command((byte) 0xE1, new CommandData(data)).toBytes(),
+                c -> {
+                    if (c == 1d) {
+                        this.onUpdateProgress(progress.withProgress(100));
+                        this.onUpdateSuccess(this.progress);
+                    }
+                }
+        );
     }
 
     private void suotaUpdate(final GlassesGatt gatt) {
