@@ -11,6 +11,8 @@ import androidx.core.util.Predicate;
 
 import com.activelook.activelooksdk.DiscoveredGlasses;
 import com.activelook.activelooksdk.Glasses;
+import com.activelook.activelooksdk.core.Command;
+import com.activelook.activelooksdk.core.CommandData;
 import com.activelook.activelooksdk.types.ConfigurationElementsInfo;
 import com.activelook.activelooksdk.types.DeviceInformation;
 import com.activelook.activelooksdk.types.GlassesUpdate;
@@ -30,6 +32,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,6 +63,7 @@ class UpdateGlassesTask {
     private final Consumer<GlassesUpdate> onUpdateSuccessCallback;
     private final Consumer<GlassesUpdate> onUpdateErrorCallback;
 
+    // SUOTA Update variables
     // private int suotaVersion = 0;
     private int suotaPatchDataSize = 20;
     private int suotaMtu = 23;
@@ -72,6 +77,15 @@ class UpdateGlassesTask {
     private int blockId;
     private int chunkId;
     private int patchLength;
+
+    // QSPI Update variables
+    private final byte PART = 7; // QSPI_PART_FW_UPDATE
+    private int addr = 0;
+
+    private byte[] newFwBytes = {};
+    private int size = -1;
+    private int eraseSize = -1;
+    private int writeSize = -1;
 
     private void onUpdateStart(final UpdateProgress progress) {
         this.progress = progress.withProgress(0);
@@ -328,13 +342,24 @@ class UpdateGlassesTask {
             this.onConnectionFail.accept(this.discoveredGlasses);
         }
     }
-
     private void onFirmwareDownloaded(final byte[] response) {
         this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
         this.onUpdateAvailableCallback.accept(new android.util.Pair<>(this.progress, ()->{
             Log.d("FIRMWARE DOWNLOADER", String.format("bytes: [%d] %s", response.length, Arrays.toString(response)));
             this.firmware = new Firmware(response);
-            this.suotaUpdate(this.glasses.gattCallbacks);
+            if (this.progress.getSourceFirmwareVersion().equals("4.12.0")) {
+                this.glasses.clear();
+                this.glasses.layoutDisplay((byte) 0x09, "");
+
+                this.newFwBytes = this.firmware.getBytes();
+                this.size = this.newFwBytes.length;
+                this.eraseSize = size;
+                this.writeSize = size;
+
+                this.eraseFWRecursive();
+            } else {
+                this.suotaUpdate(this.glasses.gattCallbacks);
+            }
         }));
         /*if(!this.onUpdateAvailableCallback.test(this.progress)) {
             this.glasses.unsubscribeToBatteryLevelNotifications();
@@ -342,6 +367,105 @@ class UpdateGlassesTask {
             this.onConnectionFail.accept(this.discoveredGlasses);
             return;
         }*/
+    }
+
+
+    private void eraseFWRecursive(){
+        if (eraseSize > 0) {
+            int blockSize = eraseSize;
+            int FLASH_SECTOR_SIZE = 1024 * 4;
+            if (blockSize > FLASH_SECTOR_SIZE) {
+                blockSize = FLASH_SECTOR_SIZE;
+            }
+
+            this.eraseFw(PART, addr, blockSize);
+
+            eraseSize -= blockSize;
+            addr += blockSize;
+
+            this.onUpdateProgress(progress.withProgress((1 - (double) eraseSize / size) * 48));
+
+            Log.i("updateFWThroughHideCmd", String.format("erasing old FW...\nremaining size to erase: {%d}", eraseSize));
+        } else {
+            Log.i("eraseFw", "Start writing new FW...");
+            addr = 0;
+            this.writeFWRecursive();
+        }
+    }
+
+    private void writeFWRecursive(){
+        if(writeSize > 0) {
+            int CMD_MAX_DATA_SIZE = 512;
+            int CMD_OVERHEAD = 5;
+            int subLen = Math.min(writeSize, (CMD_MAX_DATA_SIZE - CMD_OVERHEAD));
+
+            this.writeFw(PART, addr, Arrays.copyOfRange(newFwBytes, addr,addr + subLen));
+
+            writeSize -= subLen;
+            addr += subLen;
+
+            this.onUpdateProgress(progress.withProgress((1 - ((double) writeSize) / size) * 48 + 48));
+
+            Log.i("updateFWThroughHideCmd", String.format("writing new FW... Remaining size to write: {%d}", writeSize));
+        } else{
+            Log.i("eraseFw", "Reseting & rebooting glasses...");
+            this.resetDevice();
+        }
+    }
+
+    private void eraseFw(byte part, int addr, int length) {
+        byte[] dataToErase = ByteBuffer.allocate(9)
+                .order(ByteOrder.BIG_ENDIAN)
+                .put(part)
+                .putInt(addr)
+                .putInt(length)
+                .array();
+
+        this.glasses.gattCallbacks.writeRxCharacteristic(
+            new Command((byte) 0x0D, new CommandData(dataToErase)).toBytes(),
+            c -> {
+                if (c == 1d) {
+                    Log.i("eraseFw", "re-calling eraseFWRecursive");
+                    this.eraseFWRecursive();
+                }
+            }
+        );
+    }
+
+    private void writeFw(byte part, int addr, byte[] data) {
+            // sizeof(part + addr + data) => in bytes
+            int length = 1 + 4 + data.length;
+
+            byte[] dataToWrite = ByteBuffer.allocate(length)
+                    .order(ByteOrder.BIG_ENDIAN)
+                    .put(part)
+                    .putInt(addr)
+                    .put(data)
+                    .array();
+
+          this.glasses.gattCallbacks.writeRxCharacteristic(
+              new Command((byte) 0x0E, new CommandData(dataToWrite)).toBytes(),
+              c -> {
+                  if (c == 1d) {
+                      Log.i("writeFw", "re-calling writeFWRecursive");
+                      this.writeFWRecursive();
+                  }
+              }
+          );
+    }
+
+    private void resetDevice() {
+        byte[] data = new byte[] { (byte) 0x5C,(byte) 0x1E, (byte)0x2D, (byte) 0xE9 };
+
+        this.glasses.gattCallbacks.writeRxCharacteristic(
+                new Command((byte) 0xE1, new CommandData(data)).toBytes(),
+                c -> {
+                    if (c == 1d) {
+                        this.onUpdateProgress(progress.withProgress(100));
+                        this.onUpdateSuccess(this.progress);
+                    }
+                }
+        );
     }
 
     private void suotaUpdate(final GlassesGatt gatt) {
