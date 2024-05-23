@@ -65,7 +65,7 @@ You can add the dependency in your application by modifying the application `bui
 and add:
 ```
 dependencies {
-  implementation 'com.github.activelook:android-sdk:v4.5.2'
+  implementation 'com.github.activelook:android-sdk:v4.5.4'
 }
 ```
 
@@ -103,7 +103,6 @@ import com.activelook.activelooksdk.types.Rotation;
         Log.e("SDK", "Init");
         Sdk.init(
             MainActivity.this,
-            "your-sdk-token-provided-by-microoled",
             gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateStart               : %s", gu)),
             gu_f -> {
                   Log.d("GLASSES_UPDATE", String.format("onUpdateAvailableCallback   : %s", gu_f.first));
@@ -153,7 +152,6 @@ Note: BlueTooth will not work on the android simulator. A physical device should
 ### Initialization
 
 To start using the SDK, first import and initialize the sdk.
-You will need a token provided by Microoled to authenticate with the update server.
 Five callbacks `onUpdateStart`, `onUpdateAvailableCallback`, `onUpdateProgress`, `onUpdateSuccess`, `onUpdateError`
 must be provided to handle glasses update events.
 Read the javadoc for more inforamtions.
@@ -174,7 +172,6 @@ public class DemoApp extends Application {
     super.onCreate();
     this.alsdk = Sdk.init(
       this.getApplicationContext(),
-      "MyPrivateToken",
       (update) -> Log.i("GLASSES_UPDATE", "Starting glasses update."),
       (update) -> { Log.i("GLASSES_UPDATE", "A glasses update is available."); return true; },
       (update) -> Log.i("GLASSES_UPDATE", "Progressing glasses update."),

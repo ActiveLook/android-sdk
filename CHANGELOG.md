@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## Version 4.5.4
+
+### New
+
+- SDK init with simplified parameters
+
+### Fixes
+
+- Increase flow control overflow timer
+- UI freeze & crash during infinite commands rollback
+- FW update issue
+
+### Features
+
+- New commands : `animDisplay`, `animDelete` and `animClear`
+  
 ## Version 4.5.2
 
 ### Fixes
