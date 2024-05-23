@@ -63,7 +63,6 @@ public class DebugActivity extends AppCompatActivity {
             Log.d("SDK", "Init");
             Sdk.init(
                     DebugActivity.this,
-                    "",
                     gu -> Log.d("GLASSES_UPDATE", String.format("onUpdateStart               : %s", gu)),
                     gu_f -> {
                           Log.d("GLASSES_UPDATE", String.format("onUpdateAvailableCallback   : %s", gu_f.first));
