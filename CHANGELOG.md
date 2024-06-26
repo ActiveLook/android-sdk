@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 4.5.5
+
+### Fixes
+
+- UI freeze during Cfg update
+
 ## Version 4.5.4
 
 ### New
