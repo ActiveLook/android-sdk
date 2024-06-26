@@ -87,6 +87,9 @@ class UpdateGlassesTask {
     private int eraseSize = -1;
     private int writeSize = -1;
 
+    private ArrayList<String> cfgLines = new ArrayList<>();
+    private int indexLine = -1;
+
     private void onUpdateStart(final UpdateProgress progress) {
         this.progress = progress.withProgress(0);
         this.onUpdateStartCallback.accept(this.progress);
@@ -317,31 +320,50 @@ class UpdateGlassesTask {
             this.glasses.clear();
             this.glasses.layoutDisplay((byte) 0x09, "");
 
-            final ArrayList<String> lines = new ArrayList<>();
+            cfgLines = new ArrayList<>();
             final BufferedReader bReader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(response)));
             String line;
             while ((line = bReader.readLine()) != null) {
-                lines.add(line);
+                cfgLines.add(line);
             }
-            final int nbLines = lines.size();
-            for (int i = 0; i < nbLines; i++) {
-                final int idxLine = i;
-                this.glasses.gattCallbacks.writeRxCharacteristic(
-                    Utils.hexStringToBytes(lines.get(idxLine)),
-                    p -> UpdateGlassesTask.this.onUpdateProgress(progress.withProgress((idxLine + p) * 100d / nbLines))
-                );
-            }
-
-            this.glasses.clear();
-            this.glasses.cfgRead("ALooK", info -> {
-                this.onUpdateSuccess(this.progress);
-                this.onConnected.accept(this.glasses);
-            });
+            writeSize = cfgLines.size();
+            indexLine = 0;
+            writeCfgRecursive();
         } catch (IOException e) {
             this.onUpdateError(this.progress.withStatus(GlassesUpdate.State.ERROR_UPDATE_FAIL));
             this.onConnectionFail.accept(this.discoveredGlasses);
         }
     }
+
+    private void writeCfgRecursive(){
+        if(writeSize > 0) {
+            this.writeCfg(cfgLines.get(indexLine));
+            this.onUpdateProgress(progress.withProgress( (indexLine * 100d) / cfgLines.size()));
+            writeSize -= 1;
+            indexLine += 1;
+            Log.i("updateCfg", String.format("writing new Cfg... Remaining line to write: {%d}", writeSize));
+        } else{
+            this.glasses.clear();
+            this.glasses.cfgRead("ALooK", info -> {
+                this.onUpdateSuccess(this.progress);
+                this.onConnected.accept(this.glasses);
+            });
+        }
+    }
+
+    private void writeCfg(String line) {
+        this.glasses.gattCallbacks.writeRxCharacteristic(
+                new Command(Utils.hexStringToBytes(line)).toBytes(),
+                c -> {
+                    if (c == 1d) {
+                        Log.i("writeCfg", "re-calling writeCfgRecursive");
+                        this.writeCfgRecursive();
+                    }
+                }
+        );
+    }
+
+
     private void onFirmwareDownloaded(final byte[] response) {
         this.onUpdateProgress(progress.withStatus(GlassesUpdate.State.UPDATING_FIRMWARE).withProgress(0));
         this.onUpdateAvailableCallback.accept(new android.util.Pair<>(this.progress, ()->{
