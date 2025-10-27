@@ -36,15 +36,16 @@ public final class GlassesVersion {
     }
 
     public GlassesVersion(final String version) {
-        final String [] mmp = version
+        final String [] mmpe = version.split("-");
+        final String [] mmp = mmpe[0]
                 .replaceAll("[^.0-9]", "")
                 .split("\\.");
-        final String letters = version
-                .replaceAll("[.0-9]", "");
+        //final String letters = version
+        //        .replaceAll("[.0-9]", "");
         this.major = mmp.length > 0 ? Short.parseShort(mmp[0]) : 0;
         this.minor = mmp.length > 1 ? Short.parseShort(mmp[1]) : 0;
         this.patch = mmp.length > 2 ? Short.parseShort(mmp[2]) : 0;
-        this.extra = letters.length() > 0 ? letters.charAt(letters.length() - 1) : 0;
+        this.extra = (mmpe.length > 1 && !mmpe[1].isEmpty()) ? mmpe[1].charAt(mmpe[1].length() - 1) : 0;
         this.year = 0;
         this.week = 0;
         this.serial = 0;
