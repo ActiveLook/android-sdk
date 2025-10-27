@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 4.5.7
+
+### Fixes
+
+- Fix fw extra version parsing
+
 ## Version 4.5.6
 
 ### New
