@@ -3,7 +3,7 @@ buildscript {
     ext.sdkGroupId = "com.activelook"
     ext.sdkVersionCode = 457
     ext.sdkVersionName = '4.5.7'
-    ext.kotlin_version = '1.6.21'
+    ext.kotlin_version = '1.9.24'
     repositories {
         google()
         mavenCentral()
