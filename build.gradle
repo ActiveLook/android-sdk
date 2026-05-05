@@ -1,8 +1,8 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     ext.sdkGroupId = "com.activelook"
-    ext.sdkVersionCode = 457
-    ext.sdkVersionName = '4.5.7'
+    ext.sdkVersionCode = 458
+    ext.sdkVersionName = '4.5.8'
     ext.kotlin_version = '1.9.24'
     repositories {
         google()
