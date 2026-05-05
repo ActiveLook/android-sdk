@@ -147,8 +147,7 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
     public boolean isFirmwareAtLeast(String version) {
         version = String.format("v%s.0b", version);
         final String gVersion = this.getDeviceInformation().getFirmwareVersion();
-        Log.w("isFirmwareAtLeast", String.format("glasses: [%s], argument: [%s] = %d", gVersion, version, gVersion.compareTo(version)));
-        return gVersion.compareTo(version) >= 0;
+
         Log.w("isFirmwareAtLeast", String.format(
             "glasses: [%s], argument: [%s] = %d",
             gVersion, version, compareFirmwareVersions(gVersion, version)));

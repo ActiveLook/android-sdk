@@ -65,7 +65,7 @@ You can add the dependency in your application by modifying the application `bui
 and add:
 ```
 dependencies {
-  implementation 'com.github.activelook:android-sdk:4.5.8'
+  implementation 'com.github.activelook:android-sdk:4.5.9'
 }
 ```
 
