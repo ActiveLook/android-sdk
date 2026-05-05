@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Version 4.5.8
+
+### Fixes
+
+- Fix fw version comparison
+
 ## Version 4.5.7
 
 ### Fixes

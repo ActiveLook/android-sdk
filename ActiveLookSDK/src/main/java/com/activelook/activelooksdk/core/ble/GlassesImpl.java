@@ -117,12 +117,42 @@ class GlassesImpl extends AbstractGlasses implements Glasses {
         return new SimpleSerializedGlasses(this.getAddress(), this.getManufacturer(), this.getName());
     }
 
+    /**
+     * Compares two version strings numerically, segment by segment.
+     * Handles formats like "4.13.13", "v4.13.13", "4.0b", "v4.0.0b"
+     * Returns positive if v1 > v2, negative if v1 < v2, 0 if equal.
+     */
+    private int compareFirmwareVersions(String v1, String v2) {
+        // Strip leading 'v' and trailing 'b' (or any non-numeric suffix)
+        v1 = v1.replaceAll("(?i)^v", "").replaceAll("[a-zA-Z]+$", "");
+        v2 = v2.replaceAll("(?i)^v", "").replaceAll("[a-zA-Z]+$", "");
+
+        String[] parts1 = v1.split("\\.");
+        String[] parts2 = v2.split("\\.");
+
+        int maxLen = Math.max(parts1.length, parts2.length);
+
+        for (int i = 0; i < maxLen; i++) {
+            int num1 = i < parts1.length ? Integer.parseInt(parts1[i]) : 0;
+            int num2 = i < parts2.length ? Integer.parseInt(parts2[i]) : 0;
+
+            if (num1 != num2) {
+                return Integer.compare(num1, num2);
+            }
+        }
+        return 0;
+    }
+
     @Override
     public boolean isFirmwareAtLeast(String version) {
         version = String.format("v%s.0b", version);
         final String gVersion = this.getDeviceInformation().getFirmwareVersion();
         Log.w("isFirmwareAtLeast", String.format("glasses: [%s], argument: [%s] = %d", gVersion, version, gVersion.compareTo(version)));
         return gVersion.compareTo(version) >= 0;
+        Log.w("isFirmwareAtLeast", String.format(
+            "glasses: [%s], argument: [%s] = %d",
+            gVersion, version, compareFirmwareVersions(gVersion, version)));
+        return compareFirmwareVersions(gVersion, version) >= 0;
     }
 
     @Override
