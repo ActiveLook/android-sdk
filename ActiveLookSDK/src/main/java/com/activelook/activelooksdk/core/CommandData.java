@@ -299,6 +299,7 @@ public final class CommandData {
         switch (action) {
             case HOLD:    return new CommandData((byte) 0x00);
             case FLUSH:     return new CommandData((byte) 0x01);
+            case RESET:     return new CommandData((byte) 0xFF);
             default:     return new CommandData((byte) 0x03);
         }
     }

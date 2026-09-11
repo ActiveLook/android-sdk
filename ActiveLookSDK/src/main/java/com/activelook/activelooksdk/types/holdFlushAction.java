@@ -27,4 +27,12 @@ public enum holdFlushAction implements Utils.FieldWithValue {
             return new byte[]{(byte) 0x01};
         }
     },
+    /** Reset and flush all stacked holds (doc section 4.6): "the way to recover
+        when the state of the device is unknown". */
+    RESET {
+        @Override
+        public byte[] toBytes() {
+            return new byte[]{(byte) 0xFF};
+        }
+    },
 }
