@@ -173,7 +173,7 @@ public class TypesTest {
                 .addData(gi.getX()).addData(gi.getY())
                 .addData((char) gi.getR()).addData((char) gi.getRin())
                 .addData((byte) gi.getStart()).addData((byte) gi.getEnd())
-                // .addData(gi.isClockwise())
+                .addData((byte) (gi.isClockwise() ? 0x01 : 0x00))
         ;
         assertArrayEquals(payload, cmd.getData());
     }
@@ -197,7 +197,7 @@ public class TypesTest {
                 .addData(gi.getX()).addData(gi.getY())
                 .addData((char) gi.getR()).addData((char) gi.getRin())
                 .addData((byte) gi.getStart()).addData((byte) gi.getEnd())
-                // .addData(gi.isClockwise())
+                .addData((byte) (gi.isClockwise() ? 0x01 : 0x00))
                 ;
         assertArrayEquals(payload, cmd.getData());
     }
