@@ -392,6 +392,31 @@ public interface Glasses extends Parcelable {
      */
     void imgSave4bppHeatShrinkSaveComp(byte id, Bitmap img);
     /**
+     * Save an 4bpp grey+alpha bitmap (doc section 5.5.4): unlike the MONO_4BPP* formats,
+     * transparent source pixels stay transparent instead of flattening to opaque black. Sent
+     * uncompressed -- no Heatshrink variant exists for this format.
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration.
+     */
+    void imgSave4bppAlpha(byte id, Bitmap img);
+    /**
+     * Save an RG (red-green) 8bpp color bitmap (doc section 5.5.5): color-glasses-only (e.g.
+     * Engo 3's MDP08 display module) -- no blue subpixel, blue tones fold into green. Sent
+     * Heatshrink-compressed, same as MONO_4BPP_HEATSHRINK.
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration.
+     */
+    void imgSaveRGColor8bpp(byte id, Bitmap img);
+    /**
+     * Save an RG (red-green) 8bpp color bitmap with 4-bit alpha per pixel (doc section 5.5.6):
+     * color-glasses-only, same 81-color RG palette as imgSaveRGColor8bpp() plus transparency --
+     * firmware only supports boolean alpha (0 or 15; any nonzero value reads as fully opaque).
+     * Sent Heatshrink-compressed, same as imgSaveRGColor8bpp().
+     * @param id   The image id in the configuration.
+     * @param img  The image to store in the configuration.
+     */
+    void imgSaveRGColor8bppAlpha(byte id, Bitmap img);
+    /**
      * Save image data in the chosen format.
      * @param id      The image id in the configuration.
      * @param imgData The pre-encoded image data to store in the configuration.

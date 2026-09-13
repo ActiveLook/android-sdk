@@ -484,8 +484,14 @@ public abstract class AbstractGlasses implements Glasses {
             case MONO_4BPP_HEATSHRINK_SAVE_COMP:
                 this.imgSave4bppHeatShrinkSaveComp(id, image);
             break;
+            case MONO_4BPP_ALPHA:
+                this.imgSave4bppAlpha(id, image);
+            break;
             case RG_COLOR_8BPP:
                 this.imgSaveRGColor8bpp(id, image);
+            break;
+            case RG_COLOR_8BPP_ALPHA:
+                this.imgSaveRGColor8bppAlpha(id, image);
             break;
 
         }
@@ -511,12 +517,27 @@ public abstract class AbstractGlasses implements Glasses {
         final ImageData imgData = ImageConverter.getImageData(image, format);
         this.imgSave(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
     }
+
+    @Override
+    public void imgSave4bppAlpha(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.MONO_4BPP_ALPHA;
+        final ImageData imgData = ImageConverter.getImageData(image, format);
+        this.imgSave(id, imgData, format);
+    }
+
+    @Override
     public void imgSaveRGColor8bpp(final byte id, final Bitmap image){
         final ImgSaveFormat format = ImgSaveFormat.RG_COLOR_8BPP;
         final ImageData imgData = ImageConverter.getImageData(image, format);
-        this.imgSave(id, imgData.getWidth(), imgData.getSize(), imgData.getBytes(), format);
+        this.imgSave(id, imgData, format);
     }
 
+    @Override
+    public void imgSaveRGColor8bppAlpha(final byte id, final Bitmap image){
+        final ImgSaveFormat format = ImgSaveFormat.RG_COLOR_8BPP_ALPHA;
+        final ImageData imgData = ImageConverter.getImageData(image, format);
+        this.imgSave(id, imgData, format);
+    }
 
     @Override
     public void imgSave4bppHeatShrink(final byte id, final Bitmap image){

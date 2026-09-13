@@ -11,6 +11,7 @@ import androidx.core.app.ActivityCompat;
 import android.Manifest;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.Log;
@@ -159,8 +160,8 @@ public class DebugActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        // g.cfgWrite("DebugApp", 1, 42);
-        // g.cfgSet("DebugApp");
+        //g.cfgWrite("DebugApp", 1, 42);
+        //g.cfgSet("DebugApp");
 
         // this.runTests01(g);
         // this.runTestsLayout(g);
@@ -168,6 +169,7 @@ public class DebugActivity extends AppCompatActivity {
         // this.runTestsPage(g);
         // this.runTestsStats(g);
         // this.runTestsConfig(g);
+        // this.runTestsColorImage(g);
     }
 
     private void runTestsConfig(final Glasses g) {
@@ -476,6 +478,35 @@ public class DebugActivity extends AppCompatActivity {
         // g.unsubscribeToSensorInterfaceNotifications();
         // g.unsubscribeToFlowControlNotifications();
         // g.disconnect();
+    }
+
+    /** Fits a source bitmap within the glasses' 304x256 display, preserving aspect ratio and
+     * centering the scaled image on a full-size canvas (so imgSaveRGColor8bpp() always gets
+     * consistent dimensions regardless of the source asset's own size). */
+    private static Bitmap fitToDisplay(final Bitmap src) {
+        final int displayWidth = 304;
+        final int displayHeight = 256;
+        final float scale = Math.min((float) displayWidth / src.getWidth(), (float) displayHeight / src.getHeight());
+        final int w = Math.round(src.getWidth() * scale);
+        final int h = Math.round(src.getHeight() * scale);
+        final Bitmap scaled = Bitmap.createScaledBitmap(src, w, h, true);
+        final Bitmap canvasBitmap = Bitmap.createBitmap(displayWidth, displayHeight, Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(canvasBitmap);
+        canvas.drawBitmap(scaled, (displayWidth - w) / 2f, (displayHeight - h) / 2f, null);
+        return canvasBitmap;
+    }
+
+    private void runTestsColorImage(final Glasses g) {
+        try {
+            final Bitmap source = BitmapFactory.decodeStream(getAssets().open("Italy-sRGB.jpg"));
+            final Bitmap fitted = fitToDisplay(source);
+            final byte id = 0x50;
+            g.cfgWrite("ColorImg", 1, 0);
+            g.imgSaveRGColor8bpp(id, fitted);
+            g.imgDisplay(id, (short) 0, (short) 0);
+        } catch (IOException e) {
+            Log.e("COLOR IMAGE", "Failed to load Italy-sRGB.jpg", e);
+        }
     }
 
 }

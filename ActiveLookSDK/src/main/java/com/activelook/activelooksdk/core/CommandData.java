@@ -289,7 +289,9 @@ public final class CommandData {
             case MONO_1BPP:                         return new CommandData((byte) 0x01);
             case MONO_4BPP_HEATSHRINK:              return new CommandData((byte) 0x02);
             case MONO_4BPP_HEATSHRINK_SAVE_COMP:    return new CommandData((byte) 0x03);
+            case MONO_4BPP_ALPHA:                   return new CommandData((byte) 0x08);
             case RG_COLOR_8BPP:                     return new CommandData((byte) 0x0A);
+            case RG_COLOR_8BPP_ALPHA:               return new CommandData((byte) 0x0C);
             default:                                return new CommandData((byte) 0x04);
         }
     }
