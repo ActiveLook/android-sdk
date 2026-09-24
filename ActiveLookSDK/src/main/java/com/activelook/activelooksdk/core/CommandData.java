@@ -373,11 +373,12 @@ public final class CommandData {
         final CommandData dec = new CommandData(bytes);
         final ArrayList<ImageInfo> result = new ArrayList<>();
         while (dec.hasNext()) {
-            result.add(new ImageInfo(
-                    dec.readByte(),
-                    dec.readInt(2),
-                    dec.readInt(2)
-            ));
+            // Doc section 4.7's ActiveLook-to-Master imgList (0x47) table: per entry, `u8 id`,
+            // `u16 height`, `u16 width` -- height before width on the wire.
+            final byte id = dec.readByte();
+            final int height = dec.readInt(2);
+            final int width = dec.readInt(2);
+            result.add(new ImageInfo(id, width, height));
         }
         return result;
     }
