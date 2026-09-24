@@ -14,9 +14,6 @@ limitations under the License.
 */
 package com.activelook.activelooksdk.types;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class ImageInfo {
 
     private final int id;
@@ -27,20 +24,6 @@ public class ImageInfo {
         this.id = id & 0xFF;
         this.width = width;
         this.height = height;
-    }
-
-    public static final List<ImageInfo> toList(byte[] bytes) {
-        final ArrayList<ImageInfo> result = new ArrayList<>();
-        byte id = 0x00;
-        int offset = 0;
-        while (offset < bytes.length) {
-            int width = (bytes[offset] << 8) + (bytes[offset + 1]);
-            int height = (bytes[offset + 2] << 8) + (bytes[offset + 3]);
-            result.add(new ImageInfo(id, width, height));
-            offset += 4;
-            id++;
-        }
-        return result;
     }
 
     public int getId() {
